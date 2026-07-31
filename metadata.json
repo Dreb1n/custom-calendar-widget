@@ -1,0 +1,24 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "user@kde.org",
+                "Name": "Antigravity"
+            }
+        ],
+        "Category": "Date and Time",
+        "Description": "Customizable multi-row calendar and clock widget with per-row format strings, fonts, colors, and alignments.",
+        "Icon": "preferences-system-time",
+        "Id": "org.kde.customcalendarwidget",
+        "License": "GPL-2.0-or-later",
+        "Name": "Custom Calendar & Clock",
+        "Version": "1.0.0",
+        "Website": "https://kde.org"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.time",
+        "org.kde.plasma.date"
+    ]
+}
