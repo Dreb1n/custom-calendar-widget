@@ -9,7 +9,7 @@
       <default>Sans Serif</default>
     </entry>
     <entry name="bgType" type="Int">
-      <default>0</default>
+      <default>2</default>
     </entry>
     <entry name="bgColor" type="String">
       <default>#1e293b</default>
@@ -24,7 +24,7 @@
       <default>16</default>
     </entry>
     <entry name="rowsJson" type="String">
-      <default>[{"format":"dddd","align":"center","fontSize":18,"color":"#818cf8","weight":600,"glow":false},{"format":"dd mmm yyy","align":"center","fontSize":28,"color":"#ffffff","weight":700,"glow":false},{"format":"H:i","align":"center","fontSize":48,"color":"#38bdf8","weight":800,"glow":true}]</default>
+      <default>[{"format":"dddd","align":"center","fontSize":18,"color":"#ffffff","weight":"400","effect":"none","opacity":1.0,"timeZone":""},{"format":"dd mmm yyy","align":"center","fontSize":28,"color":"#ffffff","weight":"400","effect":"none","opacity":1.0,"timeZone":""},{"format":"H:i","align":"center","fontSize":48,"color":"#ffffff","weight":"600","effect":"none","opacity":1.0,"timeZone":""}]</default>
     </entry>
   </group>
 </kcfg>

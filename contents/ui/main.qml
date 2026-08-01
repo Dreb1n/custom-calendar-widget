@@ -40,9 +40,9 @@ PlasmoidItem {
                 rowsData = JSON.parse(jsonStr);
             } else {
                 rowsData = [
-                    { "format": "dddd", "align": "center", "fontSize": 18, "color": "#818cf8", "effectColor": "", "weight": 600, "effect": "none", "opacity": 1.0, "timeZone": "" },
-                    { "format": "dd mmm yyy", "align": "center", "fontSize": 28, "color": "#ffffff", "effectColor": "", "weight": 700, "effect": "none", "opacity": 1.0, "timeZone": "" },
-                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#38bdf8", "effectColor": "#38bdf8", "weight": 800, "effect": "glow", "opacity": 1.0, "timeZone": "" }
+                    { "format": "dddd", "align": "center", "fontSize": 18, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
+                    { "format": "dd mmm yyy", "align": "center", "fontSize": 28, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
+                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "effectColor": "", "weight": 600, "effect": "none", "opacity": 1.0, "timeZone": "" }
                 ];
             }
         } catch (e) {
