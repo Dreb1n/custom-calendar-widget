@@ -12,7 +12,7 @@
         "Id": "org.kde.customcalendarwidget",
         "License": "GPL-2.0-or-later",
         "Name": "Custom Calendar and Clock",
-        "Version": "1.1.0",
+        "Version": "1.2.0",
         "Website": "https://github.com/Dreb1n/custom-calendar-widget"
     },
     "X-Plasma-API-Minimum-Version": "6.0",

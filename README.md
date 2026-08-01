@@ -2,7 +2,7 @@
 
 [![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6.0%2B-blue.svg?logo=kde)](https://kde.org/plasma-desktop/)
 [![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL--2.0--or--later-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.1.0-orange.svg)](https://github.com/Dreb1n/custom-calendar-widget/releases)
+[![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)](https://github.com/Dreb1n/custom-calendar-widget/releases)
 
 A highly customizable, multi-row calendar and digital clock desktop widget (plasmoid) designed for **KDE Plasma 6**.
 
