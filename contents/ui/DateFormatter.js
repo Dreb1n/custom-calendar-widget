@@ -47,7 +47,55 @@ function getWeekNumber(year, month, day) {
   return Math.ceil((((target - yearStart) / 86400000) + 1) / 7);
 }
 
-function format(date, formatStr, timeZone) {
+function getLocalizedNames(localeStr) {
+  if (!localeStr || typeof localeStr !== "string" || localeStr.trim() === "" || localeStr === "default") {
+    return {
+      monthsFull: MONTH_NAMES_FULL,
+      monthsShort: MONTH_NAMES_SHORT,
+      daysFull: DAY_NAMES_FULL,
+      daysShort: DAY_NAMES_SHORT
+    };
+  }
+  const key = localeStr.trim();
+  if (FORMATTER_CACHE["loc_" + key]) {
+    return FORMATTER_CACHE["loc_" + key];
+  }
+  try {
+    var loc = Qt.locale(key);
+    var monthsFull = [];
+    var monthsShort = [];
+    var daysFull = [];
+    var daysShort = [];
+
+    for (var m = 0; m < 12; m++) {
+      var dM = new Date(2026, m, 15);
+      monthsFull.push(dM.toLocaleDateString(loc, "MMMM"));
+      monthsShort.push(dM.toLocaleDateString(loc, "MMM"));
+    }
+    for (var d = 0; d < 7; d++) {
+      var dD = new Date(2026, 0, 4 + d); // 2026-01-04 is Sunday
+      daysFull.push(dD.toLocaleDateString(loc, "dddd"));
+      daysShort.push(dD.toLocaleDateString(loc, "ddd"));
+    }
+    var res = {
+      monthsFull: monthsFull,
+      monthsShort: monthsShort,
+      daysFull: daysFull,
+      daysShort: daysShort
+    };
+    FORMATTER_CACHE["loc_" + key] = res;
+    return res;
+  } catch (e) {
+    return {
+      monthsFull: MONTH_NAMES_FULL,
+      monthsShort: MONTH_NAMES_SHORT,
+      daysFull: DAY_NAMES_FULL,
+      daysShort: DAY_NAMES_SHORT
+    };
+  }
+}
+
+function format(date, formatStr, timeZone, localeStr) {
   if (!date || isNaN(date.getTime())) {
     date = new Date();
   }
@@ -58,18 +106,20 @@ function format(date, formatStr, timeZone) {
   var year, month, dayOfMonth, dayOfWeek, hours24, minutes, seconds;
 
   if (timeZone && timeZone !== "local" && timeZone.trim() !== "") {
-    const key = timeZone.trim();
+    const tzKey = timeZone.trim();
+    const locKey = (localeStr && localeStr.trim().length > 0) ? localeStr.trim() : 'en-US';
+    const cacheKey = tzKey + "_" + locKey;
     try {
-      if (!FORMATTER_CACHE[key]) {
-        FORMATTER_CACHE[key] = new Intl.DateTimeFormat('en-US', {
-          timeZone: key,
+      if (!FORMATTER_CACHE[cacheKey]) {
+        FORMATTER_CACHE[cacheKey] = new Intl.DateTimeFormat(locKey, {
+          timeZone: tzKey,
           weekday: 'short',
           year: 'numeric', month: 'numeric', day: 'numeric',
           hour: 'numeric', minute: 'numeric', second: 'numeric',
           hour12: false
         });
       }
-      const parts = FORMATTER_CACHE[key].formatToParts(date);
+      const parts = FORMATTER_CACHE[cacheKey].formatToParts(date);
       var p = {};
       for (var i = 0; i < parts.length; i++) {
         p[parts[i].type] = parts[i].value;
@@ -104,6 +154,7 @@ function format(date, formatStr, timeZone) {
   const ampmUpper = hours24 >= 12 ? "PM" : "AM";
   const ampmLower = hours24 >= 12 ? "pm" : "am";
   const tzLabel = timeZone && timeZone !== "local" ? timeZone : "";
+  const names = getLocalizedNames(localeStr);
 
   var placeholders = [];
   var tempStr = formatStr.replace(/\[([^\]]+)\]/g, function(match, p1) {
@@ -113,10 +164,10 @@ function format(date, formatStr, timeZone) {
 
   const getValue = function(token) {
     switch (token) {
-      case "dddd": case "EEEE": return DAY_NAMES_FULL[dayOfWeek];
-      case "ddd": case "EEE": return DAY_NAMES_SHORT[dayOfWeek];
-      case "mmmm": case "MMMM": return MONTH_NAMES_FULL[month];
-      case "mmm": case "MMM": return MONTH_NAMES_SHORT[month];
+      case "dddd": case "EEEE": return names.daysFull[dayOfWeek];
+      case "ddd": case "EEE": return names.daysShort[dayOfWeek];
+      case "mmmm": case "MMMM": return names.monthsFull[month];
+      case "mmm": case "MMM": return names.monthsShort[month];
       case "mm": case "MM": return padZero(month + 1, 2);
       case "yyyy": case "YYYY": case "yyy": case "YYY": return String(year);
       case "yy": case "YY": return String(year).slice(-2);

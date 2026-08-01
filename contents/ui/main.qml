@@ -1,8 +1,10 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
+import Qt5Compat.GraphicalEffects
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
+import org.kde.plasma.plasma5support as Plasma5Support
 import org.kde.kirigami as Kirigami
 
 import "DateFormatter.js" as DateFormatter
@@ -16,13 +18,36 @@ PlasmoidItem {
     preferredRepresentation: fullRepresentation
     fullRepresentation: widgetContent
 
+    // ExecutableDataSource for launching per-row custom click commands
+    Plasma5Support.DataSource {
+        id: executableSource
+        engine: "executable"
+        onNewData: function(sourceName, data) {
+            disconnectSource(sourceName);
+        }
+        function exec(cmd) {
+            if (cmd && cmd.trim().length > 0) {
+                connectSource(cmd.trim());
+            }
+        }
+    }
+
     // Current Date/Time state
     property date currentDate: new Date()
 
-    // Timer updating every second
+    // Smart battery-saving check: only tick every second if seconds format specifier ('s' or 'X') is present
+    property bool hasSeconds: {
+        for (var i = 0; i < rowsData.length; i++) {
+            var fmt = rowsData[i].format || "";
+            if (/[sX]/i.test(fmt)) return true;
+        }
+        return false;
+    }
+
+    // Smart Timer
     Timer {
         id: timer
-        interval: 1000
+        interval: root.hasSeconds ? 1000 : 10000
         running: true
         repeat: true
         onTriggered: {
@@ -97,61 +122,119 @@ PlasmoidItem {
                 Repeater {
                     model: root.rowsData
 
-                    delegate: Text {
-                        id: rowText
+                    delegate: Item {
+                        id: rowContainer
                         width: contentColumn.width
+                        implicitHeight: mainText.implicitHeight
                         Layout.fillWidth: true
 
-                        property var rowItem: modelData
+                        z: index
+                        Layout.topMargin: rowContainer.rowItem.topMargin !== undefined ? rowContainer.rowItem.topMargin : 0
 
-                        text: DateFormatter.format(root.currentDate, rowItem.format || "", rowItem.timeZone || "")
-
-                        // Per-row Opacity
-                        opacity: rowItem.opacity !== undefined ? rowItem.opacity : 1.0
-
-                        // Per-row Alignment
-                        horizontalAlignment: {
-                            var a = rowItem.align || "center";
-                            if (a === "left") return Text.AlignLeft;
-                            if (a === "right") return Text.AlignRight;
-                            return Text.AlignHCenter;
+                        transform: Translate {
+                            x: rowContainer.rowItem.offsetX !== undefined ? rowContainer.rowItem.offsetX : 0
                         }
 
-                        // Per-row Font Size & Family
-                        font.pixelSize: rowItem.fontSize || 24
-                        font.family: plasmoid.configuration.fontFamily || "Sans Serif"
-                        font.weight: {
-                            var w = parseInt(rowItem.weight || 400);
+                        property var rowItem: modelData
+                        property string formattedText: DateFormatter.format(root.currentDate, rowContainer.rowItem.format || "", rowContainer.rowItem.timeZone || "", rowContainer.rowItem.locale || "")
+
+                        property var fontFam: (rowContainer.rowItem.fontFamily && rowContainer.rowItem.fontFamily.length > 0) ? rowContainer.rowItem.fontFamily : (plasmoid.configuration.fontFamily || "Sans Serif")
+                        property int fontW: {
+                            var w = parseInt(rowContainer.rowItem.weight || 400);
                             if (w >= 900) return Font.Black;
                             if (w >= 700) return Font.Bold;
                             if (w >= 600) return Font.DemiBold;
                             if (w >= 300) return Font.Light;
                             return Font.Normal;
                         }
+                        property int hAlign: {
+                            var a = rowContainer.rowItem.align || "center";
+                            if (a === "left") return Text.AlignLeft;
+                            if (a === "right") return Text.AlignRight;
+                            return Text.AlignHCenter;
+                        }
+                        property color effColor: {
+                            var eff = rowContainer.rowItem.effect || (rowContainer.rowItem.glow ? "glow" : "none");
+                            if (eff === "none") return "transparent";
+                            var customEc = rowContainer.rowItem.effectColor && rowContainer.rowItem.effectColor.length > 0 ? rowContainer.rowItem.effectColor : "";
+                            if (customEc !== "") return customEc;
+                            if (eff === "glow") return rowContainer.rowItem.color || "#ffffff";
+                            return "#000000";
+                        }
+                        property int effSize: rowContainer.rowItem.effectSize !== undefined ? rowContainer.rowItem.effectSize : 2
+                        property string effType: rowContainer.rowItem.effect || (rowContainer.rowItem.glow ? "glow" : "none")
 
-                        // Per-row Color
-                        color: rowItem.color || "#ffffff"
-
-                        // Text Effect (None, Neon Glow, Normal Shadow, Drop Shadow, Outer Stroke)
-                        style: {
-                            var eff = rowItem.effect || (rowItem.glow ? "glow" : "none");
-                            if (eff === "glow" || eff === "stroke") return Text.Outline;
-                            if (eff === "shadow") return Text.Sunken;
-                            if (eff === "normalShadow") return Text.Raised;
-                            return Text.Normal;
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: (rowContainer.rowItem.clickCommand && rowContainer.rowItem.clickCommand.trim().length > 0) ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            onClicked: {
+                                if (rowContainer.rowItem.clickCommand && rowContainer.rowItem.clickCommand.trim().length > 0) {
+                                    executableSource.exec(rowContainer.rowItem.clickCommand);
+                                }
+                            }
                         }
 
-                        styleColor: {
-                            var eff = rowItem.effect || (rowItem.glow ? "glow" : "none");
-                            if (eff === "none") return "transparent";
+                        // Main Foreground Vector Text
+                        Text {
+                            id: mainText
+                            anchors.fill: parent
+                            text: rowContainer.formattedText
+                            opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
+                            horizontalAlignment: rowContainer.hAlign
+                            font.pixelSize: rowContainer.rowItem.fontSize || 24
+                            font.family: rowContainer.fontFam
+                            font.weight: rowContainer.fontW
+                            font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
+                            color: rowContainer.rowItem.color || "#ffffff"
+                        }
 
-                            var customEc = rowItem.effectColor && rowItem.effectColor.length > 0 ? rowItem.effectColor : "";
-                            if (customEc !== "") return customEc;
+                        // 1. Soft Neon Glow Shader Effect
+                        Glow {
+                            anchors.fill: mainText
+                            source: mainText
+                            visible: rowContainer.effType === "glow"
+                            radius: Math.max(2, rowContainer.effSize * 2)
+                            samples: Math.min(32, rowContainer.effSize * 3 + 1)
+                            color: rowContainer.effColor
+                            transparentBorder: true
+                        }
 
-                            if (eff === "glow") return rowItem.color || "#ffffff";
-                            if (eff === "stroke") return "#000000";
-                            if (eff === "shadow" || eff === "normalShadow") return "#000000";
-                            return "transparent";
+                        // 2. Soft Drop Shadow Shader Effect
+                        DropShadow {
+                            anchors.fill: mainText
+                            source: mainText
+                            visible: rowContainer.effType === "shadow"
+                            horizontalOffset: rowContainer.effSize
+                            verticalOffset: rowContainer.effSize
+                            radius: Math.max(2, rowContainer.effSize)
+                            samples: Math.min(32, rowContainer.effSize * 2 + 1)
+                            color: rowContainer.effColor
+                            transparentBorder: true
+                        }
+
+                        // 3. Normal Shadow Shader Effect
+                        DropShadow {
+                            anchors.fill: mainText
+                            source: mainText
+                            visible: rowContainer.effType === "normalShadow"
+                            horizontalOffset: rowContainer.effSize
+                            verticalOffset: rowContainer.effSize
+                            radius: 1
+                            samples: 3
+                            color: rowContainer.effColor
+                            transparentBorder: true
+                        }
+
+                        // 4. Outer Stroke Shader Effect
+                        Glow {
+                            anchors.fill: mainText
+                            source: mainText
+                            visible: rowContainer.effType === "stroke"
+                            radius: rowContainer.effSize
+                            samples: Math.min(32, rowContainer.effSize * 3 + 1)
+                            color: rowContainer.effColor
+                            spread: 0.8
+                            transparentBorder: true
                         }
                     }
                 }

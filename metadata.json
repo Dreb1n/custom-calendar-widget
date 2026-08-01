@@ -3,8 +3,7 @@
     "KPlugin": {
         "Authors": [
             {
-                "Email": "user@kde.org",
-                "Name": "Antigravity"
+                "Name": "Dreb1n"
             }
         ],
         "Category": "Date and Time",
@@ -12,9 +11,9 @@
         "Icon": "preferences-system-time",
         "Id": "org.kde.customcalendarwidget",
         "License": "GPL-2.0-or-later",
-        "Name": "Custom Calendar & Clock",
-        "Version": "1.0.0",
-        "Website": "https://kde.org"
+        "Name": "Custom Calendar and Clock",
+        "Version": "1.1.0",
+        "Website": "https://github.com/Dreb1n/custom-calendar-widget"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-Provides": [
