@@ -98,10 +98,16 @@ KCM.SimpleKCM {
         try {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
-                savedRowsJson = pConfig.rowsJson || "";
-                savedFontFamily = pConfig.fontFamily || "Sans Serif";
-                savedBgType = pConfig.bgType !== undefined ? pConfig.bgType : 2;
-                savedBgColor = pConfig.bgColor || "#1e293b";
+                savedRowsJson = pConfig.rowsJson || cfg_rowsJson || "";
+                savedFontFamily = pConfig.fontFamily || (fontCombo ? fontCombo.selectedFont : "Sans Serif");
+                savedBgType = pConfig.bgType !== undefined ? pConfig.bgType : (bgTypeCombo ? bgTypeCombo.currentIndex : 2);
+                savedBgColor = pConfig.bgColor || (bgColorInput ? bgColorInput.text : "#1e293b");
+                hasSavedSnapshot = true;
+            } else {
+                savedRowsJson = cfg_rowsJson || "";
+                savedFontFamily = fontCombo ? fontCombo.selectedFont : "Sans Serif";
+                savedBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
+                savedBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
                 hasSavedSnapshot = true;
             }
         } catch(e) {}
@@ -351,7 +357,7 @@ KCM.SimpleKCM {
     }
 
     function load() {
-        cancel();
+        captureSavedSnapshot();
         loadRowsFromJson();
     }
 
