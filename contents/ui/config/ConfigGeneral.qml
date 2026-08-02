@@ -77,13 +77,6 @@ KCM.SimpleKCM {
         }
     }
 
-    property string savedRowsJson: ""
-    property string savedFontFamily: ""
-    property int savedBgType: 2
-    property string savedBgColor: "#1e293b"
-    property bool hasSavedSnapshot: false
-    property bool isApplyingOrSaved: false
-
     function getPlasmoidConfig() {
         try {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) return plasmoid.configuration;
@@ -92,25 +85,6 @@ KCM.SimpleKCM {
             if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.configuration) return configPage.parent.plasmoid.configuration;
         } catch(e) {}
         return null;
-    }
-
-    function captureSavedSnapshot() {
-        try {
-            var pConfig = getPlasmoidConfig();
-            if (pConfig) {
-                savedRowsJson = pConfig.rowsJson || cfg_rowsJson || "";
-                savedFontFamily = pConfig.fontFamily || (fontCombo ? fontCombo.selectedFont : "Sans Serif");
-                savedBgType = pConfig.bgType !== undefined ? pConfig.bgType : (bgTypeCombo ? bgTypeCombo.currentIndex : 2);
-                savedBgColor = pConfig.bgColor || (bgColorInput ? bgColorInput.text : "#1e293b");
-                hasSavedSnapshot = true;
-            } else {
-                savedRowsJson = cfg_rowsJson || "";
-                savedFontFamily = fontCombo ? fontCombo.selectedFont : "Sans Serif";
-                savedBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
-                savedBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
-                hasSavedSnapshot = true;
-            }
-        } catch(e) {}
     }
 
     function pushLivePreview() {
@@ -126,27 +100,8 @@ KCM.SimpleKCM {
         } catch(e) {}
     }
 
-    function cancel() {
-        try {
-            var pConfig = getPlasmoidConfig();
-            if (hasSavedSnapshot && pConfig) {
-                pConfig.rowsJson = savedRowsJson;
-                pConfig.fontFamily = savedFontFamily;
-                pConfig.bgType = savedBgType;
-                pConfig.bgColor = savedBgColor;
-            }
-        } catch(e) {}
-    }
-
     Component.onCompleted: {
-        captureSavedSnapshot();
         loadRowsFromJson();
-    }
-
-    Component.onDestruction: {
-        if (!isApplyingOrSaved) {
-            cancel();
-        }
     }
 
 
@@ -339,28 +294,20 @@ KCM.SimpleKCM {
     function save() {
         cleanStockDefaults();
         saveRowsToJson();
-
-        savedRowsJson = cfg_rowsJson;
-        savedFontFamily = fontCombo && fontCombo.selectedFont ? fontCombo.selectedFont : "Sans Serif";
-        savedBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
-        savedBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
-        hasSavedSnapshot = true;
-
         try {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
-                pConfig.rowsJson = savedRowsJson;
-                pConfig.fontFamily = savedFontFamily;
-                pConfig.bgType = savedBgType;
-                pConfig.bgColor = savedBgColor;
+                pConfig.rowsJson = cfg_rowsJson;
+                if (fontCombo && fontCombo.selectedFont) pConfig.fontFamily = fontCombo.selectedFont;
+                if (bgTypeCombo) pConfig.bgType = bgTypeCombo.currentIndex;
+                if (bgColorInput) pConfig.bgColor = bgColorInput.text;
             }
         } catch(e) {}
-        isApplyingOrSaved = true;
     }
 
     function load() {
-        captureSavedSnapshot();
         loadRowsFromJson();
+        pushLivePreview();
     }
 
     ListModel {
