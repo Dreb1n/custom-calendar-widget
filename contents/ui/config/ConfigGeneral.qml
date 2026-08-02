@@ -81,6 +81,7 @@ KCM.SimpleKCM {
     property string savedBaselineFontFamily: "Sans Serif"
     property int savedBaselineBgType: 2
     property string savedBaselineBgColor: "#1e293b"
+    property bool isSavedState: false
 
     function getPlasmoidConfig() {
         try {
@@ -90,15 +91,6 @@ KCM.SimpleKCM {
             if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.configuration) return configPage.parent.plasmoid.configuration;
         } catch(e) {}
         return null;
-    }
-
-    function getNeedsSaveState() {
-        try {
-            if (configPage.needsSave) return true;
-            if (configPage.unrepresentedNeedsSave) return true;
-            if (typeof kcm !== "undefined" && kcm && (kcm.needsSave || kcm.unrepresentedNeedsSave)) return true;
-        } catch(e) {}
-        return false;
     }
 
     function captureBaseline() {
@@ -136,13 +128,11 @@ KCM.SimpleKCM {
     Component.onCompleted: {
         loadRowsFromJson();
         captureBaseline();
+        isSavedState = false;
     }
 
     Component.onDestruction: {
-        if (getNeedsSaveState()) {
-            rollbackToBaseline();
-        } else {
-            captureBaseline();
+        if (!isSavedState) {
             rollbackToBaseline();
         }
     }
@@ -287,6 +277,7 @@ KCM.SimpleKCM {
 
     function markChanged() {
         if (!isLoaded) return;
+        isSavedState = false;
         try { configPage.needsSave = true; } catch(e) {}
         try { configPage.unrepresentedNeedsSave = true; } catch(e) {}
         try {
@@ -338,11 +329,12 @@ KCM.SimpleKCM {
         cleanStockDefaults();
         saveRowsToJson();
         captureBaseline();
+        isSavedState = true;
         pushLivePreview();
     }
 
     function load() {
-        if (getNeedsSaveState()) {
+        if (!isSavedState) {
             rollbackToBaseline();
         } else {
             captureBaseline();
