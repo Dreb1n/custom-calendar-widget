@@ -261,6 +261,12 @@ KCM.SimpleKCM {
         if (!isLoaded) return;
         try { configPage.needsSave = true; } catch(e) {}
         try { configPage.unrepresentedNeedsSave = true; } catch(e) {}
+        try {
+            if (typeof kcm !== "undefined" && kcm) {
+                kcm.needsSave = true;
+                kcm.unrepresentedNeedsSave = true;
+            }
+        } catch(e) {}
     }
 
     function saveRowsToJson() {
@@ -328,13 +334,17 @@ KCM.SimpleKCM {
         id: rowsModel
     }
 
-    TextField {
-        id: rowsJsonHidden
-        visible: false
-    }
-
     Kirigami.FormLayout {
         id: formLayout
+
+        TextField {
+            id: rowsJsonHidden
+            visible: true
+            Layout.preferredWidth: 0
+            Layout.preferredHeight: 0
+            opacity: 0
+            clip: true
+        }
 
         ComboBox {
             id: fontCombo
@@ -454,6 +464,9 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.move(index, index - 1, 1);
                                     saveRowsToJson();
+                                    rowsJsonHidden.textEdited();
+                                    pushLivePreview();
+                                    markChanged();
                                 }
                             }
                             Button {
@@ -462,6 +475,9 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.move(index, index + 1, 1);
                                     saveRowsToJson();
+                                    rowsJsonHidden.textEdited();
+                                    pushLivePreview();
+                                    markChanged();
                                 }
                             }
                             Button {
@@ -470,6 +486,9 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.remove(index);
                                     saveRowsToJson();
+                                    rowsJsonHidden.textEdited();
+                                    pushLivePreview();
+                                    markChanged();
                                 }
                             }
                         }
