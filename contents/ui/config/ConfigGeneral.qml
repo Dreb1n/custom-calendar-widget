@@ -149,6 +149,15 @@ KCM.SimpleKCM {
         }
     }
 
+    onSaved: {
+        save();
+    }
+
+    onReset: {
+        cancel();
+        loadRowsFromJson();
+    }
+
     function buildSharedFontModels() {
         if (sharedFontModel.count > 5) return; // Already loaded
         var rawFonts = Qt.fontFamilies();
