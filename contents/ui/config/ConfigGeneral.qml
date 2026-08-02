@@ -91,7 +91,7 @@ KCM.SimpleKCM {
     }
 
     function pushLivePreview() {
-        if (!isLoaded || isSaving) return;
+        if (!isLoaded) return;
         try {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
                 plasmoid.configuration.rowsJson = rowsJsonHidden.text;
