@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
+import org.kde.plasma.plasmoid
 
 KCM.SimpleKCM {
     id: configPage
@@ -11,7 +12,12 @@ KCM.SimpleKCM {
     property alias cfg_fontFamily: fontCombo.selectedFont
     property alias cfg_bgType: bgTypeCombo.currentIndex
     property alias cfg_bgColor: bgColorInput.text
-    property string cfg_rowsJson: ""
+    property alias cfg_rowsJson: rowsJsonHolder.text
+
+    Item {
+        id: rowsJsonHolder
+        property string text: ""
+    }
 
     property var activeColorCallback: null
 
@@ -315,7 +321,7 @@ KCM.SimpleKCM {
         }
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
-        cfg_rowsJson = jsonStr;
+        rowsJsonHolder.text = jsonStr;
         pushLivePreview();
         markChanged();
         isSaving = false;
