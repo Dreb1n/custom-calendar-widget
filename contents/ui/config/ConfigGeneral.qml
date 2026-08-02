@@ -11,7 +11,7 @@ KCM.SimpleKCM {
     property alias cfg_fontFamily: fontCombo.selectedFont
     property alias cfg_bgType: bgTypeCombo.currentIndex
     property alias cfg_bgColor: bgColorInput.text
-    property alias cfg_rowsJson: rowsJsonHidden.text
+    property string cfg_rowsJson: ""
 
     property var activeColorCallback: null
 
@@ -78,13 +78,24 @@ KCM.SimpleKCM {
     property bool hasSavedSnapshot: false
     property bool isApplyingOrSaved: false
 
+    function getPlasmoidConfig() {
+        try {
+            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) return plasmoid.configuration;
+            if (typeof kcm !== "undefined" && kcm && kcm.plasmoid && kcm.plasmoid.configuration) return kcm.plasmoid.configuration;
+            if (typeof kcm !== "undefined" && kcm && kcm.widget && kcm.widget.configuration) return kcm.widget.configuration;
+            if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.configuration) return configPage.parent.plasmoid.configuration;
+        } catch(e) {}
+        return null;
+    }
+
     function captureSavedSnapshot() {
         try {
-            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
-                savedRowsJson = plasmoid.configuration.rowsJson || "";
-                savedFontFamily = plasmoid.configuration.fontFamily || "Sans Serif";
-                savedBgType = plasmoid.configuration.bgType !== undefined ? plasmoid.configuration.bgType : 2;
-                savedBgColor = plasmoid.configuration.bgColor || "#1e293b";
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                savedRowsJson = pConfig.rowsJson || "";
+                savedFontFamily = pConfig.fontFamily || "Sans Serif";
+                savedBgType = pConfig.bgType !== undefined ? pConfig.bgType : 2;
+                savedBgColor = pConfig.bgColor || "#1e293b";
                 hasSavedSnapshot = true;
             }
         } catch(e) {}
@@ -93,22 +104,26 @@ KCM.SimpleKCM {
     function pushLivePreview() {
         if (!isLoaded) return;
         try {
-            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
-                plasmoid.configuration.rowsJson = rowsJsonHidden.text;
-                if (fontCombo && fontCombo.selectedFont) plasmoid.configuration.fontFamily = fontCombo.selectedFont;
-                if (bgTypeCombo) plasmoid.configuration.bgType = bgTypeCombo.currentIndex;
-                if (bgColorInput) plasmoid.configuration.bgColor = bgColorInput.text;
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                pConfig.rowsJson = cfg_rowsJson;
+                if (fontCombo && fontCombo.selectedFont) pConfig.fontFamily = fontCombo.selectedFont;
+                if (bgTypeCombo) pConfig.bgType = bgTypeCombo.currentIndex;
+                if (bgColorInput) pConfig.bgColor = bgColorInput.text;
             }
         } catch(e) {}
     }
 
     function cancel() {
-        if (hasSavedSnapshot && typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
-            plasmoid.configuration.rowsJson = savedRowsJson;
-            plasmoid.configuration.fontFamily = savedFontFamily;
-            plasmoid.configuration.bgType = savedBgType;
-            plasmoid.configuration.bgColor = savedBgColor;
-        }
+        try {
+            var pConfig = getPlasmoidConfig();
+            if (hasSavedSnapshot && pConfig) {
+                pConfig.rowsJson = savedRowsJson;
+                pConfig.fontFamily = savedFontFamily;
+                pConfig.bgType = savedBgType;
+                pConfig.bgColor = savedBgColor;
+            }
+        } catch(e) {}
     }
 
     Component.onCompleted: {
@@ -300,8 +315,7 @@ KCM.SimpleKCM {
         }
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
-        rowsJsonHidden.text = jsonStr;
-        rowsJsonHidden.textEdited();
+        cfg_rowsJson = jsonStr;
         pushLivePreview();
         markChanged();
         isSaving = false;
@@ -312,15 +326,16 @@ KCM.SimpleKCM {
         cleanStockDefaults();
         saveRowsToJson();
         try {
-            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
-                plasmoid.configuration.rowsJson = rowsJsonHidden.text;
-                if (fontCombo && fontCombo.selectedFont) plasmoid.configuration.fontFamily = fontCombo.selectedFont;
-                if (bgTypeCombo) plasmoid.configuration.bgType = bgTypeCombo.currentIndex;
-                if (bgColorInput) plasmoid.configuration.bgColor = bgColorInput.text;
-                savedRowsJson = plasmoid.configuration.rowsJson;
-                savedFontFamily = plasmoid.configuration.fontFamily;
-                savedBgType = plasmoid.configuration.bgType;
-                savedBgColor = plasmoid.configuration.bgColor;
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                pConfig.rowsJson = cfg_rowsJson;
+                if (fontCombo && fontCombo.selectedFont) pConfig.fontFamily = fontCombo.selectedFont;
+                if (bgTypeCombo) pConfig.bgType = bgTypeCombo.currentIndex;
+                if (bgColorInput) pConfig.bgColor = bgColorInput.text;
+                savedRowsJson = pConfig.rowsJson;
+                savedFontFamily = pConfig.fontFamily;
+                savedBgType = pConfig.bgType;
+                savedBgColor = pConfig.bgColor;
             }
         } catch(e) {}
         isApplyingOrSaved = false;
@@ -336,15 +351,6 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         id: formLayout
-
-        TextField {
-            id: rowsJsonHidden
-            visible: true
-            Layout.preferredWidth: 0
-            Layout.preferredHeight: 0
-            opacity: 0
-            clip: true
-        }
 
         ComboBox {
             id: fontCombo
@@ -464,9 +470,6 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.move(index, index - 1, 1);
                                     saveRowsToJson();
-                                    rowsJsonHidden.textEdited();
-                                    pushLivePreview();
-                                    markChanged();
                                 }
                             }
                             Button {
@@ -475,9 +478,6 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.move(index, index + 1, 1);
                                     saveRowsToJson();
-                                    rowsJsonHidden.textEdited();
-                                    pushLivePreview();
-                                    markChanged();
                                 }
                             }
                             Button {
@@ -486,9 +486,6 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.remove(index);
                                     saveRowsToJson();
-                                    rowsJsonHidden.textEdited();
-                                    pushLivePreview();
-                                    markChanged();
                                 }
                             }
                         }
