@@ -331,17 +331,20 @@ KCM.SimpleKCM {
         isApplyingOrSaved = true;
         cleanStockDefaults();
         saveRowsToJson();
+
+        savedRowsJson = cfg_rowsJson;
+        savedFontFamily = fontCombo && fontCombo.selectedFont ? fontCombo.selectedFont : "Sans Serif";
+        savedBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
+        savedBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
+        hasSavedSnapshot = true;
+
         try {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
-                pConfig.rowsJson = cfg_rowsJson;
-                if (fontCombo && fontCombo.selectedFont) pConfig.fontFamily = fontCombo.selectedFont;
-                if (bgTypeCombo) pConfig.bgType = bgTypeCombo.currentIndex;
-                if (bgColorInput) pConfig.bgColor = bgColorInput.text;
-                savedRowsJson = pConfig.rowsJson;
-                savedFontFamily = pConfig.fontFamily;
-                savedBgType = pConfig.bgType;
-                savedBgColor = pConfig.bgColor;
+                pConfig.rowsJson = savedRowsJson;
+                pConfig.fontFamily = savedFontFamily;
+                pConfig.bgType = savedBgType;
+                pConfig.bgColor = savedBgColor;
             }
         } catch(e) {}
         isApplyingOrSaved = false;
