@@ -330,7 +330,7 @@ KCM.SimpleKCM {
     function save() {
         isApplyingOrSaved = true;
         cleanStockDefaults();
-        configPage.saveRowsToJson();
+        saveRowsToJson();
         try {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
@@ -357,6 +357,10 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         id: formLayout
+
+        function saveRowsToJson() { formLayout.saveRowsToJson(); }
+        function pushLivePreview() { configPage.pushLivePreview(); }
+        function markChanged() { configPage.markChanged(); }
 
         ComboBox {
             id: fontCombo
@@ -475,7 +479,7 @@ KCM.SimpleKCM {
                                 enabled: index > 0
                                 onClicked: {
                                     rowsModel.move(index, index - 1, 1);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -483,7 +487,7 @@ KCM.SimpleKCM {
                                 enabled: index < rowsModel.count - 1
                                 onClicked: {
                                     rowsModel.move(index, index + 1, 1);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -491,7 +495,7 @@ KCM.SimpleKCM {
                                 enabled: rowsModel.count > 1
                                 onClicked: {
                                     rowsModel.remove(index);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -509,7 +513,7 @@ KCM.SimpleKCM {
                                 onTextEdited: {
                                     if (configPage.isLoaded) {
                                         rowsModel.setProperty(index, "format", text);
-                                        configPage.saveRowsToJson();
+                                        formLayout.saveRowsToJson();
                                     }
                                 }
                             }
@@ -521,7 +525,7 @@ KCM.SimpleKCM {
                                 value: model.fontSize || 24
                                 onValueModified: {
                                     rowsModel.setProperty(index, "fontSize", value);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
 
@@ -541,7 +545,7 @@ KCM.SimpleKCM {
                                         configPage.openColorPicker(model.color || "#ffffff", function(hex) {
                                             if (configPage.isLoaded) {
                                                 rowsModel.setProperty(index, "color", hex);
-                                                configPage.saveRowsToJson();
+                                                formLayout.saveRowsToJson();
                                             }
                                         });
                                     }
@@ -554,7 +558,7 @@ KCM.SimpleKCM {
                                 onTextEdited: {
                                     if (configPage.isLoaded) {
                                         rowsModel.setProperty(index, "color", text);
-                                        configPage.saveRowsToJson();
+                                        formLayout.saveRowsToJson();
                                     }
                                 }
                             }
@@ -595,7 +599,7 @@ KCM.SimpleKCM {
                                     }
                                     else if (val === "letterSpacing") { rowsModel.setProperty(index, "letterSpacing", 2); rowsModel.setProperty(index, "showLetterSpacing", true); }
                                     else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                     currentIndex = 0;
                                 }
                             }
@@ -615,7 +619,7 @@ KCM.SimpleKCM {
                                 onTextEdited: {
                                     if (configPage.isLoaded) {
                                         rowsModel.setProperty(index, "timeZone", text);
-                                        configPage.saveRowsToJson();
+                                        formLayout.saveRowsToJson();
                                     }
                                 }
                             }
@@ -624,7 +628,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "timeZone", "");
                                     rowsModel.setProperty(index, "showTimeZone", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -641,7 +645,7 @@ KCM.SimpleKCM {
                                 onTextEdited: {
                                     if (configPage.isLoaded) {
                                         rowsModel.setProperty(index, "locale", text);
-                                        configPage.saveRowsToJson();
+                                        formLayout.saveRowsToJson();
                                     }
                                 }
                             }
@@ -650,7 +654,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "locale", "");
                                     rowsModel.setProperty(index, "showLocale", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -667,7 +671,7 @@ KCM.SimpleKCM {
                                 onTextEdited: {
                                     if (configPage.isLoaded) {
                                         rowsModel.setProperty(index, "clickCommand", text);
-                                        configPage.saveRowsToJson();
+                                        formLayout.saveRowsToJson();
                                     }
                                 }
                             }
@@ -676,7 +680,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "clickCommand", "");
                                     rowsModel.setProperty(index, "showClickCommand", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -708,7 +712,7 @@ KCM.SimpleKCM {
                                 onActivated: function(idx) {
                                     var selected = (idx <= 0) ? "" : sharedFontModel.get(idx).fontName;
                                     rowsModel.setProperty(index, "fontFamily", selected);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -716,7 +720,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "fontFamily", "");
                                     rowsModel.setProperty(index, "showFontFamily", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -751,7 +755,7 @@ KCM.SimpleKCM {
                                 onActivated: function(idx) {
                                     var selectedWeight = weightCombo.model[idx].value;
                                     rowsModel.setProperty(index, "weight", selectedWeight);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -759,7 +763,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "weight", "400");
                                     rowsModel.setProperty(index, "showWeight", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -783,7 +787,7 @@ KCM.SimpleKCM {
                                 onActivated: function(idx) {
                                     var selectedAlign = alignCombo.model[idx];
                                     rowsModel.setProperty(index, "align", selectedAlign);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -791,7 +795,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "align", "center");
                                     rowsModel.setProperty(index, "showAlign", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -808,7 +812,7 @@ KCM.SimpleKCM {
                                 value: Math.round((model.opacity !== undefined ? model.opacity : 1.0) * 100)
                                 onValueModified: {
                                     rowsModel.setProperty(index, "opacity", value / 100.0);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -816,7 +820,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "opacity", 1.0);
                                     rowsModel.setProperty(index, "showOpacity", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -836,7 +840,7 @@ KCM.SimpleKCM {
                                 onValueModified: {
                                     rowsModel.setProperty(index, "offsetWidth", value);
                                     rowsModel.setProperty(index, "offsetX", value);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
 
@@ -849,7 +853,7 @@ KCM.SimpleKCM {
                                 onValueModified: {
                                     rowsModel.setProperty(index, "offsetHeight", value);
                                     rowsModel.setProperty(index, "topMargin", value);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
 
@@ -861,7 +865,7 @@ KCM.SimpleKCM {
                                     rowsModel.setProperty(index, "offsetHeight", 0);
                                     rowsModel.setProperty(index, "topMargin", 0);
                                     rowsModel.setProperty(index, "showOffsets", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -878,7 +882,7 @@ KCM.SimpleKCM {
                                 value: model.letterSpacing !== undefined ? model.letterSpacing : 0
                                 onValueModified: {
                                     rowsModel.setProperty(index, "letterSpacing", value);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                             Button {
@@ -886,7 +890,7 @@ KCM.SimpleKCM {
                                 onClicked: {
                                     rowsModel.setProperty(index, "letterSpacing", 0);
                                     rowsModel.setProperty(index, "showLetterSpacing", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -922,7 +926,7 @@ KCM.SimpleKCM {
                                 onActivated: function(idx) {
                                     var selectedEffect = effectCombo.model[idx].value;
                                     rowsModel.setProperty(index, "effect", selectedEffect);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
 
@@ -951,7 +955,7 @@ KCM.SimpleKCM {
                                         configPage.openColorPicker(model.effectColor || "#000000", function(hex) {
                                             if (configPage.isLoaded) {
                                                 rowsModel.setProperty(index, "effectColor", hex);
-                                                configPage.saveRowsToJson();
+                                                formLayout.saveRowsToJson();
                                             }
                                         });
                                     }
@@ -964,7 +968,7 @@ KCM.SimpleKCM {
                                 onTextEdited: {
                                     if (configPage.isLoaded) {
                                         rowsModel.setProperty(index, "effectColor", text);
-                                        configPage.saveRowsToJson();
+                                        formLayout.saveRowsToJson();
                                     }
                                 }
                             }
@@ -977,7 +981,7 @@ KCM.SimpleKCM {
                                 value: model.effectSize !== undefined ? model.effectSize : 2
                                 onValueModified: {
                                     rowsModel.setProperty(index, "effectSize", value);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
 
@@ -988,7 +992,7 @@ KCM.SimpleKCM {
                                     rowsModel.setProperty(index, "effectColor", "");
                                     rowsModel.setProperty(index, "effectSize", 2);
                                     rowsModel.setProperty(index, "showEffect", false);
-                                    configPage.saveRowsToJson();
+                                    formLayout.saveRowsToJson();
                                 }
                             }
                         }
@@ -1030,7 +1034,7 @@ KCM.SimpleKCM {
                         "showLetterSpacing": false,
                         "showEffect": false
                     });
-                    configPage.saveRowsToJson();
+                    formLayout.saveRowsToJson();
                 }
             }
         }
