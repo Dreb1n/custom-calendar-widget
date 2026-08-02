@@ -77,6 +77,11 @@ KCM.SimpleKCM {
         }
     }
 
+    property string savedBaselineRowsJson: ""
+    property string savedBaselineFontFamily: "Sans Serif"
+    property int savedBaselineBgType: 2
+    property string savedBaselineBgColor: "#1e293b"
+
     function getPlasmoidConfig() {
         try {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) return plasmoid.configuration;
@@ -85,6 +90,34 @@ KCM.SimpleKCM {
             if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.configuration) return configPage.parent.plasmoid.configuration;
         } catch(e) {}
         return null;
+    }
+
+    function getNeedsSaveState() {
+        try {
+            if (configPage.needsSave) return true;
+            if (configPage.unrepresentedNeedsSave) return true;
+            if (typeof kcm !== "undefined" && kcm && (kcm.needsSave || kcm.unrepresentedNeedsSave)) return true;
+        } catch(e) {}
+        return false;
+    }
+
+    function captureBaseline() {
+        savedBaselineRowsJson = cfg_rowsJson || "";
+        savedBaselineFontFamily = fontCombo && fontCombo.selectedFont ? fontCombo.selectedFont : "Sans Serif";
+        savedBaselineBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
+        savedBaselineBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
+    }
+
+    function rollbackToBaseline() {
+        try {
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                pConfig.rowsJson = savedBaselineRowsJson;
+                pConfig.fontFamily = savedBaselineFontFamily;
+                pConfig.bgType = savedBaselineBgType;
+                pConfig.bgColor = savedBaselineBgColor;
+            }
+        } catch(e) {}
     }
 
     function pushLivePreview() {
@@ -102,10 +135,16 @@ KCM.SimpleKCM {
 
     Component.onCompleted: {
         loadRowsFromJson();
+        captureBaseline();
     }
 
     Component.onDestruction: {
-        pushLivePreview();
+        if (getNeedsSaveState()) {
+            rollbackToBaseline();
+        } else {
+            captureBaseline();
+            rollbackToBaseline();
+        }
     }
 
 
@@ -298,10 +337,16 @@ KCM.SimpleKCM {
     function save() {
         cleanStockDefaults();
         saveRowsToJson();
+        captureBaseline();
         pushLivePreview();
     }
 
     function load() {
+        if (getNeedsSaveState()) {
+            rollbackToBaseline();
+        } else {
+            captureBaseline();
+        }
         loadRowsFromJson();
     }
 
