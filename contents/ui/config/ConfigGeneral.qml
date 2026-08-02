@@ -174,9 +174,39 @@ KCM.SimpleKCM {
             if (!item.locale) {
                 item.locale = "";
             }
+
+            item.showTimeZone = item.timeZone !== "";
+            item.showLocale = item.locale !== "";
+            item.showClickCommand = item.clickCommand !== "";
+            item.showFontFamily = item.fontFamily !== "";
+            item.showWeight = String(item.weight) !== "400";
+            item.showAlign = item.align !== undefined && item.align !== "center";
+            item.showOpacity = item.opacity !== 1.0;
+            item.showTopMargin = item.topMargin !== 0;
+            item.showOffsetX = item.offsetX !== 0;
+            item.showLetterSpacing = item.letterSpacing !== 0;
+            item.showEffect = item.effect !== "none";
+
             rowsModel.append(item);
         }
         isLoaded = true;
+    }
+
+    function cleanStockDefaults() {
+        for (var i = 0; i < rowsModel.count; i++) {
+            var item = rowsModel.get(i);
+            if (item.topMargin === 0) rowsModel.setProperty(i, "showTopMargin", false);
+            if (item.offsetX === 0) rowsModel.setProperty(i, "showOffsetX", false);
+            if (item.letterSpacing === 0) rowsModel.setProperty(i, "showLetterSpacing", false);
+            if (item.opacity === 1.0) rowsModel.setProperty(i, "showOpacity", false);
+            if (String(item.weight) === "400") rowsModel.setProperty(i, "showWeight", false);
+            if (item.align === "center") rowsModel.setProperty(i, "showAlign", false);
+            if (!item.fontFamily || item.fontFamily === "") rowsModel.setProperty(i, "showFontFamily", false);
+            if (!item.timeZone || item.timeZone === "") rowsModel.setProperty(i, "showTimeZone", false);
+            if (!item.locale || item.locale === "") rowsModel.setProperty(i, "showLocale", false);
+            if (!item.clickCommand || item.clickCommand === "") rowsModel.setProperty(i, "showClickCommand", false);
+            if (!item.effect || item.effect === "none") rowsModel.setProperty(i, "showEffect", false);
+        }
     }
 
     function saveRowsToJson() {
@@ -186,22 +216,22 @@ KCM.SimpleKCM {
             var item = rowsModel.get(i);
             arr.push({
                 "format": item.format,
-                "fontFamily": item.fontFamily || "",
-                "align": item.align || "center",
+                "fontFamily": item.showFontFamily ? (item.fontFamily || "") : "",
+                "align": item.showAlign ? (item.align || "center") : "center",
                 "fontSize": item.fontSize || 24,
                 "color": item.color || "#ffffff",
-                "effectColor": item.effectColor || "",
-                "weight": item.weight || "400",
-                "effect": item.effect || "none",
-                "opacity": item.opacity !== undefined ? item.opacity : 1.0,
-                "topMargin": item.topMargin !== undefined ? item.topMargin : 0,
-                "offsetX": item.offsetX !== undefined ? item.offsetX : 0,
-                "letterSpacing": item.letterSpacing !== undefined ? item.letterSpacing : 0,
-                "effectSize": item.effectSize !== undefined ? item.effectSize : 2,
-                "timeZone": item.timeZone || "",
-                "locale": item.locale || "",
-                "clickCommand": item.clickCommand || "",
-                "glow": item.effect === "glow"
+                "effectColor": item.showEffect ? (item.effectColor || "") : "",
+                "weight": item.showWeight ? (item.weight || "400") : "400",
+                "effect": item.showEffect ? (item.effect || "none") : "none",
+                "opacity": item.showOpacity && item.opacity !== undefined ? item.opacity : 1.0,
+                "topMargin": item.showTopMargin && item.topMargin !== undefined ? item.topMargin : 0,
+                "offsetX": item.showOffsetX && item.offsetX !== undefined ? item.offsetX : 0,
+                "letterSpacing": item.showLetterSpacing && item.letterSpacing !== undefined ? item.letterSpacing : 0,
+                "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
+                "timeZone": item.showTimeZone ? (item.timeZone || "") : "",
+                "locale": item.showLocale ? (item.locale || "") : "",
+                "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
+                "glow": item.showEffect && item.effect === "glow"
             });
         }
         var jsonStr = JSON.stringify(arr);
@@ -216,6 +246,7 @@ KCM.SimpleKCM {
     }
 
     function save() {
+        cleanStockDefaults();
         saveRowsToJson();
     }
 
@@ -445,17 +476,17 @@ KCM.SimpleKCM {
                                 onActivated: function(idx) {
                                     if (idx <= 0) return;
                                     var val = addOptionCombo.model[idx].value;
-                                    if (val === "timeZone") rowsModel.setProperty(index, "timeZone", "UTC");
-                                    else if (val === "locale") rowsModel.setProperty(index, "locale", "ja_JP");
-                                    else if (val === "clickCommand") rowsModel.setProperty(index, "clickCommand", "kcalc");
-                                    else if (val === "fontFamily") rowsModel.setProperty(index, "fontFamily", sharedFontModel.count > 1 ? sharedFontModel.get(1).fontName : "Sans Serif");
-                                    else if (val === "weight") rowsModel.setProperty(index, "weight", "700");
-                                    else if (val === "align") rowsModel.setProperty(index, "align", "left");
-                                    else if (val === "opacity") rowsModel.setProperty(index, "opacity", 0.8);
-                                    else if (val === "topMargin") rowsModel.setProperty(index, "topMargin", -10);
-                                    else if (val === "offsetX") rowsModel.setProperty(index, "offsetX", 10);
-                                    else if (val === "letterSpacing") rowsModel.setProperty(index, "letterSpacing", 2);
-                                    else if (val === "effect") rowsModel.setProperty(index, "effect", "glow");
+                                    if (val === "timeZone") { rowsModel.setProperty(index, "timeZone", "UTC"); rowsModel.setProperty(index, "showTimeZone", true); }
+                                    else if (val === "locale") { rowsModel.setProperty(index, "locale", "ja_JP"); rowsModel.setProperty(index, "showLocale", true); }
+                                    else if (val === "clickCommand") { rowsModel.setProperty(index, "clickCommand", "kcalc"); rowsModel.setProperty(index, "showClickCommand", true); }
+                                    else if (val === "fontFamily") { rowsModel.setProperty(index, "fontFamily", sharedFontModel.count > 1 ? sharedFontModel.get(1).fontName : "Sans Serif"); rowsModel.setProperty(index, "showFontFamily", true); }
+                                    else if (val === "weight") { rowsModel.setProperty(index, "weight", "700"); rowsModel.setProperty(index, "showWeight", true); }
+                                    else if (val === "align") { rowsModel.setProperty(index, "align", "left"); rowsModel.setProperty(index, "showAlign", true); }
+                                    else if (val === "opacity") { rowsModel.setProperty(index, "opacity", 0.8); rowsModel.setProperty(index, "showOpacity", true); }
+                                    else if (val === "topMargin") { rowsModel.setProperty(index, "topMargin", -10); rowsModel.setProperty(index, "showTopMargin", true); }
+                                    else if (val === "offsetX") { rowsModel.setProperty(index, "offsetX", 10); rowsModel.setProperty(index, "showOffsetX", true); }
+                                    else if (val === "letterSpacing") { rowsModel.setProperty(index, "letterSpacing", 2); rowsModel.setProperty(index, "showLetterSpacing", true); }
+                                    else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
                                     saveRowsToJson();
                                     currentIndex = 0;
                                 }
@@ -467,7 +498,7 @@ KCM.SimpleKCM {
                         // 1. Timezone
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.timeZone !== undefined && model.timeZone !== ""
+                            visible: model.showTimeZone === true
                             Label { text: i18n("Timezone:") }
                             TextField {
                                 Layout.fillWidth: true
@@ -484,6 +515,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "timeZone", "");
+                                    rowsModel.setProperty(index, "showTimeZone", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -492,7 +524,7 @@ KCM.SimpleKCM {
                         // 2. Locale
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.locale !== undefined && model.locale !== ""
+                            visible: model.showLocale === true
                             Label { text: i18n("Locale:") }
                             TextField {
                                 Layout.fillWidth: true
@@ -509,6 +541,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "locale", "");
+                                    rowsModel.setProperty(index, "showLocale", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -517,7 +550,7 @@ KCM.SimpleKCM {
                         // 3. Click Command
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.clickCommand !== undefined && model.clickCommand !== ""
+                            visible: model.showClickCommand === true
                             Label { text: i18n("Click Command:") }
                             TextField {
                                 Layout.fillWidth: true
@@ -534,6 +567,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "clickCommand", "");
+                                    rowsModel.setProperty(index, "showClickCommand", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -542,7 +576,7 @@ KCM.SimpleKCM {
                         // 4. Custom Font Family
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.fontFamily !== undefined && model.fontFamily !== ""
+                            visible: model.showFontFamily === true
                             Label { text: i18n("Font Family:") }
                             ComboBox {
                                 id: rowFontCombo
@@ -573,6 +607,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "fontFamily", "");
+                                    rowsModel.setProperty(index, "showFontFamily", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -581,7 +616,7 @@ KCM.SimpleKCM {
                         // 5. Font Weight
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.weight !== undefined && model.weight !== "400"
+                            visible: model.showWeight === true
                             Label { text: i18n("Font Weight:") }
                             ComboBox {
                                 id: weightCombo
@@ -615,6 +650,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "weight", "400");
+                                    rowsModel.setProperty(index, "showWeight", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -623,7 +659,7 @@ KCM.SimpleKCM {
                         // 6. Alignment
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.align !== undefined && model.align !== "center"
+                            visible: model.showAlign === true
                             Label { text: i18n("Alignment:") }
                             ComboBox {
                                 id: alignCombo
@@ -646,6 +682,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "align", "center");
+                                    rowsModel.setProperty(index, "showAlign", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -654,7 +691,7 @@ KCM.SimpleKCM {
                         // 7. Opacity
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.opacity !== undefined && model.opacity !== 1.0
+                            visible: model.showOpacity === true
                             Label { text: i18n("Opacity (%):") }
                             SpinBox {
                                 from: 10
@@ -670,6 +707,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "opacity", 1.0);
+                                    rowsModel.setProperty(index, "showOpacity", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -678,7 +716,7 @@ KCM.SimpleKCM {
                         // 8. Top Margin
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.topMargin !== undefined && model.topMargin !== 0
+                            visible: model.showTopMargin === true
                             Label { text: i18n("Top Margin (px):") }
                             SpinBox {
                                 from: -1000
@@ -694,6 +732,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "topMargin", 0);
+                                    rowsModel.setProperty(index, "showTopMargin", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -702,7 +741,7 @@ KCM.SimpleKCM {
                         // 9. Left Offset
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.offsetX !== undefined && model.offsetX !== 0
+                            visible: model.showOffsetX === true
                             Label { text: i18n("Left Offset (px):") }
                             SpinBox {
                                 from: -1000
@@ -718,6 +757,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "offsetX", 0);
+                                    rowsModel.setProperty(index, "showOffsetX", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -726,7 +766,7 @@ KCM.SimpleKCM {
                         // 10. Letter Spacing
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.letterSpacing !== undefined && model.letterSpacing !== 0
+                            visible: model.showLetterSpacing === true
                             Label { text: i18n("Letter Spacing (px):") }
                             SpinBox {
                                 from: -1000
@@ -742,6 +782,7 @@ KCM.SimpleKCM {
                                 text: "✕"
                                 onClicked: {
                                     rowsModel.setProperty(index, "letterSpacing", 0);
+                                    rowsModel.setProperty(index, "showLetterSpacing", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -750,7 +791,7 @@ KCM.SimpleKCM {
                         // 11. Text Effect
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.effect !== undefined && model.effect !== "none"
+                            visible: model.showEffect === true
                             spacing: 8
 
                             Label { text: i18n("Effect:") }
@@ -843,6 +884,7 @@ KCM.SimpleKCM {
                                     rowsModel.setProperty(index, "effect", "none");
                                     rowsModel.setProperty(index, "effectColor", "");
                                     rowsModel.setProperty(index, "effectSize", 2);
+                                    rowsModel.setProperty(index, "showEffect", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -865,7 +907,24 @@ KCM.SimpleKCM {
                         "weight": "400",
                         "effect": "none",
                         "opacity": 1.0,
-                        "timeZone": ""
+                        "topMargin": 0,
+                        "offsetX": 0,
+                        "letterSpacing": 0,
+                        "effectSize": 2,
+                        "timeZone": "",
+                        "locale": "",
+                        "clickCommand": "",
+                        "showTimeZone": false,
+                        "showLocale": false,
+                        "showClickCommand": false,
+                        "showFontFamily": false,
+                        "showWeight": false,
+                        "showAlign": false,
+                        "showOpacity": false,
+                        "showTopMargin": false,
+                        "showOffsetX": false,
+                        "showLetterSpacing": false,
+                        "showEffect": false
                     });
                     saveRowsToJson();
                 }
