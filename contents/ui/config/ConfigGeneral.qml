@@ -95,9 +95,9 @@ KCM.SimpleKCM {
 
     function captureBaseline() {
         savedBaselineRowsJson = cfg_rowsJson || "";
-        savedBaselineFontFamily = fontCombo && fontCombo.selectedFont ? fontCombo.selectedFont : "Sans Serif";
-        savedBaselineBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
-        savedBaselineBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
+        savedBaselineFontFamily = cfg_fontFamily || "Sans Serif";
+        savedBaselineBgType = cfg_bgType !== undefined ? cfg_bgType : 2;
+        savedBaselineBgColor = cfg_bgColor || "#1e293b";
     }
 
     function rollbackToBaseline() {
@@ -118,9 +118,9 @@ KCM.SimpleKCM {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.rowsJson = cfg_rowsJson;
-                if (fontCombo && fontCombo.selectedFont) pConfig.fontFamily = fontCombo.selectedFont;
-                if (bgTypeCombo) pConfig.bgType = bgTypeCombo.currentIndex;
-                if (bgColorInput) pConfig.bgColor = bgColorInput.text;
+                pConfig.fontFamily = cfg_fontFamily;
+                pConfig.bgType = cfg_bgType;
+                pConfig.bgColor = cfg_bgColor;
             }
         } catch(e) {}
     }
