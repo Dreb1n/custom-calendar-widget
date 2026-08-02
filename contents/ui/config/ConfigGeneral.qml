@@ -288,6 +288,7 @@ KCM.SimpleKCM {
 
     function markChanged() {
         if (!isLoaded) return;
+        isApplyingOrSaved = false;
         try { configPage.needsSave = true; } catch(e) {}
         try { configPage.unrepresentedNeedsSave = true; } catch(e) {}
         try {
@@ -336,7 +337,6 @@ KCM.SimpleKCM {
     }
 
     function save() {
-        isApplyingOrSaved = true;
         cleanStockDefaults();
         saveRowsToJson();
 
@@ -355,7 +355,7 @@ KCM.SimpleKCM {
                 pConfig.bgColor = savedBgColor;
             }
         } catch(e) {}
-        isApplyingOrSaved = false;
+        isApplyingOrSaved = true;
     }
 
     function load() {
