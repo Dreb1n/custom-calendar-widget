@@ -209,6 +209,12 @@ KCM.SimpleKCM {
         }
     }
 
+    function markChanged() {
+        if (!isLoaded) return;
+        try { configPage.needsSave = true; } catch(e) {}
+        try { configPage.unrepresentedNeedsSave = true; } catch(e) {}
+    }
+
     function saveRowsToJson() {
         if (!isLoaded) return;
         var arr = [];
@@ -237,17 +243,19 @@ KCM.SimpleKCM {
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
         rowsJsonHidden.text = jsonStr;
-        // NOTE FOR DEVELOPERS:
-        // Plasma 6 KCMUtils auto-save tracking only listens for native user input signals.
-        // Calling .textEdited() manually forces KCMUtils to recognize programmatically updated
-        // rowsJson and enables ("lights up") the Plasma Apply button instantly.
         rowsJsonHidden.textEdited();
+        markChanged();
         isSaving = false;
     }
 
     function save() {
         cleanStockDefaults();
         saveRowsToJson();
+        try {
+            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
+                plasmoid.configuration.rowsJson = rowsJsonHidden.text;
+            }
+        } catch(e) {}
     }
 
     function load() {
