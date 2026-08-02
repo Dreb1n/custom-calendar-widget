@@ -129,10 +129,10 @@ PlasmoidItem {
                         Layout.fillWidth: true
 
                         z: index
-                        Layout.topMargin: rowContainer.rowItem.topMargin !== undefined ? rowContainer.rowItem.topMargin : 0
+                        Layout.topMargin: rowContainer.rowItem.offsetHeight !== undefined ? rowContainer.rowItem.offsetHeight : (rowContainer.rowItem.topMargin !== undefined ? rowContainer.rowItem.topMargin : 0)
 
                         transform: Translate {
-                            x: rowContainer.rowItem.offsetX !== undefined ? rowContainer.rowItem.offsetX : 0
+                            x: rowContainer.rowItem.offsetWidth !== undefined ? rowContainer.rowItem.offsetWidth : (rowContainer.rowItem.offsetX !== undefined ? rowContainer.rowItem.offsetX : 0)
                         }
 
                         property var rowItem: modelData

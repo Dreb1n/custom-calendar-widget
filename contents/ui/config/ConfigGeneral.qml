@@ -203,17 +203,18 @@ KCM.SimpleKCM {
             if (!item.fontFamily) {
                 item.fontFamily = "";
             }
-            if (item.topMargin === undefined) {
-                item.topMargin = 0;
-            }
+            var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX !== undefined ? item.offsetX : 0);
+            var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin !== undefined ? item.topMargin : 0);
+            item.offsetWidth = offX;
+            item.offsetX = offX;
+            item.offsetHeight = offY;
+            item.topMargin = offY;
+
             if (item.letterSpacing === undefined) {
                 item.letterSpacing = 0;
             }
             if (item.effectSize === undefined) {
                 item.effectSize = 2;
-            }
-            if (item.offsetX === undefined) {
-                item.offsetX = 0;
             }
             if (!item.clickCommand) {
                 item.clickCommand = "";
@@ -229,8 +230,7 @@ KCM.SimpleKCM {
             item.showWeight = String(item.weight) !== "400";
             item.showAlign = item.align !== undefined && item.align !== "center";
             item.showOpacity = item.opacity !== 1.0;
-            item.showTopMargin = item.topMargin !== 0;
-            item.showOffsetX = item.offsetX !== 0;
+            item.showOffsets = (offX !== 0 || offY !== 0);
             item.showLetterSpacing = item.letterSpacing !== 0;
             item.showEffect = item.effect !== "none";
 
@@ -242,8 +242,9 @@ KCM.SimpleKCM {
     function cleanStockDefaults() {
         for (var i = 0; i < rowsModel.count; i++) {
             var item = rowsModel.get(i);
-            if (item.topMargin === 0) rowsModel.setProperty(i, "showTopMargin", false);
-            if (item.offsetX === 0) rowsModel.setProperty(i, "showOffsetX", false);
+            var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX || 0);
+            var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin || 0);
+            if (offX === 0 && offY === 0) rowsModel.setProperty(i, "showOffsets", false);
             if (item.letterSpacing === 0) rowsModel.setProperty(i, "showLetterSpacing", false);
             if (item.opacity === 1.0) rowsModel.setProperty(i, "showOpacity", false);
             if (String(item.weight) === "400") rowsModel.setProperty(i, "showWeight", false);
@@ -267,6 +268,8 @@ KCM.SimpleKCM {
         var arr = [];
         for (var i = 0; i < rowsModel.count; i++) {
             var item = rowsModel.get(i);
+            var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX !== undefined ? item.offsetX : 0);
+            var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin !== undefined ? item.topMargin : 0);
             arr.push({
                 "format": item.format,
                 "fontFamily": item.showFontFamily ? (item.fontFamily || "") : "",
@@ -277,8 +280,10 @@ KCM.SimpleKCM {
                 "weight": item.showWeight ? (item.weight || "400") : "400",
                 "effect": item.showEffect ? (item.effect || "none") : "none",
                 "opacity": item.showOpacity && item.opacity !== undefined ? item.opacity : 1.0,
-                "topMargin": item.showTopMargin && item.topMargin !== undefined ? item.topMargin : 0,
-                "offsetX": item.showOffsetX && item.offsetX !== undefined ? item.offsetX : 0,
+                "offsetWidth": item.showOffsets ? offX : 0,
+                "offsetHeight": item.showOffsets ? offY : 0,
+                "offsetX": item.showOffsets ? offX : 0,
+                "topMargin": item.showOffsets ? offY : 0,
                 "letterSpacing": item.showLetterSpacing && item.letterSpacing !== undefined ? item.letterSpacing : 0,
                 "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
                 "timeZone": item.showTimeZone ? (item.timeZone || "") : "",
@@ -544,8 +549,7 @@ KCM.SimpleKCM {
                                     { text: i18n("Font Weight"), value: "weight" },
                                     { text: i18n("Alignment"), value: "align" },
                                     { text: i18n("Opacity"), value: "opacity" },
-                                    { text: i18n("Top Margin"), value: "topMargin" },
-                                    { text: i18n("Left Offset"), value: "offsetX" },
+                                    { text: i18n("Offsets (X/Y)"), value: "offsets" },
                                     { text: i18n("Letter Spacing"), value: "letterSpacing" },
                                     { text: i18n("Text Effect"), value: "effect" }
                                 ]
@@ -560,8 +564,13 @@ KCM.SimpleKCM {
                                     else if (val === "weight") { rowsModel.setProperty(index, "weight", "700"); rowsModel.setProperty(index, "showWeight", true); }
                                     else if (val === "align") { rowsModel.setProperty(index, "align", "left"); rowsModel.setProperty(index, "showAlign", true); }
                                     else if (val === "opacity") { rowsModel.setProperty(index, "opacity", 0.8); rowsModel.setProperty(index, "showOpacity", true); }
-                                    else if (val === "topMargin") { rowsModel.setProperty(index, "topMargin", -10); rowsModel.setProperty(index, "showTopMargin", true); }
-                                    else if (val === "offsetX") { rowsModel.setProperty(index, "offsetX", 10); rowsModel.setProperty(index, "showOffsetX", true); }
+                                    else if (val === "offsets") {
+                                        rowsModel.setProperty(index, "offsetWidth", 10);
+                                        rowsModel.setProperty(index, "offsetX", 10);
+                                        rowsModel.setProperty(index, "offsetHeight", -10);
+                                        rowsModel.setProperty(index, "topMargin", -10);
+                                        rowsModel.setProperty(index, "showOffsets", true);
+                                    }
                                     else if (val === "letterSpacing") { rowsModel.setProperty(index, "letterSpacing", 2); rowsModel.setProperty(index, "showLetterSpacing", true); }
                                     else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
                                     saveRowsToJson();
@@ -790,51 +799,46 @@ KCM.SimpleKCM {
                             }
                         }
 
-                        // 8. Top Margin
+                        // 8. Offsets (Width X / Height Y)
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.showTopMargin === true
-                            Label { text: i18n("Top Margin (px):") }
-                            SpinBox {
-                                from: -1000
-                                to: 1000
-                                stepSize: 2
-                                value: model.topMargin !== undefined ? model.topMargin : 0
-                                onValueModified: {
-                                    rowsModel.setProperty(index, "topMargin", value);
-                                    saveRowsToJson();
-                                }
-                            }
-                            Button {
-                                text: "✕"
-                                onClicked: {
-                                    rowsModel.setProperty(index, "topMargin", 0);
-                                    rowsModel.setProperty(index, "showTopMargin", false);
-                                    saveRowsToJson();
-                                }
-                            }
-                        }
+                            visible: model.showOffsets === true
+                            spacing: 8
 
-                        // 9. Left Offset
-                        RowLayout {
-                            Layout.fillWidth: true
-                            visible: model.showOffsetX === true
-                            Label { text: i18n("Left Offset (px):") }
+                            Label { text: i18n("Offset Width (X):") }
                             SpinBox {
                                 from: -1000
                                 to: 1000
                                 stepSize: 2
-                                value: model.offsetX !== undefined ? model.offsetX : 0
+                                value: model.offsetWidth !== undefined ? model.offsetWidth : (model.offsetX !== undefined ? model.offsetX : 0)
                                 onValueModified: {
+                                    rowsModel.setProperty(index, "offsetWidth", value);
                                     rowsModel.setProperty(index, "offsetX", value);
                                     saveRowsToJson();
                                 }
                             }
+
+                            Label { text: i18n("Offset Height (Y):") }
+                            SpinBox {
+                                from: -1000
+                                to: 1000
+                                stepSize: 2
+                                value: model.offsetHeight !== undefined ? model.offsetHeight : (model.topMargin !== undefined ? model.topMargin : 0)
+                                onValueModified: {
+                                    rowsModel.setProperty(index, "offsetHeight", value);
+                                    rowsModel.setProperty(index, "topMargin", value);
+                                    saveRowsToJson();
+                                }
+                            }
+
                             Button {
                                 text: "✕"
                                 onClicked: {
+                                    rowsModel.setProperty(index, "offsetWidth", 0);
                                     rowsModel.setProperty(index, "offsetX", 0);
-                                    rowsModel.setProperty(index, "showOffsetX", false);
+                                    rowsModel.setProperty(index, "offsetHeight", 0);
+                                    rowsModel.setProperty(index, "topMargin", 0);
+                                    rowsModel.setProperty(index, "showOffsets", false);
                                     saveRowsToJson();
                                 }
                             }
@@ -986,6 +990,8 @@ KCM.SimpleKCM {
                         "opacity": 1.0,
                         "topMargin": 0,
                         "offsetX": 0,
+                        "offsetWidth": 0,
+                        "offsetHeight": 0,
                         "letterSpacing": 0,
                         "effectSize": 2,
                         "timeZone": "",
@@ -998,8 +1004,7 @@ KCM.SimpleKCM {
                         "showWeight": false,
                         "showAlign": false,
                         "showOpacity": false,
-                        "showTopMargin": false,
-                        "showOffsetX": false,
+                        "showOffsets": false,
                         "showLetterSpacing": false,
                         "showEffect": false
                     });
