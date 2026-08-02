@@ -77,6 +77,12 @@ KCM.SimpleKCM {
         }
     }
 
+    property string activeSnapshotRowsJson: ""
+    property string activeSnapshotFontFamily: ""
+    property int activeSnapshotBgType: 2
+    property string activeSnapshotBgColor: "#1e293b"
+    property bool isSavedState: true
+
     function getPlasmoidConfig() {
         try {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) return plasmoid.configuration;
@@ -85,6 +91,27 @@ KCM.SimpleKCM {
             if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.configuration) return configPage.parent.plasmoid.configuration;
         } catch(e) {}
         return null;
+    }
+
+    function updateActiveSnapshot() {
+        activeSnapshotRowsJson = cfg_rowsJson || "";
+        activeSnapshotFontFamily = fontCombo && fontCombo.selectedFont ? fontCombo.selectedFont : "Sans Serif";
+        activeSnapshotBgType = bgTypeCombo ? bgTypeCombo.currentIndex : 2;
+        activeSnapshotBgColor = bgColorInput ? bgColorInput.text : "#1e293b";
+        isSavedState = true;
+    }
+
+    function rollbackToActiveSnapshot() {
+        if (isSavedState) return;
+        try {
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                pConfig.rowsJson = activeSnapshotRowsJson;
+                pConfig.fontFamily = activeSnapshotFontFamily;
+                pConfig.bgType = activeSnapshotBgType;
+                pConfig.bgColor = activeSnapshotBgColor;
+            }
+        } catch(e) {}
     }
 
     function pushLivePreview() {
@@ -102,6 +129,11 @@ KCM.SimpleKCM {
 
     Component.onCompleted: {
         loadRowsFromJson();
+        updateActiveSnapshot();
+    }
+
+    Component.onDestruction: {
+        rollbackToActiveSnapshot();
     }
 
 
@@ -243,7 +275,7 @@ KCM.SimpleKCM {
 
     function markChanged() {
         if (!isLoaded) return;
-        isApplyingOrSaved = false;
+        isSavedState = false;
         try { configPage.needsSave = true; } catch(e) {}
         try { configPage.unrepresentedNeedsSave = true; } catch(e) {}
         try {
@@ -294,20 +326,22 @@ KCM.SimpleKCM {
     function save() {
         cleanStockDefaults();
         saveRowsToJson();
+        updateActiveSnapshot();
         try {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
-                pConfig.rowsJson = cfg_rowsJson;
-                if (fontCombo && fontCombo.selectedFont) pConfig.fontFamily = fontCombo.selectedFont;
-                if (bgTypeCombo) pConfig.bgType = bgTypeCombo.currentIndex;
-                if (bgColorInput) pConfig.bgColor = bgColorInput.text;
+                pConfig.rowsJson = activeSnapshotRowsJson;
+                pConfig.fontFamily = activeSnapshotFontFamily;
+                pConfig.bgType = activeSnapshotBgType;
+                pConfig.bgColor = activeSnapshotBgColor;
             }
         } catch(e) {}
     }
 
     function load() {
+        rollbackToActiveSnapshot();
         loadRowsFromJson();
-        pushLivePreview();
+        updateActiveSnapshot();
     }
 
     ListModel {
