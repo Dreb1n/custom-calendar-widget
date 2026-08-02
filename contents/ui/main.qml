@@ -55,12 +55,20 @@ PlasmoidItem {
         }
     }
 
+    // Transient live preview properties (active only while Config dialog is editing)
+    property string livePreviewRowsJson: ""
+    property string livePreviewFontFamily: ""
+    property int livePreviewBgType: -1
+    property string livePreviewBgColor: ""
+
+    onLivePreviewRowsJsonChanged: updateRowsData()
+
     // Parsed rows configuration model
     property var rowsData: []
 
     function updateRowsData() {
         try {
-            var jsonStr = plasmoid.configuration.rowsJson;
+            var jsonStr = (livePreviewRowsJson && livePreviewRowsJson.length > 0) ? livePreviewRowsJson : plasmoid.configuration.rowsJson;
             if (jsonStr && jsonStr.length > 0) {
                 rowsData = JSON.parse(jsonStr);
             } else {
@@ -100,16 +108,20 @@ PlasmoidItem {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
+            property int effectiveBgType: root.livePreviewBgType !== -1 ? root.livePreviewBgType : (plasmoid.configuration.bgType !== undefined ? plasmoid.configuration.bgType : 2)
+            property string effectiveBgColor: (root.livePreviewBgColor && root.livePreviewBgColor.length > 0) ? root.livePreviewBgColor : (plasmoid.configuration.bgColor || "#1e293b")
+            property string effectiveFontFamily: (root.livePreviewFontFamily && root.livePreviewFontFamily.length > 0) ? root.livePreviewFontFamily : (plasmoid.configuration.fontFamily || "Sans Serif")
+
             // Custom Background Box (Hidden completely when bgType is 2: Transparent)
             Rectangle {
                 id: bgRect
                 anchors.fill: parent
-                visible: plasmoid.configuration.bgType !== 2
+                visible: fullRepItem.effectiveBgType !== 2
                 radius: plasmoid.configuration.borderRadius !== undefined ? plasmoid.configuration.borderRadius : 16
-                color: plasmoid.configuration.bgColor || "#1e293b"
+                color: fullRepItem.effectiveBgColor
                 opacity: plasmoid.configuration.bgOpacity !== undefined ? plasmoid.configuration.bgOpacity : 0.8
-                border.color: plasmoid.configuration.bgType === 2 ? "transparent" : "#334155"
-                border.width: plasmoid.configuration.bgType === 2 ? 0 : 1
+                border.color: fullRepItem.effectiveBgType === 2 ? "transparent" : "#334155"
+                border.width: fullRepItem.effectiveBgType === 2 ? 0 : 1
             }
 
             // Rows Layout Column Centered in Widget
@@ -138,7 +150,7 @@ PlasmoidItem {
                         property var rowItem: modelData
                         property string formattedText: DateFormatter.format(root.currentDate, rowContainer.rowItem.format || "", rowContainer.rowItem.timeZone || "", rowContainer.rowItem.locale || "")
 
-                        property var fontFam: (rowContainer.rowItem.fontFamily && rowContainer.rowItem.fontFamily.length > 0) ? rowContainer.rowItem.fontFamily : (plasmoid.configuration.fontFamily || "Sans Serif")
+                        property var fontFam: (rowContainer.rowItem.fontFamily && rowContainer.rowItem.fontFamily.length > 0) ? rowContainer.rowItem.fontFamily : fullRepItem.effectiveFontFamily
                         property int fontW: {
                             var w = parseInt(rowContainer.rowItem.weight || 400);
                             if (w >= 900) return Font.Black;

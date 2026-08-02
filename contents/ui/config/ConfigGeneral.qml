@@ -87,6 +87,39 @@ KCM.SimpleKCM {
         return null;
     }
 
+    function getPlasmoidRoot() {
+        try {
+            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.rootItem) return plasmoid.rootItem;
+            if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.rootItem) return configPage.parent.plasmoid.rootItem;
+        } catch(e) {}
+        return null;
+    }
+
+    function pushLivePreview() {
+        if (!isLoaded) return;
+        try {
+            var r = getPlasmoidRoot();
+            if (r) {
+                r.livePreviewRowsJson = cfg_rowsJson;
+                r.livePreviewFontFamily = cfg_fontFamily;
+                r.livePreviewBgType = cfg_bgType;
+                r.livePreviewBgColor = cfg_bgColor;
+            }
+        } catch(e) {}
+    }
+
+    function clearLivePreview() {
+        try {
+            var r = getPlasmoidRoot();
+            if (r) {
+                r.livePreviewRowsJson = "";
+                r.livePreviewFontFamily = "";
+                r.livePreviewBgType = -1;
+                r.livePreviewBgColor = "";
+            }
+        } catch(e) {}
+    }
+
     function syncToPlasmoidConfig() {
         if (!isLoaded) return;
         try {
@@ -102,6 +135,11 @@ KCM.SimpleKCM {
 
     Component.onCompleted: {
         loadRowsFromJson();
+        pushLivePreview();
+    }
+
+    Component.onDestruction: {
+        clearLivePreview();
     }
 
 
@@ -286,6 +324,7 @@ KCM.SimpleKCM {
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
         rowsJsonHolder.text = jsonStr;
+        pushLivePreview();
         markChanged();
         isSaving = false;
     }
@@ -294,6 +333,7 @@ KCM.SimpleKCM {
         cleanStockDefaults();
         saveRowsToJson();
         syncToPlasmoidConfig();
+        clearLivePreview();
     }
 
     function load() {
