@@ -77,12 +77,6 @@ KCM.SimpleKCM {
         }
     }
 
-    property string savedBaselineRowsJson: ""
-    property string savedBaselineFontFamily: "Sans Serif"
-    property int savedBaselineBgType: 2
-    property string savedBaselineBgColor: "#1e293b"
-    property bool isSavedState: false
-
     function getPlasmoidConfig() {
         try {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) return plasmoid.configuration;
@@ -93,26 +87,7 @@ KCM.SimpleKCM {
         return null;
     }
 
-    function captureBaseline() {
-        savedBaselineRowsJson = cfg_rowsJson || "";
-        savedBaselineFontFamily = cfg_fontFamily || "Sans Serif";
-        savedBaselineBgType = cfg_bgType !== undefined ? cfg_bgType : 2;
-        savedBaselineBgColor = cfg_bgColor || "#1e293b";
-    }
-
-    function rollbackToBaseline() {
-        try {
-            var pConfig = getPlasmoidConfig();
-            if (pConfig) {
-                pConfig.rowsJson = savedBaselineRowsJson;
-                pConfig.fontFamily = savedBaselineFontFamily;
-                pConfig.bgType = savedBaselineBgType;
-                pConfig.bgColor = savedBaselineBgColor;
-            }
-        } catch(e) {}
-    }
-
-    function pushLivePreview() {
+    function syncToPlasmoidConfig() {
         if (!isLoaded) return;
         try {
             var pConfig = getPlasmoidConfig();
@@ -127,14 +102,6 @@ KCM.SimpleKCM {
 
     Component.onCompleted: {
         loadRowsFromJson();
-        captureBaseline();
-        isSavedState = false;
-    }
-
-    Component.onDestruction: {
-        if (!isSavedState) {
-            rollbackToBaseline();
-        }
     }
 
 
@@ -277,7 +244,6 @@ KCM.SimpleKCM {
 
     function markChanged() {
         if (!isLoaded) return;
-        isSavedState = false;
         try { configPage.needsSave = true; } catch(e) {}
         try { configPage.unrepresentedNeedsSave = true; } catch(e) {}
         try {
@@ -320,7 +286,6 @@ KCM.SimpleKCM {
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
         rowsJsonHolder.text = jsonStr;
-        pushLivePreview();
         markChanged();
         isSaving = false;
     }
@@ -328,17 +293,10 @@ KCM.SimpleKCM {
     function save() {
         cleanStockDefaults();
         saveRowsToJson();
-        captureBaseline();
-        isSavedState = true;
-        pushLivePreview();
+        syncToPlasmoidConfig();
     }
 
     function load() {
-        if (!isSavedState) {
-            rollbackToBaseline();
-        } else {
-            captureBaseline();
-        }
         loadRowsFromJson();
     }
 
