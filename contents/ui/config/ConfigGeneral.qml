@@ -71,8 +71,55 @@ KCM.SimpleKCM {
         }
     }
 
+    property string savedRowsJson: ""
+    property string savedFontFamily: ""
+    property int savedBgType: 2
+    property string savedBgColor: "#1e293b"
+    property bool hasSavedSnapshot: false
+    property bool isApplyingOrSaved: false
+
+    function captureSavedSnapshot() {
+        try {
+            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
+                savedRowsJson = plasmoid.configuration.rowsJson || "";
+                savedFontFamily = plasmoid.configuration.fontFamily || "Sans Serif";
+                savedBgType = plasmoid.configuration.bgType !== undefined ? plasmoid.configuration.bgType : 2;
+                savedBgColor = plasmoid.configuration.bgColor || "#1e293b";
+                hasSavedSnapshot = true;
+            }
+        } catch(e) {}
+    }
+
+    function pushLivePreview() {
+        if (!isLoaded || isSaving) return;
+        try {
+            if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
+                plasmoid.configuration.rowsJson = rowsJsonHidden.text;
+                if (fontCombo && fontCombo.selectedFont) plasmoid.configuration.fontFamily = fontCombo.selectedFont;
+                if (bgTypeCombo) plasmoid.configuration.bgType = bgTypeCombo.currentIndex;
+                if (bgColorInput) plasmoid.configuration.bgColor = bgColorInput.text;
+            }
+        } catch(e) {}
+    }
+
+    function cancel() {
+        if (hasSavedSnapshot && typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
+            plasmoid.configuration.rowsJson = savedRowsJson;
+            plasmoid.configuration.fontFamily = savedFontFamily;
+            plasmoid.configuration.bgType = savedBgType;
+            plasmoid.configuration.bgColor = savedBgColor;
+        }
+    }
+
     Component.onCompleted: {
+        captureSavedSnapshot();
         loadRowsFromJson();
+    }
+
+    Component.onDestruction: {
+        if (!isApplyingOrSaved && (configPage.needsSave || configPage.unrepresentedNeedsSave)) {
+            cancel();
+        }
     }
 
     function buildSharedFontModels() {
@@ -129,7 +176,7 @@ KCM.SimpleKCM {
                 rowsList = [
                     { "format": "dddd", "align": "center", "fontSize": 18, "color": "#ffffff", "effectColor": "", "weight": "400", "effect": "none", "opacity": 1.0, "timeZone": "" },
                     { "format": "dd mmm yyy", "align": "center", "fontSize": 28, "color": "#ffffff", "effectColor": "", "weight": "400", "effect": "none", "opacity": 1.0, "timeZone": "" },
-                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "effectColor": "", "weight": "600", "effect": "none", "opacity": 1.0, "timeZone": "" }
+                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "weight": "600", "effect": "none", "opacity": 1.0, "timeZone": "" }
                 ];
             }
         } catch(e) {
@@ -244,18 +291,28 @@ KCM.SimpleKCM {
         isSaving = true;
         rowsJsonHidden.text = jsonStr;
         rowsJsonHidden.textEdited();
+        pushLivePreview();
         markChanged();
         isSaving = false;
     }
 
     function save() {
+        isApplyingOrSaved = true;
         cleanStockDefaults();
         saveRowsToJson();
         try {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) {
                 plasmoid.configuration.rowsJson = rowsJsonHidden.text;
+                if (fontCombo && fontCombo.selectedFont) plasmoid.configuration.fontFamily = fontCombo.selectedFont;
+                if (bgTypeCombo) plasmoid.configuration.bgType = bgTypeCombo.currentIndex;
+                if (bgColorInput) plasmoid.configuration.bgColor = bgColorInput.text;
+                savedRowsJson = plasmoid.configuration.rowsJson;
+                savedFontFamily = plasmoid.configuration.fontFamily;
+                savedBgType = plasmoid.configuration.bgType;
+                savedBgColor = plasmoid.configuration.bgColor;
             }
         } catch(e) {}
+        isApplyingOrSaved = false;
     }
 
     function load() {
@@ -300,6 +357,8 @@ KCM.SimpleKCM {
             onActivated: function(index) {
                 if (index >= 0 && index < sharedFontOnlyModel.count) {
                     selectedFont = sharedFontOnlyModel.get(index).fontName;
+                    pushLivePreview();
+                    markChanged();
                 }
             }
         }
@@ -312,6 +371,10 @@ KCM.SimpleKCM {
                 i18n("Solid Color"),
                 i18n("Transparent (No Background)")
             ]
+            onActivated: function(index) {
+                pushLivePreview();
+                markChanged();
+            }
         }
 
         RowLayout {
@@ -333,6 +396,8 @@ KCM.SimpleKCM {
                         configPage.openColorPicker(bgColorInput.text, function(hex) {
                             bgColorInput.text = hex;
                             bgColorInput.textEdited();
+                            pushLivePreview();
+                            markChanged();
                         });
                     }
                 }
@@ -342,6 +407,10 @@ KCM.SimpleKCM {
                 id: bgColorInput
                 Layout.fillWidth: true
                 placeholderText: "#1e293b"
+                onTextEdited: {
+                    pushLivePreview();
+                    markChanged();
+                }
             }
         }
 
