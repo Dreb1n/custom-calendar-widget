@@ -138,7 +138,7 @@ KCM.SimpleKCM {
     }
 
     Component.onDestruction: {
-        if (!isApplyingOrSaved && (configPage.needsSave || configPage.unrepresentedNeedsSave)) {
+        if (!isApplyingOrSaved) {
             cancel();
         }
     }
@@ -348,6 +348,7 @@ KCM.SimpleKCM {
     }
 
     function load() {
+        cancel();
         loadRowsFromJson();
     }
 
