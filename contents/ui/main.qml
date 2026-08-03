@@ -27,55 +27,32 @@ PlasmoidItem {
         }
         function exec(cmd) {
             if (cmd && cmd.trim().length > 0) {
-                connectSource(cmd.trim());
+                var trimmed = cmd.trim();
+                disconnectSource(trimmed);
+                connectSource(trimmed);
             }
         }
     }
 
-    // Current Date/Time state
-    property date currentDate: new Date()
-
-    // Smart battery-saving check: only tick every second if seconds format specifier ('s' or 'X') is present
-    property bool hasSeconds: {
-        for (var i = 0; i < rowsData.length; i++) {
-            var fmt = rowsData[i].format || "";
-            if (/[sX]/i.test(fmt)) return true;
-        }
-        return false;
-    }
-
-    // Smart Timer
-    Timer {
-        id: timer
-        interval: root.hasSeconds ? 1000 : 10000
-        running: true
-        repeat: true
-        onTriggered: {
-            root.currentDate = new Date()
-        }
-    }
-
-    // Transient live preview properties (active only while Config dialog is editing)
-    property string livePreviewRowsJson: ""
-    property string livePreviewFontFamily: ""
-    property int livePreviewBgType: -1
-    property string livePreviewBgColor: ""
-
-    onLivePreviewRowsJsonChanged: updateRowsData()
+    // Static compiled format detection regexes
+    readonly property var regexSeconds: /[sX]/i
+    readonly property var regexMinutes: /[hHiMN]/i
 
     // Parsed rows configuration model
     property var rowsData: []
 
     function updateRowsData() {
         try {
-            var jsonStr = (livePreviewRowsJson && livePreviewRowsJson.length > 0) ? livePreviewRowsJson : plasmoid.configuration.rowsJson;
+            var isEd = plasmoid.configuration.isEditing;
+            var edRows = plasmoid.configuration.editingRowsJson;
+            var jsonStr = (isEd && edRows && edRows.length > 0) ? edRows : plasmoid.configuration.rowsJson;
             if (jsonStr && jsonStr.length > 0) {
                 rowsData = JSON.parse(jsonStr);
             } else {
                 rowsData = [
                     { "format": "dddd", "align": "center", "fontSize": 18, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
                     { "format": "dd mmm yyy", "align": "center", "fontSize": 28, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
-                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "effectColor": "", "weight": 600, "effect": "none", "opacity": 1.0, "timeZone": "" }
+                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "weight": 600, "effect": "none", "opacity": 1.0, "timeZone": "" }
                 ];
             }
         } catch (e) {
@@ -84,14 +61,18 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
+        try {
+            plasmoid.configuration.isEditing = false;
+            plasmoid.configuration.editingRowsJson = "";
+        } catch(e) {}
         updateRowsData();
     }
 
     Connections {
         target: plasmoid.configuration
-        function onRowsJsonChanged() {
-            root.updateRowsData();
-        }
+        function onRowsJsonChanged() { root.updateRowsData(); }
+        function onEditingRowsJsonChanged() { root.updateRowsData(); }
+        function onIsEditingChanged() { root.updateRowsData(); }
     }
 
     Component {
@@ -108,9 +89,9 @@ PlasmoidItem {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            property int effectiveBgType: root.livePreviewBgType !== -1 ? root.livePreviewBgType : (plasmoid.configuration.bgType !== undefined ? plasmoid.configuration.bgType : 2)
-            property string effectiveBgColor: (root.livePreviewBgColor && root.livePreviewBgColor.length > 0) ? root.livePreviewBgColor : (plasmoid.configuration.bgColor || "#1e293b")
-            property string effectiveFontFamily: (root.livePreviewFontFamily && root.livePreviewFontFamily.length > 0) ? root.livePreviewFontFamily : (plasmoid.configuration.fontFamily || "Sans Serif")
+            property int effectiveBgType: (plasmoid.configuration.isEditing && plasmoid.configuration.editingBgType !== -1) ? plasmoid.configuration.editingBgType : (plasmoid.configuration.bgType !== undefined ? plasmoid.configuration.bgType : 2)
+            property string effectiveBgColor: (plasmoid.configuration.isEditing && plasmoid.configuration.editingBgColor && plasmoid.configuration.editingBgColor.length > 0) ? plasmoid.configuration.editingBgColor : (plasmoid.configuration.bgColor || "#1e293b")
+            property string effectiveFontFamily: (plasmoid.configuration.isEditing && plasmoid.configuration.editingFontFamily && plasmoid.configuration.editingFontFamily.length > 0) ? plasmoid.configuration.editingFontFamily : (plasmoid.configuration.fontFamily || "Sans Serif")
 
             // Custom Background Box (Hidden completely when bgType is 2: Transparent)
             Rectangle {
@@ -148,7 +129,46 @@ PlasmoidItem {
                         }
 
                         property var rowItem: modelData
-                        property string formattedText: DateFormatter.format(root.currentDate, rowContainer.rowItem.format || "", rowContainer.rowItem.timeZone || "", rowContainer.rowItem.locale || "")
+                        property string formattedText: ""
+
+                        function calculateNextDelay(fmt, date) {
+                            if (!fmt) return 1000;
+                            var hasSeconds = root.regexSeconds.test(fmt);
+                            var hasMinutes = root.regexMinutes.test(fmt);
+                            var ms = date.getMilliseconds();
+                            var sec = date.getSeconds();
+
+                            if (hasSeconds) {
+                                return Math.max(20, 1000 - ms);
+                            } else if (hasMinutes) {
+                                return Math.max(100, (60 - sec) * 1000 - ms);
+                            } else {
+                                return Math.max(1000, (60 - sec) * 1000 - ms);
+                            }
+                        }
+
+                        function updateRowText() {
+                            var now = new Date();
+                            formattedText = DateFormatter.format(now, rowItem.format || "", rowItem.timeZone || "", rowItem.locale || "");
+                            rowTimer.interval = calculateNextDelay(rowItem.format || "", now);
+                        }
+
+                        Timer {
+                            id: rowTimer
+                            repeat: true
+                            running: true
+                            onTriggered: {
+                                rowContainer.updateRowText();
+                            }
+                        }
+
+                        Component.onCompleted: {
+                            rowContainer.updateRowText();
+                        }
+
+                        onRowItemChanged: {
+                            rowContainer.updateRowText();
+                        }
 
                         property var fontFam: (rowContainer.rowItem.fontFamily && rowContainer.rowItem.fontFamily.length > 0) ? rowContainer.rowItem.fontFamily : fullRepItem.effectiveFontFamily
                         property int fontW: {
@@ -200,53 +220,67 @@ PlasmoidItem {
                             color: rowContainer.rowItem.color || "#ffffff"
                         }
 
-                        // 1. Soft Neon Glow Shader Effect
-                        Glow {
+                        // Lazy-loaded Shader Effect (only created if an effect is active)
+                        Loader {
                             anchors.fill: mainText
-                            source: mainText
-                            visible: rowContainer.effType === "glow"
-                            radius: Math.max(2, rowContainer.effSize * 2)
-                            samples: Math.min(32, rowContainer.effSize * 3 + 1)
-                            color: rowContainer.effColor
-                            transparentBorder: true
+                            active: rowContainer.effType !== "none"
+                            sourceComponent: {
+                                var t = rowContainer.effType;
+                                if (t === "glow") return glowComp;
+                                if (t === "shadow") return softShadowComp;
+                                if (t === "normalShadow") return normalShadowComp;
+                                if (t === "stroke") return strokeComp;
+                                return null;
+                            }
                         }
 
-                        // 2. Soft Drop Shadow Shader Effect
-                        DropShadow {
-                            anchors.fill: mainText
-                            source: mainText
-                            visible: rowContainer.effType === "shadow"
-                            horizontalOffset: rowContainer.effSize
-                            verticalOffset: rowContainer.effSize
-                            radius: Math.max(2, rowContainer.effSize)
-                            samples: Math.min(32, rowContainer.effSize * 2 + 1)
-                            color: rowContainer.effColor
-                            transparentBorder: true
+                        Component {
+                            id: glowComp
+                            Glow {
+                                source: mainText
+                                radius: Math.max(2, rowContainer.effSize * 2)
+                                samples: Math.min(32, rowContainer.effSize * 3 + 1)
+                                color: rowContainer.effColor
+                                transparentBorder: true
+                            }
                         }
 
-                        // 3. Normal Shadow Shader Effect
-                        DropShadow {
-                            anchors.fill: mainText
-                            source: mainText
-                            visible: rowContainer.effType === "normalShadow"
-                            horizontalOffset: rowContainer.effSize
-                            verticalOffset: rowContainer.effSize
-                            radius: 1
-                            samples: 3
-                            color: rowContainer.effColor
-                            transparentBorder: true
+                        Component {
+                            id: softShadowComp
+                            DropShadow {
+                                source: mainText
+                                horizontalOffset: rowContainer.effSize
+                                verticalOffset: rowContainer.effSize
+                                radius: Math.max(2, rowContainer.effSize)
+                                samples: Math.min(32, rowContainer.effSize * 2 + 1)
+                                color: rowContainer.effColor
+                                transparentBorder: true
+                            }
                         }
 
-                        // 4. Outer Stroke Shader Effect
-                        Glow {
-                            anchors.fill: mainText
-                            source: mainText
-                            visible: rowContainer.effType === "stroke"
-                            radius: rowContainer.effSize
-                            samples: Math.min(32, rowContainer.effSize * 3 + 1)
-                            color: rowContainer.effColor
-                            spread: 0.8
-                            transparentBorder: true
+                        Component {
+                            id: normalShadowComp
+                            DropShadow {
+                                source: mainText
+                                horizontalOffset: rowContainer.effSize
+                                verticalOffset: rowContainer.effSize
+                                radius: 1
+                                samples: 3
+                                color: rowContainer.effColor
+                                transparentBorder: true
+                            }
+                        }
+
+                        Component {
+                            id: strokeComp
+                            Glow {
+                                source: mainText
+                                radius: rowContainer.effSize
+                                samples: Math.min(32, rowContainer.effSize * 3 + 1)
+                                color: rowContainer.effColor
+                                spread: 0.8
+                                transparentBorder: true
+                            }
                         }
                     }
                 }

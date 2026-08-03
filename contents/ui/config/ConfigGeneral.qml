@@ -95,27 +95,31 @@ KCM.SimpleKCM {
         return null;
     }
 
-    function pushLivePreview() {
+    function pushLiveEditingState(overrideRowsJson) {
         if (!isLoaded) return;
         try {
-            var r = getPlasmoidRoot();
-            if (r) {
-                r.livePreviewRowsJson = cfg_rowsJson;
-                r.livePreviewFontFamily = cfg_fontFamily;
-                r.livePreviewBgType = cfg_bgType;
-                r.livePreviewBgColor = cfg_bgColor;
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                pConfig.isEditing = true;
+                pConfig.editingRowsJson = (overrideRowsJson !== undefined) ? overrideRowsJson : cfg_rowsJson;
+                pConfig.editingFontFamily = cfg_fontFamily;
+                pConfig.editingBgType = cfg_bgType;
+                pConfig.editingBgColor = cfg_bgColor;
             }
-        } catch(e) {}
+        } catch(e) {
+            console.log("[CustomCalendar Config] Error in pushLiveEditingState:", e);
+        }
     }
 
-    function clearLivePreview() {
+    function clearEditingState() {
         try {
-            var r = getPlasmoidRoot();
-            if (r) {
-                r.livePreviewRowsJson = "";
-                r.livePreviewFontFamily = "";
-                r.livePreviewBgType = -1;
-                r.livePreviewBgColor = "";
+            var pConfig = getPlasmoidConfig();
+            if (pConfig) {
+                pConfig.isEditing = false;
+                pConfig.editingRowsJson = "";
+                pConfig.editingFontFamily = "";
+                pConfig.editingBgType = -1;
+                pConfig.editingBgColor = "";
             }
         } catch(e) {}
     }
@@ -135,11 +139,11 @@ KCM.SimpleKCM {
 
     Component.onCompleted: {
         loadRowsFromJson();
-        pushLivePreview();
+        pushLiveEditingState();
     }
 
     Component.onDestruction: {
-        clearLivePreview();
+        clearEditingState();
     }
 
 
@@ -259,7 +263,7 @@ KCM.SimpleKCM {
             rowsModel.append(item);
         }
         isLoaded = true;
-        pushLivePreview();
+        pushLiveEditingState();
     }
 
     function cleanStockDefaults() {
@@ -324,7 +328,7 @@ KCM.SimpleKCM {
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
         rowsJsonHolder.text = jsonStr;
-        pushLivePreview();
+        pushLiveEditingState(jsonStr);
         markChanged();
         isSaving = false;
     }
@@ -333,7 +337,8 @@ KCM.SimpleKCM {
         cleanStockDefaults();
         saveRowsToJson();
         syncToPlasmoidConfig();
-        clearLivePreview();
+        clearEditingState();
+        pushLiveEditingState();
     }
 
     function load() {
@@ -391,7 +396,7 @@ KCM.SimpleKCM {
             onActivated: function(index) {
                 if (index >= 0 && index < sharedFontOnlyModel.count) {
                     selectedFont = sharedFontOnlyModel.get(index).fontName;
-                    pushLivePreview();
+                    pushLiveEditingState();
                     markChanged();
                 }
             }
@@ -406,7 +411,7 @@ KCM.SimpleKCM {
                 i18n("Transparent (No Background)")
             ]
             onActivated: function(index) {
-                pushLivePreview();
+                pushLiveEditingState();
                 markChanged();
             }
         }
@@ -430,7 +435,7 @@ KCM.SimpleKCM {
                         configPage.openColorPicker(bgColorInput.text, function(hex) {
                             bgColorInput.text = hex;
                             bgColorInput.textEdited();
-                            pushLivePreview();
+                            pushLiveEditingState();
                             markChanged();
                         });
                     }
@@ -442,7 +447,7 @@ KCM.SimpleKCM {
                 Layout.fillWidth: true
                 placeholderText: "#1e293b"
                 onTextEdited: {
-                    pushLivePreview();
+                    pushLiveEditingState();
                     markChanged();
                 }
             }
