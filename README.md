@@ -2,16 +2,18 @@
 
 [![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6.0%2B-blue.svg?logo=kde)](https://kde.org/plasma-desktop/)
 [![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL--2.0--or--later-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.2.0-orange.svg)](https://github.com/Dreb1n/custom-calendar-widget/releases)
+[![Version](https://img.shields.io/badge/Version-1.4.0-orange.svg)](https://github.com/Dreb1n/custom-calendar-widget/releases)
 
 A highly customizable, multi-row calendar and digital clock desktop widget (plasmoid) designed for **KDE Plasma 6**.
 
-Configure individual rows with custom date/time format specifiers, typography, colors, opacities, text effects, and timezones. Includes a live system font preview picker and interactive color pickers.
+Configure individual rows with custom date/time format specifiers, typography, colors, opacities, text effects, and timezones. Includes a live system font preview picker, interactive color pickers, and JSON design preset import/export.
 
 ---
 
 ## ✨ Features
 
+- 🔷 **Custom Vector Shape Rendering**: Add custom 2D geometric shapes (**Circle, Square/Rectangle, Triangle, Pentagon, Hexagon, Heptagon, Octagon, Nonagon, Decagon**) directly to your desktop layout stack. Customize pixel width & height, fill colors, opacity, alignment, 2D X/Y spatial offsets, click commands, and shader effects (Neon Glow, Drop Shadow, Stroke).
+- 📤 **JSON Design Preset Import & Export**: Effortlessly share, backup, or load complete design presets (fonts, colors, background styles, and row configurations) via JSON files or one-click clipboard copying.
 - 🎨 **Live System Font Picker**: Preview and select any installed system font directly from a drop-down menu rendered in each font's native typeface.
 - 🖌️ **Interactive Color Pickers**: Clickable color preview swatches integrated with native system `ColorDialog` for background, text, and effect colors.
 - 🔍 **Clean Transparent Default Design**: Seamlessly blends into your desktop wallpaper with centered white typography out of the box.

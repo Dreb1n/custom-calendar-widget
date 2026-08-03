@@ -30,9 +30,17 @@ const FORMATTER_CACHE = {};
 // Compiled tokenized format cache
 const FORMAT_TOKEN_CACHE = {};
 
-const WEEKDAY_MAP = {
-  "Sun": 0, "Mon": 1, "Tue": 2, "Wed": 3, "Thu": 4, "Fri": 5, "Sat": 6
-};
+const MAX_CACHE_ENTRIES = 32;
+
+function setBoundedCache(cacheObj, key, value) {
+  var keys = Object.keys(cacheObj);
+  if (keys.length >= MAX_CACHE_ENTRIES) {
+    delete cacheObj[keys[0]];
+  }
+  cacheObj[key] = value;
+}
+
+
 
 function padZero(num, length = 2) {
   if (length === 2) {
@@ -96,7 +104,7 @@ function getLocalizedNames(localeStr) {
       daysFull: daysFull,
       daysShort: daysShort
     };
-    FORMATTER_CACHE["loc_" + key] = res;
+    setBoundedCache(FORMATTER_CACHE, "loc_" + key, res);
     return res;
   } catch (e) {
     return {
@@ -116,20 +124,20 @@ function compileFormat(formatStr) {
   var placeholders = [];
   var tempStr = formatStr.replace(/\[([^\]]+)\]/g, function(match, p1) {
     placeholders.push(p1);
-    return "__PH_" + (placeholders.length - 1) + "__";
+    return "\uE000" + (placeholders.length - 1) + "\uE001";
   });
 
   var tokens = [];
   var lastIndex = 0;
-  TOKEN_REGEX.lastIndex = 0;
+  var regex = new RegExp(TOKEN_REGEX.source, "g");
   var match;
 
-  while ((match = TOKEN_REGEX.exec(tempStr)) !== null) {
+  while ((match = regex.exec(tempStr)) !== null) {
     if (match.index > lastIndex) {
       tokens.push({ isToken: false, value: tempStr.substring(lastIndex, match.index) });
     }
     tokens.push({ isToken: true, value: match[0] });
-    lastIndex = TOKEN_REGEX.lastIndex;
+    lastIndex = regex.lastIndex;
   }
   if (lastIndex < tempStr.length) {
     tokens.push({ isToken: false, value: tempStr.substring(lastIndex) });
@@ -140,7 +148,7 @@ function compileFormat(formatStr) {
     placeholders: placeholders
   };
 
-  FORMAT_TOKEN_CACHE[formatStr] = compiled;
+  setBoundedCache(FORMAT_TOKEN_CACHE, formatStr, compiled);
   return compiled;
 }
 
@@ -156,19 +164,16 @@ function format(date, formatStr, timeZone, localeStr) {
 
   if (timeZone && timeZone !== "local" && timeZone.trim() !== "") {
     const tzKey = timeZone.trim();
-    const locKey = (localeStr && localeStr.trim().length > 0) ? localeStr.trim() : 'en-US';
-    const cacheKey = tzKey + "_" + locKey;
     try {
-      if (!FORMATTER_CACHE[cacheKey]) {
-        FORMATTER_CACHE[cacheKey] = new Intl.DateTimeFormat(locKey, {
+      if (!FORMATTER_CACHE[tzKey]) {
+        setBoundedCache(FORMATTER_CACHE, tzKey, new Intl.DateTimeFormat('en-US', {
           timeZone: tzKey,
-          weekday: 'short',
           year: 'numeric', month: 'numeric', day: 'numeric',
           hour: 'numeric', minute: 'numeric', second: 'numeric',
           hour12: false
-        });
+        }));
       }
-      const parts = FORMATTER_CACHE[cacheKey].formatToParts(date);
+      const parts = FORMATTER_CACHE[tzKey].formatToParts(date);
       for (var i = 0; i < parts.length; i++) {
         var part = parts[i];
         switch (part.type) {
@@ -178,9 +183,9 @@ function format(date, formatStr, timeZone, localeStr) {
           case 'hour': hours24 = parseInt(part.value, 10) % 24; break;
           case 'minute': minutes = parseInt(part.value, 10); break;
           case 'second': seconds = parseInt(part.value, 10) || 0; break;
-          case 'weekday': dayOfWeek = WEEKDAY_MAP[part.value] !== undefined ? WEEKDAY_MAP[part.value] : date.getDay(); break;
         }
       }
+      dayOfWeek = new Date(Date.UTC(year, month, dayOfMonth)).getUTCDay();
     } catch (e) {
       year = date.getFullYear();
       month = date.getMonth();
@@ -248,9 +253,7 @@ function format(date, formatStr, timeZone, localeStr) {
   }
 
   for (var p = 0; p < compiled.placeholders.length; p++) {
-    (function(val) {
-      result = result.replace("__PH_" + p + "__", function() { return val; });
-    })(compiled.placeholders[p]);
+    result = result.split("\uE000" + p + "\uE001").join(compiled.placeholders[p]);
   }
 
   return result;

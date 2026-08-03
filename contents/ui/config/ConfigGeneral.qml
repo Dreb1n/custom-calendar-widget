@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
+import QtQuick.Shapes
 import org.kde.kirigami as Kirigami
 import org.kde.kcmutils as KCM
 import org.kde.plasma.plasmoid
@@ -12,12 +13,25 @@ KCM.SimpleKCM {
     property alias cfg_fontFamily: fontCombo.selectedFont
     property alias cfg_bgType: bgTypeCombo.currentIndex
     property alias cfg_bgColor: bgColorInput.text
+    property alias cfg_bgOpacity: bgOpacityHolder.value
+    property alias cfg_borderRadius: borderRadiusHolder.value
+    property alias cfg_widgetPadding: widgetPaddingHolder.value
     property alias cfg_rowsJson: rowsJsonHolder.text
+    property alias cfg_isEditing: isEditingHolder.value
+    property alias cfg_editingRowsJson: editingRowsJsonHolder.text
+    property alias cfg_editingFontFamily: editingFontFamilyHolder.text
+    property alias cfg_editingBgType: editingBgTypeHolder.value
+    property alias cfg_editingBgColor: editingBgColorHolder.text
 
-    Item {
-        id: rowsJsonHolder
-        property string text: ""
-    }
+    Item { id: rowsJsonHolder; property string text: "" }
+    Item { id: bgOpacityHolder; property real value: 0.8 }
+    Item { id: borderRadiusHolder; property int value: 16 }
+    Item { id: widgetPaddingHolder; property int value: 16 }
+    Item { id: isEditingHolder; property bool value: false }
+    Item { id: editingRowsJsonHolder; property string text: "" }
+    Item { id: editingFontFamilyHolder; property string text: "" }
+    Item { id: editingBgTypeHolder; property int value: -1 }
+    Item { id: editingBgColorHolder; property string text: "" }
 
     property var activeColorCallback: null
 
@@ -71,6 +85,20 @@ KCM.SimpleKCM {
         ListElement { text: "Monospace"; fontName: "Monospace" }
     }
 
+    ListModel {
+        id: shapeTypesModel
+        ListElement { text: "Circle / Ellipse / Oblong"; value: "circle" }
+        ListElement { text: "Square / Rectangle"; value: "square" }
+        ListElement { text: "Pill / Capsule"; value: "pill" }
+        ListElement { text: "Triangle (3 sides)"; value: "triangle" }
+        ListElement { text: "Pentagon (5 sides)"; value: "pentagon" }
+        ListElement { text: "Hexagon (6 sides)"; value: "hexagon" }
+        ListElement { text: "Heptagon (7 sides)"; value: "heptagon" }
+        ListElement { text: "Octagon (8 sides)"; value: "octagon" }
+        ListElement { text: "Nonagon (9 sides)"; value: "nonagon" }
+        ListElement { text: "Decagon (10 sides)"; value: "decagon" }
+    }
+
     onCfg_rowsJsonChanged: {
         if (!isSaving) {
             loadRowsFromJson();
@@ -82,6 +110,7 @@ KCM.SimpleKCM {
             if (typeof plasmoid !== "undefined" && plasmoid && plasmoid.configuration) return plasmoid.configuration;
             if (typeof kcm !== "undefined" && kcm && kcm.plasmoid && kcm.plasmoid.configuration) return kcm.plasmoid.configuration;
             if (typeof kcm !== "undefined" && kcm && kcm.widget && kcm.widget.configuration) return kcm.widget.configuration;
+            if (configPage.Plasmoid && configPage.Plasmoid.configuration) return configPage.Plasmoid.configuration;
             if (configPage.parent && configPage.parent.plasmoid && configPage.parent.plasmoid.configuration) return configPage.parent.plasmoid.configuration;
         } catch(e) {}
         return null;
@@ -98,13 +127,19 @@ KCM.SimpleKCM {
     function pushLiveEditingState(overrideRowsJson) {
         if (!isLoaded) return;
         try {
+            isEditingHolder.value = true;
+            editingRowsJsonHolder.text = (overrideRowsJson !== undefined) ? overrideRowsJson : (rowsJsonHolder.text || cfg_rowsJson);
+            editingFontFamilyHolder.text = (typeof fontCombo !== "undefined" && fontCombo && fontCombo.selectedFont) ? fontCombo.selectedFont : cfg_fontFamily;
+            editingBgTypeHolder.value = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
+            editingBgColorHolder.text = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
+
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.isEditing = true;
-                pConfig.editingRowsJson = (overrideRowsJson !== undefined) ? overrideRowsJson : cfg_rowsJson;
-                pConfig.editingFontFamily = cfg_fontFamily;
-                pConfig.editingBgType = cfg_bgType;
-                pConfig.editingBgColor = cfg_bgColor;
+                pConfig.editingRowsJson = editingRowsJsonHolder.text;
+                pConfig.editingFontFamily = editingFontFamilyHolder.text;
+                pConfig.editingBgType = editingBgTypeHolder.value;
+                pConfig.editingBgColor = editingBgColorHolder.text;
             }
         } catch(e) {
             console.log("[CustomCalendar Config] Error in pushLiveEditingState:", e);
@@ -113,6 +148,12 @@ KCM.SimpleKCM {
 
     function clearEditingState() {
         try {
+            isEditingHolder.value = false;
+            editingRowsJsonHolder.text = "";
+            editingFontFamilyHolder.text = "";
+            editingBgTypeHolder.value = -1;
+            editingBgColorHolder.text = "";
+
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.isEditing = false;
@@ -129,10 +170,10 @@ KCM.SimpleKCM {
         try {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
-                pConfig.rowsJson = cfg_rowsJson;
-                pConfig.fontFamily = cfg_fontFamily;
-                pConfig.bgType = cfg_bgType;
-                pConfig.bgColor = cfg_bgColor;
+                pConfig.rowsJson = rowsJsonHolder.text;
+                pConfig.fontFamily = (typeof fontCombo !== "undefined" && fontCombo && fontCombo.selectedFont) ? fontCombo.selectedFont : cfg_fontFamily;
+                pConfig.bgType = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
+                pConfig.bgColor = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
             }
         } catch(e) {}
     }
@@ -236,6 +277,9 @@ KCM.SimpleKCM {
             item.offsetHeight = offY;
             item.topMargin = offY;
 
+            if (item.rotation === undefined) {
+                item.rotation = 0;
+            }
             if (item.letterSpacing === undefined) {
                 item.letterSpacing = 0;
             }
@@ -245,25 +289,42 @@ KCM.SimpleKCM {
             if (!item.clickCommand) {
                 item.clickCommand = "";
             }
-            if (!item.locale) {
-                item.locale = "";
+            var isSh = (item.isShape === true || item.isShape === "true") && (!item.format || item.format === "");
+            item.isShape = isSh;
+            if (isSh) {
+                if (!item.shapeType) item.shapeType = "circle";
+                if (item.shapeWidth === undefined) item.shapeWidth = 100;
+                if (item.shapeHeight === undefined) item.shapeHeight = 100;
+                if (!item.color) item.color = "#3b82f6";
+                item.format = "";
+                item.showTimeZone = false;
+                item.showLocale = false;
+                item.showFontFamily = false;
+                item.showWeight = false;
+                item.showLetterSpacing = false;
+            } else {
+                item.isShape = false;
+                item.shapeType = "";
+                if (!item.format) item.format = "dddd";
             }
 
-            item.showTimeZone = item.timeZone !== "";
-            item.showLocale = item.locale !== "";
+            item.fromCenter = (item.fromCenter === true || item.fromCenter === "true");
+            item.showTimeZone = !item.isShape && item.timeZone !== "";
+            item.showLocale = !item.isShape && item.locale !== "";
             item.showClickCommand = item.clickCommand !== "";
-            item.showFontFamily = item.fontFamily !== "";
-            item.showWeight = String(item.weight) !== "400";
+            item.showFontFamily = !item.isShape && item.fontFamily !== "";
+            item.showWeight = !item.isShape && String(item.weight) !== "400";
             item.showAlign = item.align !== undefined && item.align !== "center";
             item.showOpacity = item.opacity !== 1.0;
-            item.showOffsets = (offX !== 0 || offY !== 0);
-            item.showLetterSpacing = item.letterSpacing !== 0;
+            item.showOffsets = (offX !== 0 || offY !== 0 || item.fromCenter === true);
+            item.showRotation = item.rotation !== 0;
+            item.showLetterSpacing = !item.isShape && item.letterSpacing !== 0;
             item.showEffect = item.effect !== "none";
 
             rowsModel.append(item);
         }
         isLoaded = true;
-        pushLiveEditingState();
+        saveRowsToJson(true);
     }
 
     function cleanStockDefaults() {
@@ -271,7 +332,8 @@ KCM.SimpleKCM {
             var item = rowsModel.get(i);
             var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX || 0);
             var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin || 0);
-            if (offX === 0 && offY === 0) rowsModel.setProperty(i, "showOffsets", false);
+            if (offX === 0 && offY === 0 && !item.fromCenter) rowsModel.setProperty(i, "showOffsets", false);
+            if (item.rotation === 0) rowsModel.setProperty(i, "showRotation", false);
             if (item.letterSpacing === 0) rowsModel.setProperty(i, "showLetterSpacing", false);
             if (item.opacity === 1.0) rowsModel.setProperty(i, "showOpacity", false);
             if (String(item.weight) === "400") rowsModel.setProperty(i, "showWeight", false);
@@ -296,57 +358,341 @@ KCM.SimpleKCM {
         } catch(e) {}
     }
 
-    function saveRowsToJson() {
-        if (!isLoaded) return;
-        var arr = [];
-        for (var i = 0; i < rowsModel.count; i++) {
-            var item = rowsModel.get(i);
-            var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX !== undefined ? item.offsetX : 0);
-            var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin !== undefined ? item.topMargin : 0);
-            arr.push({
-                "format": item.format,
+    function serializeRowItem(item) {
+        var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX !== undefined ? item.offsetX : 0);
+        var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin !== undefined ? item.topMargin : 0);
+        var isSh = (item.isShape === true || item.isShape === "true") && (!item.format || item.format === "");
+
+        if (isSh) {
+            return {
+                "isShape": true,
+                "shapeType": item.shapeType || "circle",
+                "shapeWidth": item.shapeWidth || 100,
+                "shapeHeight": item.shapeHeight || 100,
+                "color": item.color || "#3b82f6",
+                "align": item.showAlign ? (item.align || "center") : "center",
+                "opacity": item.showOpacity && item.opacity !== undefined ? item.opacity : 1.0,
+                "offsetWidth": item.showOffsets ? offX : 0,
+                "offsetHeight": item.showOffsets ? offY : 0,
+                "offsetX": item.showOffsets ? offX : 0,
+                "topMargin": item.showOffsets ? offY : 0,
+                "fromCenter": item.showOffsets && (item.fromCenter === true || item.fromCenter === "true"),
+                "rotation": item.rotation !== undefined ? item.rotation : 0,
+                "effect": item.showEffect ? (item.effect || "none") : "none",
+                "effectColor": item.showEffect ? (item.effectColor || "") : "",
+                "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
+                "clickCommand": item.showClickCommand ? (item.clickCommand || "") : ""
+            };
+        } else {
+            return {
+                "format": item.format || "",
                 "fontFamily": item.showFontFamily ? (item.fontFamily || "") : "",
                 "align": item.showAlign ? (item.align || "center") : "center",
                 "fontSize": item.fontSize || 24,
                 "color": item.color || "#ffffff",
                 "effectColor": item.showEffect ? (item.effectColor || "") : "",
-                "weight": item.showWeight ? (item.weight || "400") : "400",
+                "weight": item.showWeight ? String(item.weight || "400") : "400",
                 "effect": item.showEffect ? (item.effect || "none") : "none",
                 "opacity": item.showOpacity && item.opacity !== undefined ? item.opacity : 1.0,
                 "offsetWidth": item.showOffsets ? offX : 0,
                 "offsetHeight": item.showOffsets ? offY : 0,
                 "offsetX": item.showOffsets ? offX : 0,
                 "topMargin": item.showOffsets ? offY : 0,
+                "fromCenter": item.showOffsets && (item.fromCenter === true || item.fromCenter === "true"),
+                "rotation": item.rotation !== undefined ? item.rotation : 0,
                 "letterSpacing": item.showLetterSpacing && item.letterSpacing !== undefined ? item.letterSpacing : 0,
                 "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
                 "timeZone": item.showTimeZone ? (item.timeZone || "") : "",
                 "locale": item.showLocale ? (item.locale || "") : "",
                 "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
                 "glow": item.showEffect && item.effect === "glow"
-            });
+            };
+        }
+    }
+
+    function saveRowsToJson(skipMarkChanged) {
+        if (!isLoaded) return;
+        var arr = [];
+        for (var i = 0; i < rowsModel.count; i++) {
+            arr.push(serializeRowItem(rowsModel.get(i)));
         }
         var jsonStr = JSON.stringify(arr);
         isSaving = true;
         rowsJsonHolder.text = jsonStr;
         pushLiveEditingState(jsonStr);
-        markChanged();
+        if (!skipMarkChanged) {
+            markChanged();
+        }
         isSaving = false;
     }
 
     function save() {
         cleanStockDefaults();
-        saveRowsToJson();
+        if (!isLoaded) return;
+        var arr = [];
+        for (var i = 0; i < rowsModel.count; i++) {
+            arr.push(serializeRowItem(rowsModel.get(i)));
+        }
+        var jsonStr = JSON.stringify(arr);
+        isSaving = true;
+        rowsJsonHolder.text = jsonStr;
         syncToPlasmoidConfig();
         clearEditingState();
-        pushLiveEditingState();
+        isSaving = false;
     }
 
-    function load() {
-        loadRowsFromJson();
+    function getExportPresetJson() {
+        var rowsArr = [];
+        for (var i = 0; i < rowsModel.count; i++) {
+            rowsArr.push(serializeRowItem(rowsModel.get(i)));
+        }
+
+        var preset = {
+            "generator": "Custom Calendar & Clock Plasmoid",
+            "version": "1.3.0",
+            "fontFamily": fontCombo.selectedFont,
+            "bgType": bgTypeCombo.currentIndex,
+            "bgColor": bgColorInput.text || "#1e293b",
+            "rows": rowsArr
+        };
+
+        return JSON.stringify(preset, null, 2);
+    }
+
+    function applyImportedJson(jsonText) {
+        try {
+            if (!jsonText || jsonText.trim().length === 0) {
+                importPresetDialog.statusMessage = i18n("Please paste or select a valid JSON preset.");
+                importPresetDialog.isError = true;
+                return;
+            }
+            var data = JSON.parse(jsonText);
+            var targetRows = [];
+
+            if (Array.isArray(data)) {
+                targetRows = data;
+            } else if (typeof data === "object" && data !== null) {
+                if (data.rows && Array.isArray(data.rows)) {
+                    targetRows = data.rows;
+                }
+                if (data.fontFamily !== undefined && data.fontFamily !== "") {
+                    fontCombo.selectedFont = data.fontFamily;
+                }
+                if (data.bgType !== undefined && data.bgType >= 0 && data.bgType <= 2) {
+                    bgTypeCombo.currentIndex = data.bgType;
+                }
+                if (data.bgColor !== undefined && data.bgColor !== "") {
+                    bgColorInput.text = data.bgColor;
+                }
+            } else {
+                importPresetDialog.statusMessage = i18n("Invalid JSON format.");
+                importPresetDialog.isError = true;
+                return;
+            }
+
+            if (!targetRows || targetRows.length === 0) {
+                importPresetDialog.statusMessage = i18n("No valid rows found in JSON preset.");
+                importPresetDialog.isError = true;
+                return;
+            }
+
+            cfg_rowsJson = JSON.stringify(targetRows);
+            loadRowsFromJson();
+            save();
+            importPresetDialog.statusMessage = i18n("Preset applied successfully!");
+            importPresetDialog.isError = false;
+            importPresetDialog.close();
+        } catch(e) {
+            importPresetDialog.statusMessage = i18n("JSON Parsing Error: ") + e.message;
+            importPresetDialog.isError = true;
+        }
+    }
+
+    function readJsonFile(fileUrl) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", fileUrl, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    importJsonArea.text = xhr.responseText;
+                    importPresetDialog.statusMessage = i18n("File loaded. Click 'Apply Preset' to import.");
+                    importPresetDialog.isError = false;
+                } else {
+                    importPresetDialog.statusMessage = i18n("Failed to read file.");
+                    importPresetDialog.isError = true;
+                }
+            }
+        };
+        xhr.send();
+    }
+
+    function writeJsonFile(fileUrl, content) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("PUT", fileUrl, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status === 200 || xhr.status === 0) {
+                    exportPresetDialog.title = i18n("Export Design Preset (Saved!)");
+                }
+            }
+        };
+        try {
+            xhr.send(content);
+        } catch(e) {}
+    }
+
+    Dialog {
+        id: exportPresetDialog
+        title: i18n("Export Design Preset")
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(configPage.width * 0.9, 580)
+        height: Math.min(configPage.height * 0.9, 420)
+        standardButtons: Dialog.Close
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 8
+
+            Label {
+                text: i18n("Copy this JSON preset snippet to share your design with others:")
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                TextArea {
+                    id: exportJsonArea
+                    font.family: "Monospace"
+                    font.pixelSize: 12
+                    wrapMode: TextEdit.Wrap
+                    readOnly: true
+                    selectByMouse: true
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Button {
+                    text: i18n("📋 Copy to Clipboard")
+                    icon.name: "edit-copy"
+                    onClicked: {
+                        exportJsonArea.selectAll();
+                        exportJsonArea.copy();
+                        copyNotification.visible = true;
+                    }
+                }
+                Label {
+                    id: copyNotification
+                    text: i18n("Copied!")
+                    color: Kirigami.Theme.positiveTextColor
+                    visible: false
+                }
+                Item { Layout.fillWidth: true }
+                Button {
+                    text: i18n("📂 Save to File...")
+                    icon.name: "document-save-as"
+                    onClicked: {
+                        exportFileDialog.open();
+                    }
+                }
+            }
+        }
+    }
+
+    Dialog {
+        id: importPresetDialog
+        title: i18n("Import Design Preset")
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(configPage.width * 0.9, 580)
+        height: Math.min(configPage.height * 0.9, 420)
+        standardButtons: Dialog.Close
+
+        property string statusMessage: ""
+        property bool isError: false
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 8
+
+            Label {
+                text: i18n("Paste a JSON preset string below or load from a file:")
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                TextArea {
+                    id: importJsonArea
+                    font.family: "Monospace"
+                    font.pixelSize: 12
+                    wrapMode: TextEdit.Wrap
+                    placeholderText: i18n("Paste JSON preset code here...")
+                    selectByMouse: true
+                }
+            }
+
+            Label {
+                text: importPresetDialog.statusMessage
+                color: importPresetDialog.isError ? Kirigami.Theme.negativeTextColor : Kirigami.Theme.positiveTextColor
+                visible: importPresetDialog.statusMessage.length > 0
+                wrapMode: Text.WordWrap
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                Button {
+                    text: i18n("📂 Load from File...")
+                    icon.name: "document-open"
+                    onClicked: {
+                        importFileDialog.open();
+                    }
+                }
+                Item { Layout.fillWidth: true }
+                Button {
+                    text: i18n("🚀 Apply Preset")
+                    icon.name: "dialog-ok-apply"
+                    highlighted: true
+                    onClicked: {
+                        applyImportedJson(importJsonArea.text);
+                    }
+                }
+            }
+        }
+    }
+
+    FileDialog {
+        id: importFileDialog
+        title: i18n("Open Preset File")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [i18n("JSON Files (*.json)"), i18n("All Files (*)")]
+        onAccepted: {
+            readJsonFile(selectedFile);
+        }
+    }
+
+    FileDialog {
+        id: exportFileDialog
+        title: i18n("Save Preset File")
+        fileMode: FileDialog.SaveFile
+        nameFilters: [i18n("JSON Files (*.json)"), i18n("All Files (*)")]
+        currentFile: "custom-calendar-preset.json"
+        onAccepted: {
+            writeJsonFile(selectedFile, exportJsonArea.text);
+        }
     }
 
     ListModel {
         id: rowsModel
+        dynamicRoles: true
 
         function removeRow(idx) {
             if (count > 1 && idx >= 0 && idx < count) {
@@ -369,6 +715,31 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         id: formLayout
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Design Presets:")
+            spacing: 8
+
+            Button {
+                text: i18n("📤 Export Preset")
+                icon.name: "document-export"
+                onClicked: {
+                    exportJsonArea.text = getExportPresetJson();
+                    copyNotification.visible = false;
+                    exportPresetDialog.open();
+                }
+            }
+
+            Button {
+                text: i18n("📥 Import Preset")
+                icon.name: "document-import"
+                onClicked: {
+                    importJsonArea.text = "";
+                    importPresetDialog.statusMessage = "";
+                    importPresetDialog.open();
+                }
+            }
+        }
 
         ComboBox {
             id: fontCombo
@@ -467,8 +838,11 @@ KCM.SimpleKCM {
                 model: rowsModel
 
                 delegate: Frame {
+                    id: delegateFrame
                     Layout.fillWidth: true
                     padding: 8
+
+                    property bool isItemShape: (model.isShape === true || model.isShape === "true") && (model.format === undefined || model.format === "")
 
                     ColumnLayout {
                         anchors.fill: parent
@@ -478,7 +852,7 @@ KCM.SimpleKCM {
                         RowLayout {
                             Layout.fillWidth: true
                             Label {
-                                text: i18n("Row ") + (index + 1)
+                                text: delegateFrame.isItemShape ? (i18n("Shape ") + (index + 1)) : (i18n("Row ") + (index + 1))
                                 font.bold: true
                             }
                             Item { Layout.fillWidth: true }
@@ -505,10 +879,130 @@ KCM.SimpleKCM {
                             }
                         }
 
+                        // Shape Always-Visible Controls
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            visible: delegateFrame.isItemShape
+
+                            Label { text: i18n("Shape:") }
+                            ComboBox {
+                                id: shapeCombo
+                                textRole: "text"
+                                valueRole: "value"
+                                model: shapeTypesModel
+                                currentIndex: {
+                                    var st = model.shapeType || "circle";
+                                    for (var s = 0; s < shapeTypesModel.count; s++) {
+                                        if (shapeTypesModel.get(s).value === st) return s;
+                                    }
+                                    return 0;
+                                }
+                                onActivated: function(sIdx) {
+                                    if (sIdx >= 0 && sIdx < shapeTypesModel.count) {
+                                        rowsModel.setProperty(index, "shapeType", shapeTypesModel.get(sIdx).value);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+
+                            Label { text: i18n("W:") }
+                            SpinBox {
+                                from: 1
+                                to: 1000
+                                stepSize: 5
+                                value: model.shapeWidth || 100
+                                onValueModified: {
+                                    rowsModel.setProperty(index, "shapeWidth", value);
+                                    rowsModel.saveToJson();
+                                }
+                            }
+
+                            Label { text: i18n("H:") }
+                            SpinBox {
+                                from: 1
+                                to: 1000
+                                stepSize: 5
+                                value: model.shapeHeight || 100
+                                onValueModified: {
+                                    rowsModel.setProperty(index, "shapeHeight", value);
+                                    rowsModel.saveToJson();
+                                }
+                            }
+
+                            Label { text: i18n("Color:") }
+                            Rectangle {
+                                Layout.preferredWidth: 24
+                                Layout.preferredHeight: 24
+                                radius: 4
+                                color: model.color || "#3b82f6"
+                                border.color: Kirigami.Theme.disabledTextColor
+                                border.width: 1
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        configPage.openColorPicker(model.color || "#3b82f6", function(hex) {
+                                            if (configPage.isLoaded) {
+                                                rowsModel.setProperty(index, "color", hex);
+                                                rowsModel.saveToJson();
+                                            }
+                                        });
+                                    }
+                                }
+                            }
+                            TextField {
+                                Layout.preferredWidth: 80
+                                Binding on text { value: model.color || "#3b82f6" }
+                                placeholderText: "#3b82f6"
+                                onTextEdited: {
+                                    if (configPage.isLoaded) {
+                                        rowsModel.setProperty(index, "color", text);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+
+                            ComboBox {
+                                id: addShapeOptionCombo
+                                textRole: "text"
+                                model: [
+                                    { text: i18n("+ Add Option..."), value: "" },
+                                    { text: i18n("Click Command"), value: "clickCommand" },
+                                    { text: i18n("Alignment"), value: "align" },
+                                    { text: i18n("Opacity"), value: "opacity" },
+                                    { text: i18n("Offsets (X/Y)"), value: "offsets" },
+                                    { text: i18n("Rotation (°)"), value: "rotation" },
+                                    { text: i18n("Shape Effect"), value: "effect" }
+                                ]
+                                currentIndex: 0
+                                onActivated: function(idx) {
+                                    if (idx <= 0) return;
+                                    var val = addShapeOptionCombo.model[idx].value;
+                                    if (val === "clickCommand") { rowsModel.setProperty(index, "clickCommand", "kcalc"); rowsModel.setProperty(index, "showClickCommand", true); }
+                                    else if (val === "align") { rowsModel.setProperty(index, "align", "left"); rowsModel.setProperty(index, "showAlign", true); }
+                                    else if (val === "opacity") { rowsModel.setProperty(index, "opacity", 0.8); rowsModel.setProperty(index, "showOpacity", true); }
+                                    else if (val === "offsets") {
+                                        rowsModel.setProperty(index, "offsetWidth", 10);
+                                        rowsModel.setProperty(index, "offsetX", 10);
+                                        rowsModel.setProperty(index, "offsetHeight", -10);
+                                        rowsModel.setProperty(index, "topMargin", -10);
+                                        rowsModel.setProperty(index, "showOffsets", true);
+                                    }
+                                    else if (val === "rotation") { rowsModel.setProperty(index, "rotation", 45); rowsModel.setProperty(index, "showRotation", true); }
+                                    else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
+                                    rowsModel.saveToJson();
+                                    currentIndex = 0;
+                                }
+                            }
+                        }
+
                         // Core Always-Visible Controls (Format, Font Size, Text Color, + Add Option...)
                         RowLayout {
                             Layout.fillWidth: true
                             spacing: 8
+                            visible: !delegateFrame.isItemShape
 
                             Label { text: i18n("Format:") }
                             TextField {
@@ -571,6 +1065,7 @@ KCM.SimpleKCM {
                             ComboBox {
                                 id: addOptionCombo
                                 textRole: "text"
+                                valueRole: "value"
                                 model: [
                                     { text: i18n("+ Add Option..."), value: "" },
                                     { text: i18n("Timezone"), value: "timeZone" },
@@ -581,6 +1076,7 @@ KCM.SimpleKCM {
                                     { text: i18n("Alignment"), value: "align" },
                                     { text: i18n("Opacity"), value: "opacity" },
                                     { text: i18n("Offsets (X/Y)"), value: "offsets" },
+                                    { text: i18n("Rotation (°)"), value: "rotation" },
                                     { text: i18n("Letter Spacing"), value: "letterSpacing" },
                                     { text: i18n("Text Effect"), value: "effect" }
                                 ]
@@ -602,10 +1098,53 @@ KCM.SimpleKCM {
                                         rowsModel.setProperty(index, "topMargin", -10);
                                         rowsModel.setProperty(index, "showOffsets", true);
                                     }
+                                    else if (val === "rotation") { rowsModel.setProperty(index, "rotation", 45); rowsModel.setProperty(index, "showRotation", true); }
                                     else if (val === "letterSpacing") { rowsModel.setProperty(index, "letterSpacing", 2); rowsModel.setProperty(index, "showLetterSpacing", true); }
                                     else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
                                     rowsModel.saveToJson();
                                     currentIndex = 0;
+                                }
+                            }
+                        }
+
+                        // 9. Rotation
+                        RowLayout {
+                            Layout.fillWidth: true
+                            visible: model.showRotation === true
+                            spacing: 8
+                            Label { text: i18n("Rotation (°):") }
+                            SpinBox {
+                                from: -360
+                                to: 360
+                                stepSize: 5
+                                value: model.rotation !== undefined ? model.rotation : 0
+                                onValueModified: {
+                                    if (configPage.isLoaded) {
+                                        rowsModel.setProperty(index, "rotation", value);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+                            Slider {
+                                Layout.fillWidth: true
+                                from: -180
+                                to: 180
+                                stepSize: 1
+                                value: model.rotation !== undefined ? model.rotation : 0
+                                onMoved: {
+                                    if (configPage.isLoaded) {
+                                        var v = Math.round(value);
+                                        rowsModel.setProperty(index, "rotation", v);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+                            Button {
+                                text: "✕"
+                                onClicked: {
+                                    rowsModel.setProperty(index, "rotation", 0);
+                                    rowsModel.setProperty(index, "showRotation", false);
+                                    rowsModel.saveToJson();
                                 }
                             }
                         }
@@ -615,7 +1154,7 @@ KCM.SimpleKCM {
                         // 1. Timezone
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.showTimeZone === true
+                            visible: !delegateFrame.isItemShape && model.showTimeZone === true
                             Label { text: i18n("Timezone:") }
                             TextField {
                                 Layout.fillWidth: true
@@ -641,7 +1180,7 @@ KCM.SimpleKCM {
                         // 2. Locale
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.showLocale === true
+                            visible: !delegateFrame.isItemShape && model.showLocale === true
                             Label { text: i18n("Locale:") }
                             TextField {
                                 Layout.fillWidth: true
@@ -693,7 +1232,7 @@ KCM.SimpleKCM {
                         // 4. Custom Font Family
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.showFontFamily === true
+                            visible: !delegateFrame.isItemShape && model.showFontFamily === true
                             Label { text: i18n("Font Family:") }
                             ComboBox {
                                 id: rowFontCombo
@@ -733,7 +1272,7 @@ KCM.SimpleKCM {
                         // 5. Font Weight
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.showWeight === true
+                            visible: !delegateFrame.isItemShape && model.showWeight === true
                             Label { text: i18n("Font Weight:") }
                             ComboBox {
                                 id: weightCombo
@@ -862,6 +1401,17 @@ KCM.SimpleKCM {
                                 }
                             }
 
+                            CheckBox {
+                                text: i18n("From Direct Center")
+                                checked: model.fromCenter === true || model.fromCenter === "true"
+                                onCheckedChanged: {
+                                    if (configPage.isLoaded) {
+                                        rowsModel.setProperty(index, "fromCenter", checked);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+
                             Button {
                                 text: "✕"
                                 onClicked: {
@@ -869,6 +1419,7 @@ KCM.SimpleKCM {
                                     rowsModel.setProperty(index, "offsetX", 0);
                                     rowsModel.setProperty(index, "offsetHeight", 0);
                                     rowsModel.setProperty(index, "topMargin", 0);
+                                    rowsModel.setProperty(index, "fromCenter", false);
                                     rowsModel.setProperty(index, "showOffsets", false);
                                     rowsModel.saveToJson();
                                 }
@@ -878,7 +1429,7 @@ KCM.SimpleKCM {
                         // 10. Letter Spacing
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: model.showLetterSpacing === true
+                            visible: !delegateFrame.isItemShape && model.showLetterSpacing === true
                             Label { text: i18n("Letter Spacing (px):") }
                             SpinBox {
                                 from: -1000
@@ -1006,40 +1557,81 @@ KCM.SimpleKCM {
                 }
             }
 
-            Button {
-                text: i18n("+ Add Row")
+            RowLayout {
+                spacing: 8
                 Layout.alignment: Qt.AlignLeft
-                onClicked: {
-                    rowsModel.append({
-                        "format": "H:i:ss",
-                        "align": "center",
-                        "fontSize": 24,
-                        "color": "#ffffff",
-                        "effectColor": "",
-                        "weight": "400",
-                        "effect": "none",
-                        "opacity": 1.0,
-                        "topMargin": 0,
-                        "offsetX": 0,
-                        "offsetWidth": 0,
-                        "offsetHeight": 0,
-                        "letterSpacing": 0,
-                        "effectSize": 2,
-                        "timeZone": "",
-                        "locale": "",
-                        "clickCommand": "",
-                        "showTimeZone": false,
-                        "showLocale": false,
-                        "showClickCommand": false,
-                        "showFontFamily": false,
-                        "showWeight": false,
-                        "showAlign": false,
-                        "showOpacity": false,
-                        "showOffsets": false,
-                        "showLetterSpacing": false,
-                        "showEffect": false
-                    });
-                    rowsModel.saveToJson();
+
+                Button {
+                    text: i18n("+ Add Row")
+                    icon.name: "list-add"
+                    onClicked: {
+                        rowsModel.append({
+                            "isShape": false,
+                            "format": "H:i:ss",
+                            "align": "center",
+                            "fontSize": 24,
+                            "color": "#ffffff",
+                            "effectColor": "",
+                            "weight": "400",
+                            "effect": "none",
+                            "opacity": 1.0,
+                            "topMargin": 0,
+                            "offsetX": 0,
+                            "offsetWidth": 0,
+                            "offsetHeight": 0,
+                            "letterSpacing": 0,
+                            "effectSize": 2,
+                            "timeZone": "",
+                            "locale": "",
+                            "clickCommand": "",
+                            "showTimeZone": false,
+                            "showLocale": false,
+                            "showClickCommand": false,
+                            "showFontFamily": false,
+                            "showWeight": false,
+                            "showAlign": false,
+                            "showOpacity": false,
+                            "showOffsets": false,
+                            "showLetterSpacing": false,
+                            "showEffect": false
+                        });
+                        rowsModel.saveToJson();
+                    }
+                }
+
+                Button {
+                    text: i18n("+ Add Shape")
+                    icon.name: "draw-polygon"
+                    onClicked: {
+                        rowsModel.append({
+                            "isShape": true,
+                            "shapeType": "circle",
+                            "shapeWidth": 100,
+                            "shapeHeight": 100,
+                            "color": "#3b82f6",
+                            "align": "center",
+                            "opacity": 1.0,
+                            "topMargin": 0,
+                            "offsetX": 0,
+                            "offsetWidth": 0,
+                            "offsetHeight": 0,
+                            "effect": "none",
+                            "effectColor": "",
+                            "effectSize": 2,
+                            "clickCommand": "",
+                            "showTimeZone": false,
+                            "showLocale": false,
+                            "showClickCommand": false,
+                            "showFontFamily": false,
+                            "showWeight": false,
+                            "showAlign": false,
+                            "showOpacity": false,
+                            "showOffsets": false,
+                            "showLetterSpacing": false,
+                            "showEffect": false
+                        });
+                        rowsModel.saveToJson();
+                    }
                 }
             }
         }
