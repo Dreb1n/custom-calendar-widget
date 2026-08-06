@@ -1033,11 +1033,7 @@ KCM.SimpleKCM {
             i18n("All Files (*)")
         ]
         onAccepted: {
-            // Strip the file:// protocol prefix if present, as Qt Quick handles local paths directly
             var path = String(selectedFile);
-            if (path.indexOf("file://") === 0) {
-                path = path.substring(7);
-            }
             if (configPage.activeRowIndexForFileDialog !== -1) {
                 rowsModel.setProperty(configPage.activeRowIndexForFileDialog, "overlayFile", path);
                 rowsModel.saveToJson();

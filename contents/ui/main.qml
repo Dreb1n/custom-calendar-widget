@@ -466,7 +466,7 @@ PlasmoidItem {
                                 id: rowVideoComponent
                                 Video {
                                     source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
-                                    fillMode: Video.PreserveAspectCrop
+                                    fillMode: VideoOutput.PreserveAspectCrop
                                     loops: MediaPlayer.Infinite
                                     volume: 0
                                     
