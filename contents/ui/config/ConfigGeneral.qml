@@ -1936,7 +1936,7 @@ KCM.SimpleKCM {
                             visible: model.showOpacity === true
                             Label { text: i18n("Opacity (%):") }
                             SpinBox {
-                                from: 10
+                                from: 0
                                 to: 100
                                 stepSize: 5
                                 value: Math.round((model.opacity !== undefined ? model.opacity : 1.0) * 100)
