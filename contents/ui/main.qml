@@ -415,13 +415,10 @@ PlasmoidItem {
                             rotation: rowContainer.itemRotation
                             transformOrigin: Item.Center
 
-                            // Row Overlay Layer Source (Hidden, used as MultiEffect texture source)
+                            // Row Overlay Layer Source (Placed inline, but hidden from screen via ShaderEffectSource)
                             Item {
                                 id: rowOverlayContent
-                                x: -9999
-                                y: -9999
-                                width: rowContainer.activeShaderSource ? rowContainer.activeShaderSource.width : 100
-                                height: rowContainer.activeShaderSource ? rowContainer.activeShaderSource.height : 30
+                                anchors.fill: rowContainer.activeShaderSource
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
 
                                 // Option 1: Solid Color
@@ -444,13 +441,22 @@ PlasmoidItem {
                                 }
                             }
 
+                            // Capture live video/color frames and hide the original source from direct layout drawing
+                            ShaderEffectSource {
+                                id: rowOverlaySourceGrabber
+                                sourceItem: rowOverlayContent
+                                hideSource: true
+                                live: true
+                                visible: false
+                            }
+
                             // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
                                 anchors.fill: rowContainer.activeShaderSource
-                                source: rowOverlayContent
+                                source: rowOverlaySourceGrabber
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
-                maskEnabled: true
+                                maskEnabled: true
                                 maskSource: rowContainer.activeShaderSource
                                 z: 2
                             }
