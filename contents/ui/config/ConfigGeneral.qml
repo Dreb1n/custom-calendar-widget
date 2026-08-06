@@ -636,7 +636,12 @@ KCM.SimpleKCM {
                 "effect": item.showEffect ? (item.effect || "none") : "none",
                 "effectColor": item.showEffect ? (item.effectColor || "") : "",
                 "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
-                "clickCommand": item.showClickCommand ? (item.clickCommand || "") : ""
+                "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
+                "overlayType": item.showOverlay ? (item.overlayType !== undefined ? item.overlayType : 0) : 0,
+                "overlayColor": item.showOverlay ? (item.overlayColor || "#000000") : "#000000",
+                "overlayOpacity": item.showOverlay && item.overlayOpacity !== undefined ? item.overlayOpacity : 0.5,
+                "overlayFile": item.showOverlay ? (item.overlayFile || "") : "",
+                "showOverlay": item.showOverlay === true
             };
         } else {
             return {
@@ -660,7 +665,12 @@ KCM.SimpleKCM {
                 "timeZone": item.showTimeZone ? (item.timeZone || "") : "",
                 "locale": item.showLocale ? (item.locale || "") : "",
                 "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
-                "glow": item.showEffect && item.effect === "glow"
+                "glow": item.showEffect && item.effect === "glow",
+                "overlayType": item.showOverlay ? (item.overlayType !== undefined ? item.overlayType : 0) : 0,
+                "overlayColor": item.showOverlay ? (item.overlayColor || "#000000") : "#000000",
+                "overlayOpacity": item.showOverlay && item.overlayOpacity !== undefined ? item.overlayOpacity : 0.5,
+                "overlayFile": item.showOverlay ? (item.overlayFile || "") : "",
+                "showOverlay": item.showOverlay === true
             };
         }
     }
