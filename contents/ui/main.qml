@@ -427,7 +427,7 @@ PlasmoidItem {
                             // Row Overlay Layer Source (Placed inline, but hidden from screen via ShaderEffectSource)
                             Item {
                                 id: rowOverlayContent
-                                anchors.fill: rowContainer.activeShaderSource
+                                anchors.fill: rowContainer.overlayMaskSource
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
 
                                 // Option 1: Solid Color
@@ -473,7 +473,7 @@ PlasmoidItem {
                             // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
                                 id: rowOverlayMultiEffect
-                                anchors.fill: rowContainer.activeShaderSource
+                                anchors.fill: rowContainer.overlayMaskSource
                                 source: rowOverlaySourceGrabber
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: (rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5) * (rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0)
