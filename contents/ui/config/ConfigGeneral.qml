@@ -2150,7 +2150,9 @@ KCM.SimpleKCM {
                                         i18n("Solid Color"),
                                         i18n("Media File (Image/GIF/Video)")
                                     ]
-                                    currentIndex: model.overlayType !== undefined ? model.overlayType : 0
+                                    Binding on currentIndex {
+                                        value: model.overlayType !== undefined ? model.overlayType : 0
+                                    }
                                     onActivated: function(oIdx) {
                                         if (configPage.isLoaded) {
                                             rowsModel.setProperty(index, "overlayType", oIdx);

@@ -273,8 +273,10 @@ PlasmoidItem {
                         property real itemRotation: (rowContainer.rowItem && rowContainer.rowItem.rotation !== undefined) ? Number(rowContainer.rowItem.rotation) : 0
 
                         property real strokeMargin: (rowContainer.effType === "stroke") ? Math.max(1, rowContainer.effSize) : 0
-                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2)
-                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2)
+                        property real overlayPadW: (rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0 && !isShapeItem) ? 24 : 0
+                        property real overlayPadH: (rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0 && !isShapeItem) ? 12 : 0
+                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2 + overlayPadW)
+                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2 + overlayPadH)
                         property real rotRad: itemRotation * Math.PI / 180.0
                         property real boundingW: itemRotation === 0 ? unrotatedW : (Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
                         property real boundingH: itemRotation === 0 ? unrotatedH : (Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
@@ -631,7 +633,7 @@ PlasmoidItem {
                             Text {
                                 id: mainText
                                 visible: !rowContainer.isShapeItem && rowContainer.effType !== "stroke"
-                                anchors.fill: parent
+                                anchors.centerIn: parent
                                 text: rowContainer.formattedText
                                 opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
                                 horizontalAlignment: rowContainer.hAlign
