@@ -23,6 +23,15 @@ KCM.SimpleKCM {
     property alias cfg_editingBgType: editingBgTypeHolder.value
     property alias cfg_editingBgColor: editingBgColorHolder.text
 
+    property alias cfg_overlayType: overlayTypeCombo.currentIndex
+    property alias cfg_overlayColor: overlayColorInput.text
+    property alias cfg_overlayOpacity: overlayOpacityHolder.value
+    property alias cfg_overlayFile: overlayFileInput.text
+    property alias cfg_editingOverlayType: editingOverlayTypeHolder.value
+    property alias cfg_editingOverlayColor: editingOverlayColorHolder.text
+    property alias cfg_editingOverlayOpacity: editingOverlayOpacityHolder.value
+    property alias cfg_editingOverlayFile: editingOverlayFileHolder.text
+
     QtObject { id: rowsJsonHolder; property string text: "" }
     QtObject { id: bgOpacityHolder; property real value: 0.8 }
     QtObject { id: borderRadiusHolder; property int value: 16 }
@@ -32,6 +41,12 @@ KCM.SimpleKCM {
     QtObject { id: editingFontFamilyHolder; property string text: "" }
     QtObject { id: editingBgTypeHolder; property int value: -1 }
     QtObject { id: editingBgColorHolder; property string text: "" }
+
+    QtObject { id: overlayOpacityHolder; property real value: 0.5 }
+    QtObject { id: editingOverlayTypeHolder; property int value: -1 }
+    QtObject { id: editingOverlayColorHolder; property string text: "" }
+    QtObject { id: editingOverlayOpacityHolder; property real value: -1.0 }
+    QtObject { id: editingOverlayFileHolder; property string text: "" }
 
     property var activeColorCallback: null
 
@@ -320,6 +335,11 @@ KCM.SimpleKCM {
             editingBgTypeHolder.value = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
             editingBgColorHolder.text = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
 
+            editingOverlayTypeHolder.value = (typeof overlayTypeCombo !== "undefined" && overlayTypeCombo && overlayTypeCombo.currentIndex !== undefined) ? overlayTypeCombo.currentIndex : cfg_overlayType;
+            editingOverlayColorHolder.text = (typeof overlayColorInput !== "undefined" && overlayColorInput && overlayColorInput.text) ? overlayColorInput.text : cfg_overlayColor;
+            editingOverlayOpacityHolder.value = (typeof overlayOpacitySlider !== "undefined" && overlayOpacitySlider) ? overlayOpacitySlider.value : cfg_overlayOpacity;
+            editingOverlayFileHolder.text = (typeof overlayFileInput !== "undefined" && overlayFileInput && overlayFileInput.text) ? overlayFileInput.text : cfg_overlayFile;
+
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.isEditing = true;
@@ -327,6 +347,11 @@ KCM.SimpleKCM {
                 pConfig.editingFontFamily = editingFontFamilyHolder.text;
                 pConfig.editingBgType = editingBgTypeHolder.value;
                 pConfig.editingBgColor = editingBgColorHolder.text;
+
+                pConfig.editingOverlayType = editingOverlayTypeHolder.value;
+                pConfig.editingOverlayColor = editingOverlayColorHolder.text;
+                pConfig.editingOverlayOpacity = editingOverlayOpacityHolder.value;
+                pConfig.editingOverlayFile = editingOverlayFileHolder.text;
             }
         } catch(e) {
             console.log("[CustomCalendar Config] Error in pushLiveEditingStateNow:", e);
@@ -341,6 +366,11 @@ KCM.SimpleKCM {
             editingBgTypeHolder.value = -1;
             editingBgColorHolder.text = "";
 
+            editingOverlayTypeHolder.value = -1;
+            editingOverlayColorHolder.text = "";
+            editingOverlayOpacityHolder.value = -1.0;
+            editingOverlayFileHolder.text = "";
+
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.isEditing = false;
@@ -348,6 +378,11 @@ KCM.SimpleKCM {
                 pConfig.editingFontFamily = "";
                 pConfig.editingBgType = -1;
                 pConfig.editingBgColor = "";
+
+                pConfig.editingOverlayType = -1;
+                pConfig.editingOverlayColor = "";
+                pConfig.editingOverlayOpacity = -1.0;
+                pConfig.editingOverlayFile = "";
             }
         } catch(e) {}
     }
@@ -361,6 +396,11 @@ KCM.SimpleKCM {
                 pConfig.fontFamily = (typeof fontCombo !== "undefined" && fontCombo && fontCombo.selectedFont) ? fontCombo.selectedFont : cfg_fontFamily;
                 pConfig.bgType = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
                 pConfig.bgColor = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
+
+                pConfig.overlayType = (typeof overlayTypeCombo !== "undefined" && overlayTypeCombo && overlayTypeCombo.currentIndex !== undefined) ? overlayTypeCombo.currentIndex : cfg_overlayType;
+                pConfig.overlayColor = (typeof overlayColorInput !== "undefined" && overlayColorInput && overlayColorInput.text) ? overlayColorInput.text : cfg_overlayColor;
+                pConfig.overlayOpacity = (typeof overlayOpacitySlider !== "undefined" && overlayOpacitySlider) ? overlayOpacitySlider.value : cfg_overlayOpacity;
+                pConfig.overlayFile = (typeof overlayFileInput !== "undefined" && overlayFileInput && overlayFileInput.text) ? overlayFileInput.text : cfg_overlayFile;
             }
         } catch(e) {}
     }
@@ -996,6 +1036,28 @@ KCM.SimpleKCM {
         }
     }
 
+    FileDialog {
+        id: overlayFileDialog
+        title: i18n("Select Overlay Media File")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [
+            i18n("Media Files (*.png *.jpg *.jpeg *.gif *.webp *.mp4 *.webm *.ogv *.mov *.avi *.3gp *.mkv)"),
+            i18n("Image Files (*.png *.jpg *.jpeg *.gif *.webp)"),
+            i18n("Video Files (*.mp4 *.webm *.ogv *.mov *.avi *.3gp *.mkv)"),
+            i18n("All Files (*)")
+        ]
+        onAccepted: {
+            // Strip the file:// protocol prefix if present, as Qt Quick handles local paths directly
+            var path = String(selectedFile);
+            if (path.indexOf("file://") === 0) {
+                path = path.substring(7);
+            }
+            overlayFileInput.text = path;
+            pushLiveEditingState();
+            markChanged();
+        }
+    }
+
     Dialog {
         id: commandSecurityAuditDialog
         title: i18n("⚠️ Security Review: Executable Commands Detected")
@@ -1245,6 +1307,106 @@ KCM.SimpleKCM {
                     pushLiveEditingState();
                     markChanged();
                 }
+            }
+        }
+
+        // Design Overlay Configuration
+        ComboBox {
+            id: overlayTypeCombo
+            Kirigami.FormData.label: i18n("Overlay Type:")
+            model: [
+                i18n("None"),
+                i18n("Solid Color"),
+                i18n("Media File (Image/GIF/Video)")
+            ]
+            onActivated: function(index) {
+                pushLiveEditingState();
+                markChanged();
+            }
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Overlay Color:")
+            visible: overlayTypeCombo.currentIndex === 1
+
+            Rectangle {
+                id: overlayColorSwatch
+                Layout.preferredWidth: 26
+                Layout.preferredHeight: 26
+                radius: 4
+                color: overlayColorInput.text || "#000000"
+                border.color: Kirigami.Theme.disabledTextColor
+                border.width: 1
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        configPage.openColorPicker(overlayColorInput.text, function(hex) {
+                            overlayColorInput.text = hex;
+                            overlayColorInput.textEdited();
+                            pushLiveEditingState();
+                            markChanged();
+                        });
+                    }
+                }
+            }
+
+            TextField {
+                id: overlayColorInput
+                Layout.fillWidth: true
+                placeholderText: "#000000"
+                onTextEdited: {
+                    pushLiveEditingState();
+                    markChanged();
+                }
+            }
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Overlay Media File:")
+            visible: overlayTypeCombo.currentIndex === 2
+
+            TextField {
+                id: overlayFileInput
+                Layout.fillWidth: true
+                placeholderText: i18n("Select local image, GIF, or video...")
+                onTextEdited: {
+                    pushLiveEditingState();
+                    markChanged();
+                }
+            }
+
+            Button {
+                text: i18n("Browse...")
+                icon.name: "document-open"
+                onClicked: {
+                    overlayFileDialog.open();
+                }
+            }
+        }
+
+        RowLayout {
+            Kirigami.FormData.label: i18n("Overlay Opacity:")
+            visible: overlayTypeCombo.currentIndex !== 0
+
+            Slider {
+                id: overlayOpacitySlider
+                Layout.fillWidth: true
+                from: 0.0
+                to: 1.0
+                stepSize: 0.05
+                value: overlayOpacityHolder.value
+                onMoved: {
+                    overlayOpacityHolder.value = value;
+                    pushLiveEditingState();
+                    markChanged();
+                }
+            }
+
+            Label {
+                text: Math.round(overlayOpacitySlider.value * 100) + "%"
+                Layout.preferredWidth: 35
             }
         }
 

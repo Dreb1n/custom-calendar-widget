@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Shapes
 import QtQuick.Effects
+import QtMultimedia
 import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
@@ -95,7 +96,11 @@ PlasmoidItem {
         "bgType": 2,
         "bgColor": "#1e293b",
         "bgOpacity": 0.8,
-        "borderRadius": 16
+        "borderRadius": 16,
+        "overlayType": 0,
+        "overlayColor": "#000000",
+        "overlayOpacity": 0.5,
+        "overlayFile": ""
     })
 
     // In-memory cache for parsed JSON rows to eliminate JSON.parse churn
@@ -110,18 +115,30 @@ PlasmoidItem {
         var fontFam = "";
         var bgT = -1;
         var bgC = "";
+        var ovT = -1;
+        var ovC = "";
+        var ovO = -1.0;
+        var ovF = "";
 
         if (isEd) {
             jsonStr = (pCfg && pCfg.editingRowsJson) ? pCfg.editingRowsJson : "";
             fontFam = (pCfg && pCfg.editingFontFamily) ? pCfg.editingFontFamily : "";
             bgT = (pCfg && pCfg.editingBgType !== undefined && pCfg.editingBgType !== -1) ? pCfg.editingBgType : -1;
             bgC = (pCfg && pCfg.editingBgColor) ? pCfg.editingBgColor : "";
+            ovT = (pCfg && pCfg.editingOverlayType !== undefined && pCfg.editingOverlayType !== -1) ? pCfg.editingOverlayType : -1;
+            ovC = (pCfg && pCfg.editingOverlayColor) ? pCfg.editingOverlayColor : "";
+            ovO = (pCfg && pCfg.editingOverlayOpacity !== undefined && pCfg.editingOverlayOpacity !== -1.0) ? pCfg.editingOverlayOpacity : -1.0;
+            ovF = (pCfg && pCfg.editingOverlayFile) ? pCfg.editingOverlayFile : "";
         }
 
         if (!jsonStr) jsonStr = (pCfg && pCfg.rowsJson) ? pCfg.rowsJson : "";
         if (!fontFam) fontFam = (pCfg && pCfg.fontFamily) ? pCfg.fontFamily : "Sans Serif";
         if (bgT === -1) bgT = (pCfg && pCfg.bgType !== undefined) ? pCfg.bgType : 2;
         if (!bgC) bgC = (pCfg && pCfg.bgColor) ? pCfg.bgColor : "#1e293b";
+        if (ovT === -1) ovT = (pCfg && pCfg.overlayType !== undefined) ? pCfg.overlayType : 0;
+        if (!ovC) ovC = (pCfg && pCfg.overlayColor) ? pCfg.overlayColor : "#000000";
+        if (ovO === -1.0) ovO = (pCfg && pCfg.overlayOpacity !== undefined) ? pCfg.overlayOpacity : 0.5;
+        if (!ovF) ovF = (pCfg && pCfg.overlayFile) ? pCfg.overlayFile : "";
 
         var parsedRows = cachedParsedRows;
         if (jsonStr !== cachedJsonStr) {
@@ -153,7 +170,11 @@ PlasmoidItem {
             activeSettings.bgType === bgT &&
             activeSettings.bgColor === bgC &&
             activeSettings.bgOpacity === bgOp &&
-            activeSettings.borderRadius === bRad) {
+            activeSettings.borderRadius === bRad &&
+            activeSettings.overlayType === ovT &&
+            activeSettings.overlayColor === ovC &&
+            activeSettings.overlayOpacity === ovO &&
+            activeSettings.overlayFile === ovF) {
             return;
         }
 
@@ -164,7 +185,11 @@ PlasmoidItem {
             "bgType": bgT,
             "bgColor": bgC,
             "bgOpacity": bgOp,
-            "borderRadius": bRad
+            "borderRadius": bRad,
+            "overlayType": ovT,
+            "overlayColor": ovC,
+            "overlayOpacity": ovO,
+            "overlayFile": ovF
         };
     }
 
@@ -173,6 +198,10 @@ PlasmoidItem {
             if (plasmoid.configuration) {
                 plasmoid.configuration.isEditing = false;
                 plasmoid.configuration.editingRowsJson = "";
+                plasmoid.configuration.editingOverlayType = -1;
+                plasmoid.configuration.editingOverlayColor = "";
+                plasmoid.configuration.editingOverlayOpacity = -1.0;
+                plasmoid.configuration.editingOverlayFile = "";
             }
         } catch(e) {}
         updateActiveSettings();
@@ -190,6 +219,14 @@ PlasmoidItem {
         function onFontFamilyChanged() { root.updateActiveSettings(); }
         function onBgTypeChanged() { root.updateActiveSettings(); }
         function onBgColorChanged() { root.updateActiveSettings(); }
+        function onOverlayTypeChanged() { root.updateActiveSettings(); }
+        function onOverlayColorChanged() { root.updateActiveSettings(); }
+        function onOverlayOpacityChanged() { root.updateActiveSettings(); }
+        function onOverlayFileChanged() { root.updateActiveSettings(); }
+        function onEditingOverlayTypeChanged() { root.updateActiveSettings(); }
+        function onEditingOverlayColorChanged() { root.updateActiveSettings(); }
+        function onEditingOverlayOpacityChanged() { root.updateActiveSettings(); }
+        function onEditingOverlayFileChanged() { root.updateActiveSettings(); }
     }
 
     Component {
@@ -216,6 +253,76 @@ PlasmoidItem {
                 opacity: root.activeSettings.bgOpacity
                 border.color: root.activeSettings.bgType === 2 ? "transparent" : "#334155"
                 border.width: root.activeSettings.bgType === 2 ? 0 : 1
+            }
+
+            // Optional Design Overlay Layer (Visual Content)
+            Item {
+                id: overlayContent
+                anchors.fill: parent
+                visible: root.activeSettings.overlayType !== 0
+                opacity: root.activeSettings.overlayOpacity
+
+                // Option 1: Solid Color Overlay
+                Rectangle {
+                    anchors.fill: parent
+                    visible: root.activeSettings.overlayType === 1
+                    color: root.activeSettings.overlayColor
+                    radius: root.activeSettings.borderRadius
+                }
+
+                // Option 2: Media Overlay (Image / Video)
+                Loader {
+                    anchors.fill: parent
+                    visible: root.activeSettings.overlayType === 2
+                    sourceComponent: {
+                        var file = root.activeSettings.overlayFile;
+                        if (!file) return null;
+                        var isVideo = /\.(mp4|webm|ogv|mov|avi|3gp|mkv)$/i.test(file);
+                        return isVideo ? videoComponent : imageComponent;
+                    }
+                }
+            }
+
+            // Rounded corner clipping mask to match background radius
+            Rectangle {
+                id: overlayMask
+                anchors.fill: parent
+                radius: root.activeSettings.borderRadius
+                color: "black"
+                visible: false
+            }
+
+            // Apply hardware-accelerated clipping mask using MultiEffect
+            MultiEffect {
+                anchors.fill: overlayContent
+                source: overlayContent
+                visible: overlayContent.visible
+                maskEnabled: true
+                maskSource: overlayMask
+            }
+
+            Component {
+                id: imageComponent
+                Image {
+                    source: root.activeSettings.overlayFile
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: true
+                }
+            }
+
+            Component {
+                id: videoComponent
+                Video {
+                    source: root.activeSettings.overlayFile
+                    fillMode: Video.PreserveAspectCrop
+                    loops: MediaPlayer.Infinite
+                    volume: 0 // Keep backgrounds silent
+                    
+                    Component.onCompleted: {
+                        play();
+                    }
+                }
             }
 
             // Rows Layout Column Centered in Widget
