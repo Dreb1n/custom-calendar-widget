@@ -470,6 +470,14 @@ PlasmoidItem {
                                 visible: false
                             }
 
+                            // Capture a dedicated clean texture copy of the text/shape mask to isolate it from shadow/glow expansions
+                            ShaderEffectSource {
+                                id: rowOverlayMaskGrabber
+                                sourceItem: rowContainer.activeShaderSource
+                                live: true
+                                visible: false
+                            }
+
                             // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
                                 anchors.fill: rowContainer.activeShaderSource
@@ -477,7 +485,7 @@ PlasmoidItem {
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: (rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5) * (rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0)
                                 maskEnabled: true
-                                maskSource: rowContainer.activeShaderSource
+                                maskSource: rowOverlayMaskGrabber
                                 z: 2
                             }
 
