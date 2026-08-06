@@ -22,16 +22,6 @@ KCM.SimpleKCM {
     property alias cfg_editingFontFamily: editingFontFamilyHolder.text
     property alias cfg_editingBgType: editingBgTypeHolder.value
     property alias cfg_editingBgColor: editingBgColorHolder.text
-
-    property alias cfg_overlayType: overlayTypeCombo.currentIndex
-    property alias cfg_overlayColor: overlayColorInput.text
-    property alias cfg_overlayOpacity: overlayOpacityHolder.value
-    property alias cfg_overlayFile: overlayFileInput.text
-    property alias cfg_editingOverlayType: editingOverlayTypeHolder.value
-    property alias cfg_editingOverlayColor: editingOverlayColorHolder.text
-    property alias cfg_editingOverlayOpacity: editingOverlayOpacityHolder.value
-    property alias cfg_editingOverlayFile: editingOverlayFileHolder.text
-
     QtObject { id: rowsJsonHolder; property string text: "" }
     QtObject { id: bgOpacityHolder; property real value: 0.8 }
     QtObject { id: borderRadiusHolder; property int value: 16 }
@@ -43,12 +33,6 @@ KCM.SimpleKCM {
     QtObject { id: editingBgColorHolder; property string text: "" }
 
     property int activeRowIndexForFileDialog: -1
-
-    QtObject { id: overlayOpacityHolder; property real value: 0.5 }
-    QtObject { id: editingOverlayTypeHolder; property int value: -1 }
-    QtObject { id: editingOverlayColorHolder; property string text: "" }
-    QtObject { id: editingOverlayOpacityHolder; property real value: -1.0 }
-    QtObject { id: editingOverlayFileHolder; property string text: "" }
 
     property var activeColorCallback: null
 
@@ -337,11 +321,6 @@ KCM.SimpleKCM {
             editingBgTypeHolder.value = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
             editingBgColorHolder.text = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
 
-            editingOverlayTypeHolder.value = (typeof overlayTypeCombo !== "undefined" && overlayTypeCombo && overlayTypeCombo.currentIndex !== undefined) ? overlayTypeCombo.currentIndex : cfg_overlayType;
-            editingOverlayColorHolder.text = (typeof overlayColorInput !== "undefined" && overlayColorInput && overlayColorInput.text) ? overlayColorInput.text : cfg_overlayColor;
-            editingOverlayOpacityHolder.value = (typeof overlayOpacitySlider !== "undefined" && overlayOpacitySlider) ? overlayOpacitySlider.value : cfg_overlayOpacity;
-            editingOverlayFileHolder.text = (typeof overlayFileInput !== "undefined" && overlayFileInput && overlayFileInput.text) ? overlayFileInput.text : cfg_overlayFile;
-
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.isEditing = true;
@@ -349,11 +328,6 @@ KCM.SimpleKCM {
                 pConfig.editingFontFamily = editingFontFamilyHolder.text;
                 pConfig.editingBgType = editingBgTypeHolder.value;
                 pConfig.editingBgColor = editingBgColorHolder.text;
-
-                pConfig.editingOverlayType = editingOverlayTypeHolder.value;
-                pConfig.editingOverlayColor = editingOverlayColorHolder.text;
-                pConfig.editingOverlayOpacity = editingOverlayOpacityHolder.value;
-                pConfig.editingOverlayFile = editingOverlayFileHolder.text;
             }
         } catch(e) {
             console.log("[CustomCalendar Config] Error in pushLiveEditingStateNow:", e);
@@ -368,11 +342,6 @@ KCM.SimpleKCM {
             editingBgTypeHolder.value = -1;
             editingBgColorHolder.text = "";
 
-            editingOverlayTypeHolder.value = -1;
-            editingOverlayColorHolder.text = "";
-            editingOverlayOpacityHolder.value = -1.0;
-            editingOverlayFileHolder.text = "";
-
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.isEditing = false;
@@ -380,11 +349,6 @@ KCM.SimpleKCM {
                 pConfig.editingFontFamily = "";
                 pConfig.editingBgType = -1;
                 pConfig.editingBgColor = "";
-
-                pConfig.editingOverlayType = -1;
-                pConfig.editingOverlayColor = "";
-                pConfig.editingOverlayOpacity = -1.0;
-                pConfig.editingOverlayFile = "";
             }
         } catch(e) {}
     }
@@ -398,11 +362,6 @@ KCM.SimpleKCM {
                 pConfig.fontFamily = (typeof fontCombo !== "undefined" && fontCombo && fontCombo.selectedFont) ? fontCombo.selectedFont : cfg_fontFamily;
                 pConfig.bgType = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
                 pConfig.bgColor = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
-
-                pConfig.overlayType = (typeof overlayTypeCombo !== "undefined" && overlayTypeCombo && overlayTypeCombo.currentIndex !== undefined) ? overlayTypeCombo.currentIndex : cfg_overlayType;
-                pConfig.overlayColor = (typeof overlayColorInput !== "undefined" && overlayColorInput && overlayColorInput.text) ? overlayColorInput.text : cfg_overlayColor;
-                pConfig.overlayOpacity = (typeof overlayOpacitySlider !== "undefined" && overlayOpacitySlider) ? overlayOpacitySlider.value : cfg_overlayOpacity;
-                pConfig.overlayFile = (typeof overlayFileInput !== "undefined" && overlayFileInput && overlayFileInput.text) ? overlayFileInput.text : cfg_overlayFile;
             }
         } catch(e) {}
     }
