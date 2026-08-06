@@ -427,7 +427,7 @@ PlasmoidItem {
                             // Row Overlay Layer Source (Placed inline, but hidden from screen via ShaderEffectSource)
                             Item {
                                 id: rowOverlayContent
-                                anchors.fill: rowContainer.overlayMaskSource
+                                anchors.fill: rowContainer.activeShaderSource
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
 
                                 // Option 1: Solid Color
@@ -473,7 +473,7 @@ PlasmoidItem {
                             // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
                                 id: rowOverlayMultiEffect
-                                anchors.fill: rowContainer.overlayMaskSource
+                                anchors.fill: rowContainer.activeShaderSource
                                 source: rowOverlaySourceGrabber
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: (rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5) * (rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0)
@@ -609,6 +609,57 @@ PlasmoidItem {
                                 }
                             }
 
+                             // Canvas that only draws the text fill to serve as a perfect mask
+                             Canvas {
+                                 id: textMaskCanvas
+                                 visible: false
+                                 layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                 layer.smooth: true
+                                 property real pad: rowContainer.effSize * 2
+                                 x: -pad
+                                 y: -pad
+                                 width: parent.width + (pad * 2)
+                                 height: parent.height + (pad * 2)
+                                 renderTarget: Canvas.Image
+
+                                 property string txt: rowContainer.formattedText
+                                 property string fontFam: rowContainer.fontFam
+                                 property int fontSize: rowContainer.rowItem.fontSize || 24
+                                 property int fontWeight: rowContainer.rowItem.weight || 400
+                                 property int hAlign: rowContainer.hAlign
+
+                                 onTxtChanged: requestPaint()
+                                 onFontSizeChanged: requestPaint()
+                                 onFontFamChanged: requestPaint()
+                                 onWidthChanged: requestPaint()
+                                 onHeightChanged: requestPaint()
+
+                                 onPaint: {
+                                     var ctx = getContext("2d");
+                                     ctx.clearRect(0, 0, width, height);
+                                     if (!txt) return;
+
+                                     var wStr = (fontWeight >= 700) ? "bold " : "";
+                                     ctx.font = wStr + fontSize + "px " + (fontFam || "sans-serif");
+
+                                     var align = "center";
+                                     var cx = width / 2;
+                                     if (hAlign === Text.AlignLeft) {
+                                         align = "left";
+                                         cx = pad;
+                                     } else if (hAlign === Text.AlignRight) {
+                                         align = "right";
+                                         cx = width - pad;
+                                     }
+                                     ctx.textAlign = align;
+                                     ctx.textBaseline = "middle";
+
+                                     var cy = height / 2;
+                                     ctx.fillStyle = "#ffffff";
+                                     ctx.fillText(txt, cx, cy);
+                                 }
+                             }
+
                             // True Native Vector RoundJoin Text Stroke Canvas
                             Canvas {
                                 id: textStrokeCanvas
@@ -710,7 +761,7 @@ PlasmoidItem {
                         }
 
                         property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textStrokeCanvas : mainText)
-                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : mainText
+                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textMaskCanvas : mainText)
 
                         Component {
                             id: glowComp
