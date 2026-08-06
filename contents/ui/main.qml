@@ -417,25 +417,23 @@ PlasmoidItem {
                             rotation: rowContainer.itemRotation
                             transformOrigin: Item.Center
 
-                            // Row Overlay Layer
+                            // Row Overlay Layer Source (Hidden, used as MultiEffect texture source)
                             Item {
                                 id: rowOverlayContent
                                 anchors.fill: parent
-                                visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
-                                opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
+                                visible: false
 
                                 // Option 1: Solid Color
                                 Rectangle {
                                     anchors.fill: parent
-                                    visible: rowContainer.rowItem.overlayType === 1
-                                    color: rowContainer.rowItem.overlayColor || "#000000"
-                                    radius: 8
+                                    visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 1
+                                    color: (rowContainer.rowItem && rowContainer.rowItem.overlayColor) ? rowContainer.rowItem.overlayColor : "#000000"
                                 }
 
                                 // Option 2: Media (Image/Video)
                                 Loader {
                                     anchors.fill: parent
-                                    visible: rowContainer.rowItem.overlayType === 2
+                                    visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 2
                                     sourceComponent: {
                                         if (!rowContainer.rowItem || !rowContainer.rowItem.overlayFile) return null;
                                         var file = rowContainer.rowItem.overlayFile;
@@ -445,21 +443,15 @@ PlasmoidItem {
                                 }
                             }
 
-                            // Clipping mask for row-level overlay rounded corners
-                            Rectangle {
-                                id: rowOverlayMask
-                                anchors.fill: parent
-                                radius: 8
-                                color: "black"
-                                visible: false
-                            }
-
+                            // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
-                                anchors.fill: rowOverlayContent
+                                anchors.fill: parent
                                 source: rowOverlayContent
-                                visible: rowOverlayContent.visible
+                                visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
                                 maskEnabled: true
-                                maskSource: rowOverlayMask
+                                maskSource: rowContainer.activeShaderSource
+                                z: 2
                             }
 
                             Component {
