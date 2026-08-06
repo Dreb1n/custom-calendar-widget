@@ -458,7 +458,11 @@ PlasmoidItem {
                                 sourceItem: {
                                     if (!rowContainer.rowItem) return null;
                                     if (rowContainer.rowItem.overlayType === 1) return rowOverlayColorRect;
-                                    if (rowContainer.rowItem.overlayType === 2) return rowOverlayMediaLoader.item;
+                                    if (rowContainer.rowItem.overlayType === 2) {
+                                        var it = rowOverlayMediaLoader.item;
+                                        if (!it) return null;
+                                        return it.videoSink !== undefined ? it.videoSink : it;
+                                    }
                                     return null;
                                 }
                                 hideSource: true
@@ -490,23 +494,36 @@ PlasmoidItem {
 
                             Component {
                                 id: rowVideoComponent
-                                Video {
+                                Item {
                                     anchors.fill: parent
-                                    source: rowContainer.formattedOverlayFile
-                                    autoPlay: true
-                                    fillMode: VideoOutput.PreserveAspectCrop
-                                    loops: MediaPlayer.Infinite
-                                    volume: 0
-                                    layer.enabled: true
-                                    layer.smooth: true
-                                    
-                                    onSourceChanged: {
-                                        if (source && source !== "") {
+                                    property Item videoSink: videoOutput
+
+                                    MediaPlayer {
+                                        id: rowMediaPlayer
+                                        source: rowContainer.formattedOverlayFile
+                                        videoOutput: videoOutput
+                                        audioOutput: AudioOutput { volume: 0 }
+                                        loops: MediaPlayer.Infinite
+                                        
+                                        Component.onCompleted: {
                                             play();
                                         }
                                     }
-                                    Component.onCompleted: {
-                                        play();
+
+                                    VideoOutput {
+                                        id: videoOutput
+                                        anchors.fill: parent
+                                        fillMode: VideoOutput.PreserveAspectCrop
+                                        visible: false
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                    }
+
+                                    Connections {
+                                        target: rowContainer
+                                        function onFormattedOverlayFileChanged() {
+                                            rowMediaPlayer.play();
+                                        }
                                     }
                                 }
                             }
