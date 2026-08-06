@@ -23,17 +23,187 @@ KCM.SimpleKCM {
     property alias cfg_editingBgType: editingBgTypeHolder.value
     property alias cfg_editingBgColor: editingBgColorHolder.text
 
-    Item { id: rowsJsonHolder; property string text: "" }
-    Item { id: bgOpacityHolder; property real value: 0.8 }
-    Item { id: borderRadiusHolder; property int value: 16 }
-    Item { id: widgetPaddingHolder; property int value: 16 }
-    Item { id: isEditingHolder; property bool value: false }
-    Item { id: editingRowsJsonHolder; property string text: "" }
-    Item { id: editingFontFamilyHolder; property string text: "" }
-    Item { id: editingBgTypeHolder; property int value: -1 }
-    Item { id: editingBgColorHolder; property string text: "" }
+    QtObject { id: rowsJsonHolder; property string text: "" }
+    QtObject { id: bgOpacityHolder; property real value: 0.8 }
+    QtObject { id: borderRadiusHolder; property int value: 16 }
+    QtObject { id: widgetPaddingHolder; property int value: 16 }
+    QtObject { id: isEditingHolder; property bool value: false }
+    QtObject { id: editingRowsJsonHolder; property string text: "" }
+    QtObject { id: editingFontFamilyHolder; property string text: "" }
+    QtObject { id: editingBgTypeHolder; property int value: -1 }
+    QtObject { id: editingBgColorHolder; property string text: "" }
 
     property var activeColorCallback: null
+
+    property var timezoneOptions: [
+        // System & Universal
+        { label: "Local (System Default)", value: "" },
+        { label: "UTC / GMT (Coordinated Universal Time)", value: "UTC" },
+
+        // Africa
+        { label: "🇪🇬 Africa/Cairo (Egypt - EET / EEST)", value: "Africa/Cairo" },
+        { label: "🇿🇦 Africa/Johannesburg (South Africa - SAST)", value: "Africa/Johannesburg" },
+        { label: "🇳🇬 Africa/Lagos (West Africa - WAT)", value: "Africa/Lagos" },
+        { label: "🇰🇪 Africa/Nairobi (East Africa - EAT)", value: "Africa/Nairobi" },
+        { label: "🇲🇦 Africa/Casablanca (Morocco - WET / WEST)", value: "Africa/Casablanca" },
+        { label: "🇩🇿 Africa/Algiers (Central Africa - CET)", value: "Africa/Algiers" },
+
+        // Americas - North
+        { label: "🇺🇸 America/New_York (US Eastern - EST / EDT)", value: "America/New_York" },
+        { label: "🇺🇸 America/Chicago (US Central - CST / CDT)", value: "America/Chicago" },
+        { label: "🇺🇸 America/Denver (US Mountain - MST / MDT)", value: "America/Denver" },
+        { label: "🇺🇸 America/Phoenix (US Arizona - MST no DST)", value: "America/Phoenix" },
+        { label: "🇺🇸 America/Los_Angeles (US Pacific - PST / PDT)", value: "America/Los_Angeles" },
+        { label: "🇺🇸 America/Anchorage (Alaska - AKST / AKDT)", value: "America/Anchorage" },
+        { label: "🇺🇸 Pacific/Honolulu (Hawaii - HST)", value: "Pacific/Honolulu" },
+        { label: "🇨🇦 America/Toronto (Canada Eastern)", value: "America/Toronto" },
+        { label: "🇨🇦 America/Vancouver (Canada Pacific)", value: "America/Vancouver" },
+
+        // Americas - Central & South
+        { label: "🇲🇽 America/Mexico_City (Mexico - CST)", value: "America/Mexico_City" },
+        { label: "🇧🇷 America/Sao_Paulo (Brazil - BRT)", value: "America/Sao_Paulo" },
+        { label: "🇦🇷 America/Argentina/Buenos_Aires (Argentina - ART)", value: "America/Argentina/Buenos_Aires" },
+        { label: "🇨🇱 America/Santiago (Chile - CLT / CLST)", value: "America/Santiago" },
+        { label: "🇨🇴 America/Bogota (Colombia - COT)", value: "America/Bogota" },
+        { label: "🇵🇪 America/Lima (Peru - PET)", value: "America/Lima" },
+        { label: "🇻🇪 America/Caracas (Venezuela - VET)", value: "America/Caracas" },
+
+        // Asia & Middle East
+        { label: "🇯🇵 Asia/Tokyo (Japan - JST)", value: "Asia/Tokyo" },
+        { label: "🇰🇷 Asia/Seoul (South Korea - KST)", value: "Asia/Seoul" },
+        { label: "🇨🇳 Asia/Shanghai (China - CST)", value: "Asia/Shanghai" },
+        { label: "🇭🇰 Asia/Hong_Kong (Hong Kong - HKT)", value: "Asia/Hong_Kong" },
+        { label: "🇸🇬 Asia/Singapore (Singapore - SGT)", value: "Asia/Singapore" },
+        { label: "🇹🇼 Asia/Taipei (Taiwan - CST)", value: "Asia/Taipei" },
+        { label: "🇮🇩 Asia/Jakarta (Indonesia Western - WIB)", value: "Asia/Jakarta" },
+        { label: "🇹🇭 Asia/Bangkok (Thailand, Vietnam - ICT)", value: "Asia/Bangkok" },
+        { label: "🇮🇳 Asia/Kolkata (India - IST)", value: "Asia/Kolkata" },
+        { label: "🇵🇰 Asia/Karachi (Pakistan - PKT)", value: "Asia/Karachi" },
+        { label: "🇧🇩 Asia/Dhaka (Bangladesh - BST)", value: "Asia/Dhaka" },
+        { label: "🇦🇪 Asia/Dubai (UAE, Gulf - GST)", value: "Asia/Dubai" },
+        { label: "🇸🇦 Asia/Riyadh (Saudi Arabia - AST)", value: "Asia/Riyadh" },
+        { label: "🇮🇱 Asia/Jerusalem (Israel - IST / IDT)", value: "Asia/Jerusalem" },
+        { label: "🇮🇷 Asia/Tehran (Iran - IRST / IRDT)", value: "Asia/Tehran" },
+        { label: "🇶🇦 Asia/Qatar (Qatar - AST)", value: "Asia/Qatar" },
+
+        // Australia & Pacific
+        { label: "🇦🇺 Australia/Sydney (NSW, VIC, ACT, TAS - AEST / AEDT)", value: "Australia/Sydney" },
+        { label: "🇦🇺 Australia/Melbourne (Victoria - AEST / AEDT)", value: "Australia/Melbourne" },
+        { label: "🇦🇺 Australia/Adelaide (South Australia - ACST / ACDT)", value: "Australia/Adelaide" },
+        { label: "🇦🇺 Australia/Darwin (Northern Territory - ACST)", value: "Australia/Darwin" },
+        { label: "🇦🇺 Australia/Brisbane (Queensland - AEST)", value: "Australia/Brisbane" },
+        { label: "🇦🇺 Australia/Perth (Western Australia - AWST)", value: "Australia/Perth" },
+        { label: "🇦🇺 Australia/Hobart (Tasmania - AEST / AEDT)", value: "Australia/Hobart" },
+        { label: "🇦🇺 Australia/Lord_Howe (Lord Howe Island)", value: "Australia/Lord_Howe" },
+        { label: "🇳🇿 Pacific/Auckland (New Zealand - NZST / NZDT)", value: "Pacific/Auckland" },
+        { label: "🇫🇯 Pacific/Fiji (Fiji - FJT / FJST)", value: "Pacific/Fiji" },
+
+        // Europe & Russia
+        { label: "🇬🇧 Europe/London (UK - GMT / BST)", value: "Europe/London" },
+        { label: "🇮🇪 Europe/Dublin (Ireland - GMT / IST)", value: "Europe/Dublin" },
+        { label: "🇫🇷 Europe/Paris (France - CET / CEST)", value: "Europe/Paris" },
+        { label: "🇩🇪 Europe/Berlin (Germany - CET / CEST)", value: "Europe/Berlin" },
+        { label: "🇪🇸 Europe/Madrid (Spain - CET / CEST)", value: "Europe/Madrid" },
+        { label: "🇮🇹 Europe/Rome (Italy - CET / CEST)", value: "Europe/Rome" },
+        { label: "🇳🇱 Europe/Amsterdam (Netherlands - CET / CEST)", value: "Europe/Amsterdam" },
+        { label: "🇧🇪 Europe/Brussels (Belgium - CET / CEST)", value: "Europe/Brussels" },
+        { label: "🇨🇭 Europe/Zurich (Switzerland - CET / CEST)", value: "Europe/Zurich" },
+        { label: "🇦🇹 Europe/Vienna (Austria - CET / CEST)", value: "Europe/Vienna" },
+        { label: "🇸🇪 Europe/Stockholm (Sweden - CET / CEST)", value: "Europe/Stockholm" },
+        { label: "🇳🇴 Europe/Oslo (Norway - CET / CEST)", value: "Europe/Oslo" },
+        { label: "🇩🇰 Europe/Copenhagen (Denmark - CET / CEST)", value: "Europe/Copenhagen" },
+        { label: "🇵🇱 Europe/Warsaw (Poland - CET / CEST)", value: "Europe/Warsaw" },
+        { label: "🇨🇿 Europe/Prague (Czechia - CET / CEST)", value: "Europe/Prague" },
+        { label: "🇭🇺 Europe/Budapest (Hungary - CET / CEST)", value: "Europe/Budapest" },
+        { label: "🇬🇷 Europe/Athens (Greece - EET / EEST)", value: "Europe/Athens" },
+        { label: "🇫🇮 Europe/Helsinki (Finland - EET / EEST)", value: "Europe/Helsinki" },
+        { label: "🇷🇴 Europe/Bucharest (Romania - EET / EEST)", value: "Europe/Bucharest" },
+        { label: "🇺🇦 Europe/Kyiv (Ukraine - EET / EEST)", value: "Europe/Kyiv" },
+        { label: "🇹🇷 Europe/Istanbul (Turkey - TRT)", value: "Europe/Istanbul" },
+        { label: "🇷🇺 Europe/Moscow (Russia - MSK)", value: "Europe/Moscow" },
+
+        // Fixed UTC Offsets (UTC-12 to UTC+14)
+        { label: "UTC+14:00 (Line Islands, Kiribati)", value: "UTC+14" },
+        { label: "UTC+13:00 (Tonga, Samoa)", value: "UTC+13" },
+        { label: "UTC+12:45 (Chatham Islands)", value: "UTC+12:45" },
+        { label: "UTC+12:00 (Marshall Islands, Tuvalu)", value: "UTC+12" },
+        { label: "UTC+11:00 (Solomon Islands, Vanuatu)", value: "UTC+11" },
+        { label: "UTC+10:30 (Lord Howe Standard)", value: "UTC+10:30" },
+        { label: "UTC+10:00 (Guam, Papua New Guinea)", value: "UTC+10" },
+        { label: "UTC+09:30 (Australian Central Standard)", value: "UTC+9:30" },
+        { label: "UTC+09:00 (East Timor, Palau)", value: "UTC+9" },
+        { label: "UTC+08:45 (Australian Central Western)", value: "UTC+8:45" },
+        { label: "UTC+08:00 (Perth, Singapore, Beijing)", value: "UTC+8" },
+        { label: "UTC+07:00 (Bangkok, Jakarta, Hanoi)", value: "UTC+7" },
+        { label: "UTC+06:30 (Myanmar, Cocos Islands)", value: "UTC+6:30" },
+        { label: "UTC+06:00 (Dhaka, Almaty)", value: "UTC+6" },
+        { label: "UTC+05:45 (Nepal Standard)", value: "UTC+5:45" },
+        { label: "UTC+05:30 (India Standard, Sri Lanka)", value: "UTC+5:30" },
+        { label: "UTC+05:00 (Pakistan, Tashkent, Maldives)", value: "UTC+5" },
+        { label: "UTC+04:30 (Afghanistan)", value: "UTC+4:30" },
+        { label: "UTC+04:00 (Dubai, Baku, Yerevan, Tbilisi)", value: "UTC+4" },
+        { label: "UTC+03:30 (Iran Standard)", value: "UTC+3:30" },
+        { label: "UTC+03:00 (Moscow, Riyadh, Nairobi, Baghdad)", value: "UTC+3" },
+        { label: "UTC+02:00 (Athens, Cairo, Helsinki, Johannesburg)", value: "UTC+2" },
+        { label: "UTC+01:00 (Paris, Berlin, Rome, Madrid, Lagos)", value: "UTC+1" },
+        { label: "UTC+00:00 (UTC, GMT, London, Reykjavik, Accra)", value: "UTC+0" },
+        { label: "UTC-01:00 (Cabo Verde, Azores)", value: "UTC-1" },
+        { label: "UTC-02:00 (South Georgia, Fernando de Noronha)", value: "UTC-2" },
+        { label: "UTC-03:00 (Buenos Aires, Sao Paulo, Montevideo)", value: "UTC-3" },
+        { label: "UTC-03:30 (Newfoundland Standard)", value: "UTC-3:30" },
+        { label: "UTC-04:00 (Santiago, Caracas, Halifax, Manaus)", value: "UTC-4" },
+        { label: "UTC-05:00 (New York, Toronto, Bogota, Lima)", value: "UTC-5" },
+        { label: "UTC-06:00 (Chicago, Mexico City, Guatemala)", value: "UTC-6" },
+        { label: "UTC-07:00 (Denver, Phoenix, Edmonton)", value: "UTC-7" },
+        { label: "UTC-08:00 (Los Angeles, Vancouver, Tijuana)", value: "UTC-8" },
+        { label: "UTC-09:00 (Anchorage, Gambier Islands)", value: "UTC-9" },
+        { label: "UTC-09:30 (Marquesas Islands)", value: "UTC-9:30" },
+        { label: "UTC-10:00 (Honolulu, Tahiti, Rarotonga)", value: "UTC-10" },
+        { label: "UTC-11:00 (American Samoa, Niue, Midway)", value: "UTC-11" },
+
+        // Custom Write-In Option
+        { label: "✏️ Custom Timezone / City / Offset...", value: "__CUSTOM__" }
+    ]
+
+    property var localeOptions: [
+        { label: "System Default", value: "" },
+        { label: "🇬🇧 English (US / UK - en_US / en_GB)", value: "en_US" },
+        { label: "🇫🇷 French (France - fr_FR)", value: "fr_FR" },
+        { label: "🇩🇪 German (Germany - de_DE)", value: "de_DE" },
+        { label: "🇪🇸 Spanish (Spain - es_ES)", value: "es_ES" },
+        { label: "🇲🇽 Spanish (Mexico - es_MX)", value: "es_MX" },
+        { label: "🇮🇹 Italian (Italy - it_IT)", value: "it_IT" },
+        { label: "🇵🇹 Portuguese (Portugal - pt_PT)", value: "pt_PT" },
+        { label: "🇧🇷 Portuguese (Brazil - pt_BR)", value: "pt_BR" },
+        { label: "🇯🇵 Japanese (Japan - ja_JP)", value: "ja_JP" },
+        { label: "🇰🇷 Korean (South Korea - ko_KR)", value: "ko_KR" },
+        { label: "🇨🇳 Chinese (Simplified - zh_CN)", value: "zh_CN" },
+        { label: "🇹🇼 Chinese (Traditional - zh_TW)", value: "zh_TW" },
+        { label: "🇷🇺 Russian (Russia - ru_RU)", value: "ru_RU" },
+        { label: "🇺🇦 Ukrainian (Ukraine - uk_UA)", value: "uk_UA" },
+        { label: "🇵🇱 Polish (Poland - pl_PL)", value: "pl_PL" },
+        { label: "🇳🇱 Dutch (Netherlands - nl_NL)", value: "nl_NL" },
+        { label: "🇸🇪 Swedish (Sweden - sv_SE)", value: "sv_SE" },
+        { label: "🇳🇴 Norwegian (Norway - nb_NO)", value: "nb_NO" },
+        { label: "🇩🇰 Danish (Denmark - da_DK)", value: "da_DK" },
+        { label: "🇫🇮 Finnish (Finland - fi_FI)", value: "fi_FI" },
+        { label: "🇨🇿 Czech (Czechia - cs_CZ)", value: "cs_CZ" },
+        { label: "🇸lovakia (sk_SK)", value: "sk_SK" },
+        { label: "🇭🇺 Hungarian (Hungary - hu_HU)", value: "hu_HU" },
+        { label: "🇷🇴 Romanian (Romania - ro_RO)", value: "ro_RO" },
+        { label: "🇧🇬 Bulgarian (Bulgaria - bg_BG)", value: "bg_BG" },
+        { label: "🇬🇷 Greek (Greece - el_GR)", value: "el_GR" },
+        { label: "🇹🇷 Turkish (Turkey - tr_TR)", value: "tr_TR" },
+        { label: "🇸🇦 Arabic (Saudi Arabia - ar_SA)", value: "ar_SA" },
+        { label: "🇮🇳 Hindi (India - hi_IN)", value: "hi_IN" },
+        { label: "🇮🇩 Indonesian (Indonesia - id_ID)", value: "id_ID" },
+        { label: "🇻🇳 Vietnamese (Vietnam - vi_VN)", value: "vi_VN" },
+        { label: "🇹🇭 Thai (Thailand - th_TH)", value: "th_TH" },
+        { label: "✏️ Custom Locale...", value: "__CUSTOM__" }
+    ]
+
+    readonly property var timezoneLabels: timezoneOptions.map(function(opt) { return opt.label; })
+    readonly property var localeLabels: localeOptions.map(function(opt) { return opt.label; })
 
     function colorToHex(col) {
         var c = Qt.color(col);
@@ -100,7 +270,7 @@ KCM.SimpleKCM {
     }
 
     onCfg_rowsJsonChanged: {
-        if (!isSaving) {
+        if (isLoaded && !isSaving) {
             loadRowsFromJson();
         }
     }
@@ -124,7 +294,24 @@ KCM.SimpleKCM {
         return null;
     }
 
+    Timer {
+        id: liveEditDebounceTimer
+        interval: 150 // 150ms debounce eliminates D-Bus payload spam on slider drag
+        repeat: false
+        property var pendingOverrideJson: undefined
+
+        onTriggered: {
+            configPage.pushLiveEditingStateNow(pendingOverrideJson);
+        }
+    }
+
     function pushLiveEditingState(overrideRowsJson) {
+        if (!isLoaded) return;
+        liveEditDebounceTimer.pendingOverrideJson = overrideRowsJson;
+        liveEditDebounceTimer.restart();
+    }
+
+    function pushLiveEditingStateNow(overrideRowsJson) {
         if (!isLoaded) return;
         try {
             isEditingHolder.value = true;
@@ -142,7 +329,7 @@ KCM.SimpleKCM {
                 pConfig.editingBgColor = editingBgColorHolder.text;
             }
         } catch(e) {
-            console.log("[CustomCalendar Config] Error in pushLiveEditingState:", e);
+            console.log("[CustomCalendar Config] Error in pushLiveEditingStateNow:", e);
         }
     }
 
@@ -181,6 +368,7 @@ KCM.SimpleKCM {
     Component.onCompleted: {
         loadRowsFromJson();
         pushLiveEditingState();
+        asyncFontLoadTimer.start();
     }
 
     Component.onDestruction: {
@@ -189,27 +377,71 @@ KCM.SimpleKCM {
 
 
 
+    function ensureFontInModels(fontName) {
+        if (!fontName || typeof fontName !== "string" || fontName.trim() === "") return;
+        var name = fontName.trim();
+
+        var foundInShared = false;
+        for (var i = 0; i < sharedFontModel.count; i++) {
+            if (sharedFontModel.get(i).fontName.toLowerCase() === name.toLowerCase()) {
+                foundInShared = true;
+                break;
+            }
+        }
+        if (!foundInShared) {
+            sharedFontModel.append({ "text": name, "fontName": name });
+        }
+
+        var foundInOnly = false;
+        for (var j = 0; j < sharedFontOnlyModel.count; j++) {
+            if (sharedFontOnlyModel.get(j).fontName.toLowerCase() === name.toLowerCase()) {
+                foundInOnly = true;
+                break;
+            }
+        }
+        if (!foundInOnly) {
+            sharedFontOnlyModel.append({ "text": name, "fontName": name });
+        }
+    }
+
+    Timer {
+        id: asyncFontLoadTimer
+        interval: 150
+        repeat: false
+        onTriggered: {
+            buildSharedFontModels();
+        }
+    }
+
     function buildSharedFontModels() {
-        if (sharedFontModel.count > 5) return; // Already loaded
+        if (sharedFontModel.count > 10) return; // Already populated
         var rawFonts = Qt.fontFamilies();
         var seen = {};
         var cleanList = [];
         var weightSuffixRegex = /\s+(Thin|ExtraLight|UltraLight|Light|Book|Regular|Medium|SemiBold|DemiBold|Bold|ExtraBold|UltraBold|Black|Heavy|Hair|Four|Eight)$/i;
-        var allLower = {};
 
-        for (var i = 0; i < rawFonts.length; i++) {
-            var f = rawFonts[i].trim();
-            if (f) allLower[f.toLowerCase()] = f;
+        // Preserve any preselected fonts already added to sharedFontModel
+        for (var s = 0; s < sharedFontModel.count; s++) {
+            var sf = sharedFontModel.get(s).fontName.trim();
+            if (sf) {
+                seen[sf.toLowerCase()] = true;
+                cleanList.push(sf);
+            }
         }
 
         for (var j = 0; j < rawFonts.length; j++) {
             var fontName = rawFonts[j].trim();
             if (!fontName) continue;
 
+            // Filter out redundant Noto regional sub-fonts to keep font list ultra-fast and readable
+            if (fontName.indexOf("Noto ") === 0 && fontName !== "Noto Sans" && fontName !== "Noto Serif" && fontName !== "Noto Mono" && fontName !== "Noto Color Emoji") {
+                continue;
+            }
+
             var match = fontName.match(weightSuffixRegex);
             if (match) {
                 var baseName = fontName.substring(0, match.index).trim();
-                if (allLower[baseName.toLowerCase()]) continue;
+                if (seen[baseName.toLowerCase()]) continue;
             }
 
             var key = fontName.toLowerCase();
@@ -219,8 +451,11 @@ KCM.SimpleKCM {
             }
         }
 
+        // Ultra-fast case-insensitive string sort
         cleanList.sort(function(a, b) {
-            return a.localeCompare(b, undefined, { sensitivity: 'base' });
+            var la = a.toLowerCase();
+            var lb = b.toLowerCase();
+            return la < lb ? -1 : (la > lb ? 1 : 0);
         });
 
         sharedFontModel.clear();
@@ -249,9 +484,13 @@ KCM.SimpleKCM {
         } catch(e) {
             rowsList = [];
         }
+        ensureFontInModels(cfg_fontFamily);
         rowsModel.clear();
         for (var i = 0; i < rowsList.length; i++) {
             var item = rowsList[i];
+            if (item.fontFamily) {
+                ensureFontInModels(item.fontFamily);
+            }
             if (!item.effect) {
                 item.effect = item.glow ? "glow" : "none";
             }
@@ -410,7 +649,25 @@ KCM.SimpleKCM {
         }
     }
 
+    Timer {
+        id: debounceSaveTimer
+        interval: 150
+        repeat: false
+        onTriggered: {
+            saveRowsToJsonDirect(false);
+        }
+    }
+
     function saveRowsToJson(skipMarkChanged) {
+        if (!isLoaded) return;
+        if (skipMarkChanged) {
+            saveRowsToJsonDirect(true);
+        } else {
+            debounceSaveTimer.restart();
+        }
+    }
+
+    function saveRowsToJsonDirect(skipMarkChanged) {
         if (!isLoaded) return;
         var arr = [];
         for (var i = 0; i < rowsModel.count; i++) {
@@ -459,6 +716,14 @@ KCM.SimpleKCM {
         return JSON.stringify(preset, null, 2);
     }
 
+    // Security & Import Architecture:
+    // Power users have full freedom to author custom shell commands for row click actions.
+    // To prevent silent command injection from third-party JSON presets (e.g. shared online),
+    // applyImportedJson() performs an automated pre-import security audit scan on incoming JSON payloads.
+    // If clickCommands are detected, import is paused and commandSecurityAuditDialog displays an interactive
+    // line-by-line review allowing the user to explicitly Trust & Enable, Strip Commands, or Cancel Import.
+    property var pendingImportPayload: null
+
     function applyImportedJson(jsonText) {
         try {
             if (!jsonText || jsonText.trim().length === 0) {
@@ -475,15 +740,6 @@ KCM.SimpleKCM {
                 if (data.rows && Array.isArray(data.rows)) {
                     targetRows = data.rows;
                 }
-                if (data.fontFamily !== undefined && data.fontFamily !== "") {
-                    fontCombo.selectedFont = data.fontFamily;
-                }
-                if (data.bgType !== undefined && data.bgType >= 0 && data.bgType <= 2) {
-                    bgTypeCombo.currentIndex = data.bgType;
-                }
-                if (data.bgColor !== undefined && data.bgColor !== "") {
-                    bgColorInput.text = data.bgColor;
-                }
             } else {
                 importPresetDialog.statusMessage = i18n("Invalid JSON format.");
                 importPresetDialog.isError = true;
@@ -496,14 +752,64 @@ KCM.SimpleKCM {
                 return;
             }
 
+            var commandsFound = [];
+            for (var c = 0; c < targetRows.length; c++) {
+                var rCmd = targetRows[c].clickCommand;
+                if (rCmd && typeof rCmd === "string" && rCmd.trim().length > 0) {
+                    commandsFound.push({
+                        rowIndex: c + 1,
+                        fmt: targetRows[c].format || "Shape",
+                        cmd: rCmd.trim()
+                    });
+                }
+            }
+
+            var payload = { data: data, targetRows: targetRows, commands: commandsFound };
+            if (commandsFound.length > 0) {
+                configPage.pendingImportPayload = payload;
+                commandSecurityAuditDialog.open();
+            } else {
+                executeImportData(payload, true);
+            }
+        } catch(e) {
+            importPresetDialog.statusMessage = i18n("JSON Parsing Error: ") + e.message;
+            importPresetDialog.isError = true;
+        }
+    }
+
+    function executeImportData(payload, keepCommands) {
+        if (!payload || !payload.targetRows) return;
+        try {
+            var data = payload.data;
+            var targetRows = payload.targetRows;
+
+            if (!keepCommands) {
+                for (var i = 0; i < targetRows.length; i++) {
+                    targetRows[i].clickCommand = "";
+                }
+            }
+
+            if (typeof data === "object" && !Array.isArray(data) && data !== null) {
+                if (data.fontFamily !== undefined && data.fontFamily !== "") {
+                    fontCombo.selectedFont = data.fontFamily;
+                }
+                if (data.bgType !== undefined && data.bgType >= 0 && data.bgType <= 2) {
+                    bgTypeCombo.currentIndex = data.bgType;
+                }
+                if (data.bgColor !== undefined && data.bgColor !== "") {
+                    bgColorInput.text = data.bgColor;
+                }
+            }
+
             cfg_rowsJson = JSON.stringify(targetRows);
             loadRowsFromJson();
             save();
             importPresetDialog.statusMessage = i18n("Preset applied successfully!");
             importPresetDialog.isError = false;
             importPresetDialog.close();
+            configPage.pendingImportPayload = null;
         } catch(e) {
-            importPresetDialog.statusMessage = i18n("JSON Parsing Error: ") + e.message;
+            importPresetDialog.statusMessage = i18n("Error applying preset: ") + e.message;
             importPresetDialog.isError = true;
         }
     }
@@ -690,6 +996,113 @@ KCM.SimpleKCM {
         }
     }
 
+    Dialog {
+        id: commandSecurityAuditDialog
+        title: i18n("⚠️ Security Review: Executable Commands Detected")
+        modal: true
+        anchors.centerIn: parent
+        width: Math.min(configPage.width * 0.95, 580)
+        height: Math.min(configPage.height * 0.95, 450)
+        standardButtons: Dialog.NoButton
+
+        ColumnLayout {
+            anchors.fill: parent
+            spacing: 10
+
+            Label {
+                text: i18n("The imported layout contains custom shell commands that will execute when rows are clicked. Please review them carefully:")
+                wrapMode: Text.WordWrap
+                font.bold: true
+                color: Kirigami.Theme.warningTextColor
+                Layout.fillWidth: true
+            }
+
+            ScrollView {
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+
+                ListView {
+                    id: auditCommandsListView
+                    model: configPage.pendingImportPayload ? configPage.pendingImportPayload.commands : []
+                    clip: true
+                    spacing: 6
+
+                    delegate: Rectangle {
+                        width: auditCommandsListView.width
+                        implicitHeight: col.implicitHeight + 12
+                        color: Kirigami.Theme.alternateBackgroundColor
+                        border.color: Kirigami.Theme.focusColor
+                        radius: 6
+
+                        Column {
+                            id: col
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            spacing: 4
+
+                            Text {
+                                text: "Row " + modelData.rowIndex + " ('" + modelData.fmt + "')"
+                                color: Kirigami.Theme.disabledTextColor
+                                font.pixelSize: 11
+                                font.bold: true
+                            }
+                            Text {
+                                text: modelData.cmd
+                                color: Kirigami.Theme.negativeTextColor
+                                font.family: "Monospace"
+                                font.pixelSize: 12
+                                wrapMode: Text.Wrap
+                                width: parent.width
+                            }
+                        }
+                    }
+                }
+            }
+
+            Label {
+                text: i18n("Do you trust the author of this preset and want to enable these click commands?")
+                wrapMode: Text.WordWrap
+                font.pixelSize: 12
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Button {
+                    text: i18n("Cancel Import")
+                    icon.name: "dialog-cancel"
+                    onClicked: {
+                        commandSecurityAuditDialog.close();
+                        configPage.pendingImportPayload = null;
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                Button {
+                    text: i18n("Import (Strip Commands)")
+                    icon.name: "edit-clear"
+                    onClicked: {
+                        configPage.executeImportData(configPage.pendingImportPayload, false);
+                        commandSecurityAuditDialog.close();
+                    }
+                }
+
+                Button {
+                    text: i18n("Trust & Enable Commands")
+                    icon.name: "security-high"
+                    highlighted: true
+                    onClicked: {
+                        configPage.executeImportData(configPage.pendingImportPayload, true);
+                        commandSecurityAuditDialog.close();
+                    }
+                }
+            }
+        }
+    }
+
     ListModel {
         id: rowsModel
         dynamicRoles: true
@@ -750,15 +1163,25 @@ KCM.SimpleKCM {
             textRole: "text"
             valueRole: "fontName"
 
-            onPressedChanged: {
-                if (pressed) buildSharedFontModels();
+            delegate: ItemDelegate {
+                width: parent ? parent.width : 200
+                contentItem: Text {
+                    text: model.text
+                    font.family: (model.fontName && model.fontName !== "") ? model.fontName : fontCombo.font.family
+                    font.pixelSize: 14
+                    color: parent.highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                    elide: Text.ElideRight
+                    verticalAlignment: Text.AlignVCenter
+                }
+                highlighted: fontCombo.currentIndex === index
             }
 
             Binding on currentIndex {
                 value: {
-                    if (!fontCombo.selectedFont) return 0;
+                    var f = fontCombo.selectedFont;
+                    if (!f) return 0;
                     for (var m = 0; m < sharedFontOnlyModel.count; m++) {
-                        if (sharedFontOnlyModel.get(m).fontName === fontCombo.selectedFont) return m;
+                        if (sharedFontOnlyModel.get(m).fontName.toLowerCase() === f.toLowerCase()) return m;
                     }
                     return 0;
                 }
@@ -789,6 +1212,7 @@ KCM.SimpleKCM {
 
         RowLayout {
             Kirigami.FormData.label: i18n("Background Color:")
+            visible: bgTypeCombo.currentIndex !== 2
 
             Rectangle {
                 id: bgColorSwatch
@@ -824,13 +1248,7 @@ KCM.SimpleKCM {
             }
         }
 
-        Kirigami.Separator {
-            Kirigami.FormData.isSection: true
-            Kirigami.FormData.label: i18n("Row Configuration")
-        }
-
         ColumnLayout {
-            Kirigami.FormData.label: i18n("Rows:")
             Layout.fillWidth: true
             spacing: 12
 
@@ -1152,53 +1570,143 @@ KCM.SimpleKCM {
                         // --- Dynamic Optional Setting Rows (Only visible when set) ---
 
                         // 1. Timezone
-                        RowLayout {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            visible: !delegateFrame.isItemShape && model.showTimeZone === true
-                            Label { text: i18n("Timezone:") }
-                            TextField {
+                            visible: !delegateFrame.isItemShape && (rowsModel.get(index) ? (rowsModel.get(index).showTimeZone === true || rowsModel.get(index).showTimeZone === "true") : false)
+                            spacing: 4
+
+                            RowLayout {
                                 Layout.fillWidth: true
-                                Binding on text { value: model.timeZone || "" }
-                                placeholderText: "Local (or UTC, America/New_York, Europe/London, Asia/Tokyo...)"
-                                onTextEdited: {
-                                    if (configPage.isLoaded) {
-                                        rowsModel.setProperty(index, "timeZone", text);
+                                spacing: 8
+
+                                Label { text: i18n("Timezone:") }
+
+                                ComboBox {
+                                    id: tzCombo
+                                    Layout.fillWidth: true
+                                    model: configPage.timezoneLabels
+
+                                    property string currentTzVal: (index >= 0 && index < rowsModel.count && rowsModel.get(index)) ? (rowsModel.get(index).timeZone || "") : ""
+
+                                    function getIndexForValue(val) {
+                                        var clean = (val || "").trim().toUpperCase();
+                                        for (var k = 0; k < configPage.timezoneOptions.length - 1; k++) {
+                                            if (configPage.timezoneOptions[k].value.toUpperCase() === clean) {
+                                                return k;
+                                            }
+                                        }
+                                        return configPage.timezoneOptions.length - 1;
+                                    }
+
+                                    currentIndex: getIndexForValue(currentTzVal)
+
+                                    onActivated: function(comboIdx) {
+                                        if (configPage.isLoaded) {
+                                            var rIdx = index;
+                                            var selVal = configPage.timezoneOptions[comboIdx].value;
+                                            if (selVal !== "__CUSTOM__") {
+                                                rowsModel.setProperty(rIdx, "timeZone", selVal);
+                                                rowsModel.setProperty(rIdx, "showTimeZone", true);
+                                                rowsModel.saveToJson();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Button {
+                                    text: "✕"
+                                    onClicked: {
+                                        var rIdx = index;
+                                        rowsModel.setProperty(rIdx, "timeZone", "");
+                                        rowsModel.setProperty(rIdx, "showTimeZone", false);
                                         rowsModel.saveToJson();
                                     }
                                 }
                             }
-                            Button {
-                                text: "✕"
-                                onClicked: {
-                                    rowsModel.setProperty(index, "timeZone", "");
-                                    rowsModel.setProperty(index, "showTimeZone", false);
-                                    rowsModel.saveToJson();
+
+                            TextField {
+                                Layout.fillWidth: true
+                                visible: tzCombo.currentIndex === configPage.timezoneOptions.length - 1
+                                text: (index >= 0 && index < rowsModel.count && rowsModel.get(index)) ? (rowsModel.get(index).timeZone || "") : ""
+                                placeholderText: "e.g. Europe/Madrid, America/Sao_Paulo, UTC+3:30..."
+                                onTextEdited: {
+                                    if (configPage.isLoaded) {
+                                        var rIdx = index;
+                                        rowsModel.setProperty(rIdx, "timeZone", text);
+                                        rowsModel.setProperty(rIdx, "showTimeZone", true);
+                                        rowsModel.saveToJson();
+                                    }
                                 }
                             }
                         }
 
                         // 2. Locale
-                        RowLayout {
+                        ColumnLayout {
                             Layout.fillWidth: true
-                            visible: !delegateFrame.isItemShape && model.showLocale === true
-                            Label { text: i18n("Locale:") }
-                            TextField {
+                            visible: !delegateFrame.isItemShape && (rowsModel.get(index) ? (rowsModel.get(index).showLocale === true || rowsModel.get(index).showLocale === "true") : false)
+                            spacing: 4
+
+                            RowLayout {
                                 Layout.fillWidth: true
-                                Binding on text { value: model.locale || "" }
-                                placeholderText: "System Default (e.g. ja_JP, fr_FR, de_DE, es_ES, uk_UA, zh_CN)"
-                                onTextEdited: {
-                                    if (configPage.isLoaded) {
-                                        rowsModel.setProperty(index, "locale", text);
+                                spacing: 8
+
+                                Label { text: i18n("Locale:") }
+
+                                ComboBox {
+                                    id: locCombo
+                                    Layout.fillWidth: true
+                                    model: configPage.localeLabels
+
+                                    property string currentLocVal: (index >= 0 && index < rowsModel.count && rowsModel.get(index)) ? (rowsModel.get(index).locale || "") : ""
+
+                                    function getIndexForValue(val) {
+                                        var clean = (val || "").trim().toLowerCase();
+                                        for (var k = 0; k < configPage.localeOptions.length - 1; k++) {
+                                            if (configPage.localeOptions[k].value.toLowerCase() === clean) {
+                                                return k;
+                                            }
+                                        }
+                                        return configPage.localeOptions.length - 1;
+                                    }
+
+                                    currentIndex: getIndexForValue(currentLocVal)
+
+                                    onActivated: function(comboIdx) {
+                                        if (configPage.isLoaded) {
+                                            var rIdx = index;
+                                            var selVal = configPage.localeOptions[comboIdx].value;
+                                            if (selVal !== "__CUSTOM__") {
+                                                rowsModel.setProperty(rIdx, "locale", selVal);
+                                                rowsModel.setProperty(rIdx, "showLocale", true);
+                                                rowsModel.saveToJson();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Button {
+                                    text: "✕"
+                                    onClicked: {
+                                        var rIdx = index;
+                                        rowsModel.setProperty(rIdx, "locale", "");
+                                        rowsModel.setProperty(rIdx, "showLocale", false);
                                         rowsModel.saveToJson();
                                     }
                                 }
                             }
-                            Button {
-                                text: "✕"
-                                onClicked: {
-                                    rowsModel.setProperty(index, "locale", "");
-                                    rowsModel.setProperty(index, "showLocale", false);
-                                    rowsModel.saveToJson();
+
+                            TextField {
+                                Layout.fillWidth: true
+                                visible: locCombo.currentIndex === configPage.localeOptions.length - 1
+                                text: (index >= 0 && index < rowsModel.count && rowsModel.get(index)) ? (rowsModel.get(index).locale || "") : ""
+                                placeholderText: "e.g. ja_JP, fr_FR, de_DE, es_ES, uk_UA, zh_CN..."
+                                onTextEdited: {
+                                    if (configPage.isLoaded) {
+                                        var rIdx = index;
+                                        rowsModel.setProperty(rIdx, "locale", text);
+                                        rowsModel.setProperty(rIdx, "showLocale", true);
+                                        rowsModel.saveToJson();
+                                    }
                                 }
                             }
                         }
@@ -1232,7 +1740,7 @@ KCM.SimpleKCM {
                         // 4. Custom Font Family
                         RowLayout {
                             Layout.fillWidth: true
-                            visible: !delegateFrame.isItemShape && model.showFontFamily === true
+                            visible: !delegateFrame.isItemShape && (rowsModel.get(index) ? (rowsModel.get(index).showFontFamily === true || rowsModel.get(index).showFontFamily === "true") : false)
                             Label { text: i18n("Font Family:") }
                             ComboBox {
                                 id: rowFontCombo
@@ -1240,22 +1748,33 @@ KCM.SimpleKCM {
                                 model: sharedFontModel
                                 textRole: "text"
                                 valueRole: "fontName"
-                                onPressedChanged: {
-                                    if (pressed) buildSharedFontModels();
+                                property string currentFVal: (index >= 0 && index < rowsModel.count && rowsModel.get(index)) ? (rowsModel.get(index).fontFamily || "") : ""
+                                delegate: ItemDelegate {
+                                    width: parent ? parent.width : 200
+                                    contentItem: Text {
+                                        text: model.text
+                                        font.family: (model.fontName && model.fontName !== "") ? model.fontName : rowFontCombo.font.family
+                                        font.pixelSize: 14
+                                        color: parent.highlighted ? Kirigami.Theme.highlightedTextColor : Kirigami.Theme.textColor
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    highlighted: rowFontCombo.currentIndex === index
                                 }
                                 Binding on currentIndex {
                                     value: {
-                                        var f = model.fontFamily || "";
+                                        var f = rowFontCombo.currentFVal;
                                         if (!f || f === "") return 0;
                                         for (var m = 1; m < sharedFontModel.count; m++) {
-                                            if (sharedFontModel.get(m).fontName === f) return m;
+                                            if (sharedFontModel.get(m).fontName.toLowerCase() === f.toLowerCase()) return m;
                                         }
                                         return 0;
                                     }
                                 }
                                 onActivated: function(idx) {
+                                    var rIdx = index;
                                     var selected = (idx <= 0) ? "" : sharedFontModel.get(idx).fontName;
-                                    rowsModel.setProperty(index, "fontFamily", selected);
+                                    rowsModel.setProperty(rIdx, "fontFamily", selected);
                                     rowsModel.saveToJson();
                                 }
                             }

@@ -50,8 +50,42 @@ PlasmoidItem {
     }
 
     // Static compiled format detection regexes
-    readonly property var regexSeconds: /[sX]/i
-    readonly property var regexMinutes: /[hHiMN]/i
+    readonly property var regexSeconds: /[sX]/
+    readonly property var regexMinutes: /i|MN/
+    readonly property var regexHours: /[hHAa]/
+
+    property var currentTime: new Date()
+
+    property bool anyRowHasSeconds: {
+        var rows = (activeSettings && activeSettings.rows) ? activeSettings.rows : [];
+        for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            if (r && r.format && regexSeconds.test(r.format)) return true;
+        }
+        return false;
+    }
+
+    Timer {
+        id: masterClockTimer
+        interval: 1000
+        repeat: true
+        running: true
+        triggeredOnStart: true
+        onTriggered: {
+            var now = new Date();
+            root.currentTime = now;
+            var ms = now.getMilliseconds();
+
+            if (root.anyRowHasSeconds) {
+                // Phase-lock to top of every second (000ms boundary)
+                masterClockTimer.interval = Math.max(10, 1000 - ms);
+            } else {
+                // Phase-lock to top of every minute (00s 000ms boundary)
+                var sec = now.getSeconds();
+                masterClockTimer.interval = Math.max(50, (60 - sec) * 1000 - ms);
+            }
+        }
+    }
 
     // Consolidated active settings state object computed ONCE when configuration updates
     property var activeSettings: ({
@@ -64,24 +98,9 @@ PlasmoidItem {
         "borderRadius": 16
     })
 
-    // Cached pre-computed stroke offsets (eliminates GC heap allocation churn)
-    readonly property var strokeOffsetsCache: ({})
-    function getStrokeOffsets(effSize) {
-        var radius = Math.max(1, Math.min(15, Math.round(effSize)));
-        if (strokeOffsetsCache[radius]) return strokeOffsetsCache[radius];
-        var list = [];
-        for (var r = 1; r <= radius; r++) {
-            var steps = Math.max(8, r * 4);
-            for (var s = 0; s < steps; s++) {
-                var angle = s * (2 * Math.PI / steps);
-                var ox = Math.round(r * Math.cos(angle));
-                var oy = Math.round(r * Math.sin(angle));
-                list.push({ "x": ox, "y": oy });
-            }
-        }
-        strokeOffsetsCache[radius] = list;
-        return list;
-    }
+    // In-memory cache for parsed JSON rows to eliminate JSON.parse churn
+    property string cachedJsonStr: ""
+    property var cachedParsedRows: []
 
     function updateActiveSettings() {
         var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
@@ -104,20 +123,38 @@ PlasmoidItem {
         if (bgT === -1) bgT = (pCfg && pCfg.bgType !== undefined) ? pCfg.bgType : 2;
         if (!bgC) bgC = (pCfg && pCfg.bgColor) ? pCfg.bgColor : "#1e293b";
 
-        var parsedRows = [];
-        if (jsonStr && jsonStr.trim().length > 0) {
-            try {
-                parsedRows = JSON.parse(jsonStr);
-            } catch(e) {
-                console.error("Error parsing rows JSON:", e);
+        var parsedRows = cachedParsedRows;
+        if (jsonStr !== cachedJsonStr) {
+            cachedJsonStr = jsonStr;
+            if (jsonStr && jsonStr.trim().length > 0) {
+                try {
+                    parsedRows = JSON.parse(jsonStr);
+                } catch(e) {
+                    console.error("Error parsing rows JSON:", e);
+                }
             }
+            if (!parsedRows || parsedRows.length === 0) {
+                parsedRows = [
+                    { "format": "dddd", "align": "center", "fontSize": 18, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
+                    { "format": "dd mmm yyy", "align": "center", "fontSize": 28, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
+                    { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "weight": 600, "effect": "none", "opacity": 1.0, "timeZone": "" }
+                ];
+            }
+            cachedParsedRows = parsedRows;
         }
-        if (!parsedRows || parsedRows.length === 0) {
-            parsedRows = [
-                { "format": "dddd", "align": "center", "fontSize": 18, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
-                { "format": "dd mmm yyy", "align": "center", "fontSize": 28, "color": "#ffffff", "effectColor": "", "weight": 400, "effect": "none", "opacity": 1.0, "timeZone": "" },
-                { "format": "H:i", "align": "center", "fontSize": 48, "color": "#ffffff", "weight": 600, "effect": "none", "opacity": 1.0, "timeZone": "" }
-            ];
+
+        var bgOp = (pCfg && pCfg.bgOpacity !== undefined) ? pCfg.bgOpacity : 0.8;
+        var bRad = (pCfg && pCfg.borderRadius !== undefined) ? pCfg.borderRadius : 16;
+
+        // Skip object identity re-creation if all state values are identical
+        if (activeSettings.isEditing === isEd &&
+            activeSettings.rows === parsedRows &&
+            activeSettings.fontFamily === fontFam &&
+            activeSettings.bgType === bgT &&
+            activeSettings.bgColor === bgC &&
+            activeSettings.bgOpacity === bgOp &&
+            activeSettings.borderRadius === bRad) {
+            return;
         }
 
         activeSettings = {
@@ -126,8 +163,8 @@ PlasmoidItem {
             "fontFamily": fontFam,
             "bgType": bgT,
             "bgColor": bgC,
-            "bgOpacity": (pCfg && pCfg.bgOpacity !== undefined) ? pCfg.bgOpacity : 0.8,
-            "borderRadius": (pCfg && pCfg.borderRadius !== undefined) ? pCfg.borderRadius : 16
+            "bgOpacity": bgOp,
+            "borderRadius": bRad
         };
     }
 
@@ -153,7 +190,6 @@ PlasmoidItem {
         function onFontFamilyChanged() { root.updateActiveSettings(); }
         function onBgTypeChanged() { root.updateActiveSettings(); }
         function onBgColorChanged() { root.updateActiveSettings(); }
-        function onValueChanged(key, value) { root.updateActiveSettings(); }
     }
 
     Component {
@@ -198,9 +234,9 @@ PlasmoidItem {
                         property bool isShapeItem: rowContainer.rowItem && (rowContainer.rowItem.isShape === true || rowContainer.rowItem.isShape === "true") && (!rowContainer.rowItem.format || rowContainer.rowItem.format === "")
                         property real itemRotation: (rowContainer.rowItem && rowContainer.rowItem.rotation !== undefined) ? Number(rowContainer.rowItem.rotation) : 0
 
-                        property real strokeMargin: (rowContainer.isShapeItem && rowContainer.effType === "stroke") ? Math.max(1, rowContainer.effSize) : 0
-                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : (mainText ? Math.max(10, mainText.implicitWidth) : 100)
-                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : (mainText ? Math.max(10, mainText.implicitHeight) : 30)
+                        property real strokeMargin: (rowContainer.effType === "stroke") ? Math.max(1, rowContainer.effSize) : 0
+                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2)
+                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2)
                         property real rotRad: itemRotation * Math.PI / 180.0
                         property real boundingW: itemRotation === 0 ? unrotatedW : (Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
                         property real boundingH: itemRotation === 0 ? unrotatedH : (Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
@@ -228,44 +264,60 @@ PlasmoidItem {
 
                         property string formattedText: ""
 
-                        function calculateNextDelay(fmt, date) {
-                            if (!fmt) return 1000;
-                            var hasSeconds = root.regexSeconds.test(fmt);
-                            var hasMinutes = root.regexMinutes.test(fmt);
-                            var ms = date.getMilliseconds();
-                            var sec = date.getSeconds();
+                        property string currentFmt: (rowContainer.rowItem && rowContainer.rowItem.format) ? rowContainer.rowItem.format : ""
+                        property string currentTz: (rowContainer.rowItem && rowContainer.rowItem.timeZone) ? rowContainer.rowItem.timeZone : ""
+                        property string currentLoc: (rowContainer.rowItem && rowContainer.rowItem.locale) ? rowContainer.rowItem.locale : ""
 
-                            if (hasSeconds) {
-                                return Math.max(20, 1000 - ms);
-                            } else if (hasMinutes) {
-                                return Math.max(100, (60 - sec) * 1000 - ms);
-                            } else {
-                                return Math.max(1000, (60 - sec) * 1000 - ms);
+                        property int lastMin: -1
+                        property int lastHr: -1
+                        property int lastDay: -1
+                        property bool hasSecondsToken: root.regexSeconds.test(currentFmt)
+                        property bool hasMinutesToken: root.regexMinutes.test(currentFmt)
+                        property bool hasHoursToken: root.regexHours.test(currentFmt)
+
+                        onCurrentFmtChanged: updateRowText(true)
+                        onCurrentTzChanged: updateRowText(true)
+                        onCurrentLocChanged: updateRowText(true)
+
+                        Connections {
+                            target: root
+                            function onCurrentTimeChanged() {
+                                rowContainer.updateRowText(false);
                             }
                         }
 
-                        function updateRowText() {
-                            if (rowContainer.isShapeItem) return;
-                            var now = new Date();
-                            formattedText = DateFormatter.format(now, rowItem.format || "", rowItem.timeZone || "", rowItem.locale || "");
-                            rowTimer.interval = calculateNextDelay(rowItem.format || "", now);
-                        }
+                        function updateRowText(force) {
+                            if (rowContainer.isShapeItem || !currentFmt) return;
+                            var now = root.currentTime;
 
-                        Timer {
-                            id: rowTimer
-                            repeat: true
-                            running: !rowContainer.isShapeItem
-                            onTriggered: {
-                                rowContainer.updateRowText();
+                            if (!force && !hasSecondsToken) {
+                                if (hasMinutesToken) {
+                                    var m = now.getMinutes();
+                                    if (m === lastMin && formattedText !== "") return;
+                                    lastMin = m;
+                                } else if (hasHoursToken) {
+                                    var h = now.getHours();
+                                    if (h === lastHr && formattedText !== "") return;
+                                    lastHr = h;
+                                } else {
+                                    var d = now.getDate();
+                                    if (d === lastDay && formattedText !== "") return;
+                                    lastDay = d;
+                                }
+                            }
+
+                            var newTxt = DateFormatter.format(now, currentFmt, currentTz, currentLoc);
+                            if (newTxt !== formattedText) {
+                                formattedText = newTxt;
                             }
                         }
 
                         Component.onCompleted: {
-                            rowContainer.updateRowText();
+                            rowContainer.updateRowText(true);
                         }
 
                         onRowItemChanged: {
-                            rowContainer.updateRowText();
+                            rowContainer.updateRowText(true);
                         }
 
                         property var fontFam: (rowContainer.rowItem.fontFamily && rowContainer.rowItem.fontFamily.length > 0) ? rowContainer.rowItem.fontFamily : root.activeSettings.fontFamily
@@ -294,8 +346,12 @@ PlasmoidItem {
                         property int effSize: rowContainer.rowItem.effectSize !== undefined ? rowContainer.rowItem.effectSize : 2
                         property string effType: rowContainer.rowItem.effect || (rowContainer.rowItem.glow ? "glow" : "none")
 
-                        readonly property var strokeOffsets: (rowContainer.isShapeItem || rowContainer.effType !== "stroke") ? [] : root.getStrokeOffsets(rowContainer.effSize)
-
+                        // Security & Execution Policy:
+                        // Users retain 100% freedom to configure custom shell commands, binaries, or scripts for row clicks.
+                        // User-authored commands entered in the KCM are trusted.
+                        // Third-party JSON layout imports with clickCommands are intercepted by the KCM Security Audit
+                        // Scanner (ConfigGeneral.qml), displaying an interactive command review dialog that lets users
+                        // inspect, approve, or strip imported commands before saving.
                         MouseArea {
                             anchors.fill: parent
                             property bool hasValidCmd: executableSource.sanitizeCommand(rowContainer.rowItem.clickCommand) !== null
@@ -327,7 +383,6 @@ PlasmoidItem {
                                 visible: rowContainer.isShapeItem
                                 anchors.fill: parent
                                 opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
-                                asynchronous: true
 
                                 // Enable SceneGraph Hardware Layer Caching for static vector shapes
                                 layer.enabled: rowContainer.isShapeItem
@@ -392,6 +447,8 @@ PlasmoidItem {
                                 ShapePath {
                                     strokeColor: (rowContainer.effType === "stroke") ? rowContainer.effColor : "transparent"
                                     strokeWidth: (rowContainer.effType === "stroke") ? Math.max(1, rowContainer.effSize * 2) : 0
+                                    joinStyle: ShapePath.RoundJoin
+                                    capStyle: ShapePath.RoundCap
                                     fillColor: vectorShape.sColor
 
                                     PathSvg {
@@ -400,33 +457,73 @@ PlasmoidItem {
                                 }
                             }
 
-                            // Dense Concentric Ring Text Outline (Fills 1px to effSize solidly)
-                            Repeater {
-                                model: rowContainer.strokeOffsets
-                                delegate: Text {
-                                    anchors.fill: parent
-                                    text: rowContainer.formattedText
-                                    opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
-                                    horizontalAlignment: rowContainer.hAlign
-                                    verticalAlignment: Text.AlignVCenter
-                                    font.pixelSize: rowContainer.rowItem.fontSize || 24
-                                    font.family: rowContainer.fontFam
-                                    font.weight: rowContainer.fontW
-                                    font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
-                                    color: rowContainer.effColor
-                                    z: 0
+                            // True Native Vector RoundJoin Text Stroke Canvas
+                            Canvas {
+                                id: textStrokeCanvas
+                                visible: !rowContainer.isShapeItem && rowContainer.effType === "stroke"
+                                property real pad: rowContainer.effSize * 2
+                                x: -pad
+                                y: -pad
+                                width: parent.width + (pad * 2)
+                                height: parent.height + (pad * 2)
+                                renderTarget: Canvas.Image
 
-                                    transform: Translate {
-                                        x: modelData.x
-                                        y: modelData.y
+                                property string txt: rowContainer.formattedText
+                                property string fontFam: rowContainer.fontFam
+                                property int fontSize: rowContainer.rowItem.fontSize || 24
+                                property int fontWeight: rowContainer.rowItem.weight || 400
+                                property color txtColor: rowContainer.rowItem.color || "#ffffff"
+                                property color strokeColor: rowContainer.effColor
+                                property int strokeWidth: rowContainer.effSize
+                                property int hAlign: rowContainer.hAlign
+
+                                onTxtChanged: requestPaint()
+                                onFontSizeChanged: requestPaint()
+                                onFontFamChanged: requestPaint()
+                                onStrokeWidthChanged: requestPaint()
+                                onStrokeColorChanged: requestPaint()
+                                onWidthChanged: requestPaint()
+                                onHeightChanged: requestPaint()
+
+                                onPaint: {
+                                    var ctx = getContext("2d");
+                                    ctx.clearRect(0, 0, width, height);
+                                    if (!txt) return;
+
+                                    var wStr = (fontWeight >= 700) ? "bold " : "";
+                                    ctx.font = wStr + fontSize + "px " + (fontFam || "sans-serif");
+
+                                    var align = "center";
+                                    var cx = width / 2;
+                                    if (hAlign === Text.AlignLeft) {
+                                        align = "left";
+                                        cx = pad;
+                                    } else if (hAlign === Text.AlignRight) {
+                                        align = "right";
+                                        cx = width - pad;
                                     }
+                                    ctx.textAlign = align;
+                                    ctx.textBaseline = "middle";
+
+                                    var cy = height / 2;
+
+                                    if (strokeWidth > 0) {
+                                        ctx.lineWidth = strokeWidth * 2;
+                                        ctx.lineJoin = "round";
+                                        ctx.lineCap = "round";
+                                        ctx.strokeStyle = strokeColor;
+                                        ctx.strokeText(txt, cx, cy);
+                                    }
+
+                                    ctx.fillStyle = txtColor;
+                                    ctx.fillText(txt, cx, cy);
                                 }
                             }
 
                             // Main Foreground Vector Text
                             Text {
                                 id: mainText
-                                visible: !rowContainer.isShapeItem
+                                visible: !rowContainer.isShapeItem && rowContainer.effType !== "stroke"
                                 anchors.fill: parent
                                 text: rowContainer.formattedText
                                 opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
@@ -454,7 +551,7 @@ PlasmoidItem {
                             }
                         }
 
-                        property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : mainText
+                        property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textStrokeCanvas : mainText)
 
                         Component {
                             id: glowComp
