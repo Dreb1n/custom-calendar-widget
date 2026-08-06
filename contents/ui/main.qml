@@ -255,75 +255,6 @@ PlasmoidItem {
                 border.width: root.activeSettings.bgType === 2 ? 0 : 1
             }
 
-            // Optional Design Overlay Layer (Visual Content)
-            Item {
-                id: overlayContent
-                anchors.fill: parent
-                visible: root.activeSettings.overlayType !== 0
-                opacity: root.activeSettings.overlayOpacity
-
-                // Option 1: Solid Color Overlay
-                Rectangle {
-                    anchors.fill: parent
-                    visible: root.activeSettings.overlayType === 1
-                    color: root.activeSettings.overlayColor
-                    radius: root.activeSettings.borderRadius
-                }
-
-                // Option 2: Media Overlay (Image / Video)
-                Loader {
-                    anchors.fill: parent
-                    visible: root.activeSettings.overlayType === 2
-                    sourceComponent: {
-                        var file = root.activeSettings.overlayFile;
-                        if (!file) return null;
-                        var isVideo = /\.(mp4|webm|ogv|mov|avi|3gp|mkv)$/i.test(file);
-                        return isVideo ? videoComponent : imageComponent;
-                    }
-                }
-            }
-
-            // Rounded corner clipping mask to match background radius
-            Rectangle {
-                id: overlayMask
-                anchors.fill: parent
-                radius: root.activeSettings.borderRadius
-                color: "black"
-                visible: false
-            }
-
-            // Apply hardware-accelerated clipping mask using MultiEffect
-            MultiEffect {
-                anchors.fill: overlayContent
-                source: overlayContent
-                visible: overlayContent.visible
-                maskEnabled: true
-                maskSource: overlayMask
-            }
-
-            Component {
-                id: imageComponent
-                Image {
-                    source: root.activeSettings.overlayFile
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    cache: true
-                }
-            }
-
-            Component {
-                id: videoComponent
-                Video {
-                    source: root.activeSettings.overlayFile
-                    fillMode: Video.PreserveAspectCrop
-                    loops: MediaPlayer.Infinite
-                    volume: 0 // Keep backgrounds silent
-                    
-                    Component.onCompleted: {
-                        play();
-                    }
-                }
-            }
 
             // Rows Layout Column Centered in Widget
             ColumnLayout {
@@ -483,6 +414,75 @@ PlasmoidItem {
 
                             rotation: rowContainer.itemRotation
                             transformOrigin: Item.Center
+
+                            // Row Overlay Layer
+                            Item {
+                                id: rowOverlayContent
+                                anchors.fill: parent
+                                visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
+
+                                // Option 1: Solid Color
+                                Rectangle {
+                                    anchors.fill: parent
+                                    visible: rowContainer.rowItem.overlayType === 1
+                                    color: rowContainer.rowItem.overlayColor || "#000000"
+                                    radius: 8
+                                }
+
+                                // Option 2: Media (Image/Video)
+                                Loader {
+                                    anchors.fill: parent
+                                    visible: rowContainer.rowItem.overlayType === 2
+                                    sourceComponent: {
+                                        if (!rowContainer.rowItem || !rowContainer.rowItem.overlayFile) return null;
+                                        var file = rowContainer.rowItem.overlayFile;
+                                        var isVideo = /\.(mp4|webm|ogv|mov|avi|3gp|mkv)$/i.test(file);
+                                        return isVideo ? rowVideoComponent : rowImageComponent;
+                                    }
+                                }
+                            }
+
+                            // Clipping mask for row-level overlay rounded corners
+                            Rectangle {
+                                id: rowOverlayMask
+                                anchors.fill: parent
+                                radius: 8
+                                color: "black"
+                                visible: false
+                            }
+
+                            MultiEffect {
+                                anchors.fill: rowOverlayContent
+                                source: rowOverlayContent
+                                visible: rowOverlayContent.visible
+                                maskEnabled: true
+                                maskSource: rowOverlayMask
+                            }
+
+                            Component {
+                                id: rowImageComponent
+                                Image {
+                                    source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    cache: true
+                                }
+                            }
+
+                            Component {
+                                id: rowVideoComponent
+                                Video {
+                                    source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
+                                    fillMode: Video.PreserveAspectCrop
+                                    loops: MediaPlayer.Infinite
+                                    volume: 0
+                                    
+                                    Component.onCompleted: {
+                                        play();
+                                    }
+                                }
+                            }
 
                             // Vector Shape Rendering Item (QtQuick.Shapes Hardware SceneGraph with Texture Caching)
                             Shape {

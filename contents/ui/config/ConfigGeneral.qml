@@ -42,6 +42,8 @@ KCM.SimpleKCM {
     QtObject { id: editingBgTypeHolder; property int value: -1 }
     QtObject { id: editingBgColorHolder; property string text: "" }
 
+    property int activeRowIndexForFileDialog: -1
+
     QtObject { id: overlayOpacityHolder; property real value: 0.5 }
     QtObject { id: editingOverlayTypeHolder; property int value: -1 }
     QtObject { id: editingOverlayColorHolder; property string text: "" }
@@ -600,6 +602,20 @@ KCM.SimpleKCM {
             item.showLetterSpacing = !item.isShape && item.letterSpacing !== 0;
             item.showEffect = item.effect !== "none";
 
+            if (item.overlayType === undefined) {
+                item.overlayType = 0;
+            }
+            if (!item.overlayColor) {
+                item.overlayColor = "#000000";
+            }
+            if (item.overlayOpacity === undefined) {
+                item.overlayOpacity = 0.5;
+            }
+            if (!item.overlayFile) {
+                item.overlayFile = "";
+            }
+            item.showOverlay = (item.showOverlay === true || item.showOverlay === "true" || item.overlayType !== 0);
+
             rowsModel.append(item);
         }
         isLoaded = true;
@@ -622,6 +638,7 @@ KCM.SimpleKCM {
             if (!item.locale || item.locale === "") rowsModel.setProperty(i, "showLocale", false);
             if (!item.clickCommand || item.clickCommand === "") rowsModel.setProperty(i, "showClickCommand", false);
             if (!item.effect || item.effect === "none") rowsModel.setProperty(i, "showEffect", false);
+            if (item.overlayType === 0) rowsModel.setProperty(i, "showOverlay", false);
         }
     }
 
@@ -1052,9 +1069,15 @@ KCM.SimpleKCM {
             if (path.indexOf("file://") === 0) {
                 path = path.substring(7);
             }
-            overlayFileInput.text = path;
-            pushLiveEditingState();
-            markChanged();
+            if (configPage.activeRowIndexForFileDialog !== -1) {
+                rowsModel.setProperty(configPage.activeRowIndexForFileDialog, "overlayFile", path);
+                rowsModel.saveToJson();
+                configPage.activeRowIndexForFileDialog = -1;
+            } else {
+                overlayFileInput.text = path;
+                pushLiveEditingState();
+                markChanged();
+            }
         }
     }
 
@@ -1310,105 +1333,6 @@ KCM.SimpleKCM {
             }
         }
 
-        // Design Overlay Configuration
-        ComboBox {
-            id: overlayTypeCombo
-            Kirigami.FormData.label: i18n("Overlay Type:")
-            model: [
-                i18n("None"),
-                i18n("Solid Color"),
-                i18n("Media File (Image/GIF/Video)")
-            ]
-            onActivated: function(index) {
-                pushLiveEditingState();
-                markChanged();
-            }
-        }
-
-        RowLayout {
-            Kirigami.FormData.label: i18n("Overlay Color:")
-            visible: overlayTypeCombo.currentIndex === 1
-
-            Rectangle {
-                id: overlayColorSwatch
-                Layout.preferredWidth: 26
-                Layout.preferredHeight: 26
-                radius: 4
-                color: overlayColorInput.text || "#000000"
-                border.color: Kirigami.Theme.disabledTextColor
-                border.width: 1
-
-                MouseArea {
-                    anchors.fill: parent
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        configPage.openColorPicker(overlayColorInput.text, function(hex) {
-                            overlayColorInput.text = hex;
-                            overlayColorInput.textEdited();
-                            pushLiveEditingState();
-                            markChanged();
-                        });
-                    }
-                }
-            }
-
-            TextField {
-                id: overlayColorInput
-                Layout.fillWidth: true
-                placeholderText: "#000000"
-                onTextEdited: {
-                    pushLiveEditingState();
-                    markChanged();
-                }
-            }
-        }
-
-        RowLayout {
-            Kirigami.FormData.label: i18n("Overlay Media File:")
-            visible: overlayTypeCombo.currentIndex === 2
-
-            TextField {
-                id: overlayFileInput
-                Layout.fillWidth: true
-                placeholderText: i18n("Select local image, GIF, or video...")
-                onTextEdited: {
-                    pushLiveEditingState();
-                    markChanged();
-                }
-            }
-
-            Button {
-                text: i18n("Browse...")
-                icon.name: "document-open"
-                onClicked: {
-                    overlayFileDialog.open();
-                }
-            }
-        }
-
-        RowLayout {
-            Kirigami.FormData.label: i18n("Overlay Opacity:")
-            visible: overlayTypeCombo.currentIndex !== 0
-
-            Slider {
-                id: overlayOpacitySlider
-                Layout.fillWidth: true
-                from: 0.0
-                to: 1.0
-                stepSize: 0.05
-                value: overlayOpacityHolder.value
-                onMoved: {
-                    overlayOpacityHolder.value = value;
-                    pushLiveEditingState();
-                    markChanged();
-                }
-            }
-
-            Label {
-                text: Math.round(overlayOpacitySlider.value * 100) + "%"
-                Layout.preferredWidth: 35
-            }
-        }
 
         ColumnLayout {
             Layout.fillWidth: true
@@ -1554,7 +1478,8 @@ KCM.SimpleKCM {
                                     { text: i18n("Opacity"), value: "opacity" },
                                     { text: i18n("Offsets (X/Y)"), value: "offsets" },
                                     { text: i18n("Rotation (°)"), value: "rotation" },
-                                    { text: i18n("Shape Effect"), value: "effect" }
+                                    { text: i18n("Shape Effect"), value: "effect" },
+                                    { text: i18n("Overlay Layer"), value: "overlay" }
                                 ]
                                 currentIndex: 0
                                 onActivated: function(idx) {
@@ -1572,6 +1497,13 @@ KCM.SimpleKCM {
                                     }
                                     else if (val === "rotation") { rowsModel.setProperty(index, "rotation", 45); rowsModel.setProperty(index, "showRotation", true); }
                                     else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
+                                    else if (val === "overlay") {
+                                        rowsModel.setProperty(index, "overlayType", 1);
+                                        rowsModel.setProperty(index, "overlayColor", "#000000");
+                                        rowsModel.setProperty(index, "overlayOpacity", 0.5);
+                                        rowsModel.setProperty(index, "overlayFile", "");
+                                        rowsModel.setProperty(index, "showOverlay", true);
+                                    }
                                     rowsModel.saveToJson();
                                     currentIndex = 0;
                                 }
@@ -1646,7 +1578,7 @@ KCM.SimpleKCM {
                                 id: addOptionCombo
                                 textRole: "text"
                                 valueRole: "value"
-                                model: [
+                                 model: [
                                     { text: i18n("+ Add Option..."), value: "" },
                                     { text: i18n("Timezone"), value: "timeZone" },
                                     { text: i18n("Locale"), value: "locale" },
@@ -1658,7 +1590,8 @@ KCM.SimpleKCM {
                                     { text: i18n("Offsets (X/Y)"), value: "offsets" },
                                     { text: i18n("Rotation (°)"), value: "rotation" },
                                     { text: i18n("Letter Spacing"), value: "letterSpacing" },
-                                    { text: i18n("Text Effect"), value: "effect" }
+                                    { text: i18n("Text Effect"), value: "effect" },
+                                    { text: i18n("Overlay Layer"), value: "overlay" }
                                 ]
                                 currentIndex: 0
                                 onActivated: function(idx) {
@@ -1681,6 +1614,13 @@ KCM.SimpleKCM {
                                     else if (val === "rotation") { rowsModel.setProperty(index, "rotation", 45); rowsModel.setProperty(index, "showRotation", true); }
                                     else if (val === "letterSpacing") { rowsModel.setProperty(index, "letterSpacing", 2); rowsModel.setProperty(index, "showLetterSpacing", true); }
                                     else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
+                                    else if (val === "overlay") {
+                                        rowsModel.setProperty(index, "overlayType", 1);
+                                        rowsModel.setProperty(index, "overlayColor", "#000000");
+                                        rowsModel.setProperty(index, "overlayOpacity", 0.5);
+                                        rowsModel.setProperty(index, "overlayFile", "");
+                                        rowsModel.setProperty(index, "showOverlay", true);
+                                    }
                                     rowsModel.saveToJson();
                                     currentIndex = 0;
                                 }
@@ -2230,6 +2170,132 @@ KCM.SimpleKCM {
                                     rowsModel.setProperty(index, "effectSize", 2);
                                     rowsModel.setProperty(index, "showEffect", false);
                                     rowsModel.saveToJson();
+                                }
+                            }
+                        }
+
+                        // 12. Overlay Layer
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 4
+                            visible: model.showOverlay === true
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Label { text: i18n("Overlay Type:") }
+                                ComboBox {
+                                    id: rowOverlayTypeCombo
+                                    Layout.fillWidth: true
+                                    model: [
+                                        i18n("None"),
+                                        i18n("Solid Color"),
+                                        i18n("Media File (Image/GIF/Video)")
+                                    ]
+                                    currentIndex: model.overlayType !== undefined ? model.overlayType : 0
+                                    onActivated: function(oIdx) {
+                                        if (configPage.isLoaded) {
+                                            rowsModel.setProperty(index, "overlayType", oIdx);
+                                            rowsModel.saveToJson();
+                                        }
+                                    }
+                                }
+                                Button {
+                                    text: "✕"
+                                    onClicked: {
+                                        rowsModel.setProperty(index, "overlayType", 0);
+                                        rowsModel.setProperty(index, "overlayColor", "#000000");
+                                        rowsModel.setProperty(index, "overlayOpacity", 0.5);
+                                        rowsModel.setProperty(index, "overlayFile", "");
+                                        rowsModel.setProperty(index, "showOverlay", false);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                visible: (model.overlayType !== undefined ? model.overlayType : 0) === 1
+                                Label { text: i18n("Overlay Color:") }
+                                Rectangle {
+                                    Layout.preferredWidth: 24
+                                    Layout.preferredHeight: 24
+                                    radius: 4
+                                    color: model.overlayColor || "#000000"
+                                    border.color: Kirigami.Theme.disabledTextColor
+                                    border.width: 1
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            configPage.openColorPicker(model.overlayColor || "#000000", function(hex) {
+                                                if (configPage.isLoaded) {
+                                                    rowsModel.setProperty(index, "overlayColor", hex);
+                                                    rowsModel.saveToJson();
+                                                }
+                                            });
+                                        }
+                                    }
+                                }
+                                TextField {
+                                    Layout.fillWidth: true
+                                    Binding on text { value: model.overlayColor || "#000000" }
+                                    placeholderText: "#000000"
+                                    onTextEdited: {
+                                        if (configPage.isLoaded) {
+                                            rowsModel.setProperty(index, "overlayColor", text);
+                                            rowsModel.saveToJson();
+                                        }
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                visible: (model.overlayType !== undefined ? model.overlayType : 0) === 2
+                                Label { text: i18n("Media File:") }
+                                TextField {
+                                    id: rowOverlayFileInput
+                                    Layout.fillWidth: true
+                                    Binding on text { value: model.overlayFile || "" }
+                                    placeholderText: i18n("Select local image, GIF, or video...")
+                                    onTextEdited: {
+                                        if (configPage.isLoaded) {
+                                            rowsModel.setProperty(index, "overlayFile", text);
+                                            rowsModel.saveToJson();
+                                        }
+                                    }
+                                }
+                                Button {
+                                    text: i18n("Browse...")
+                                    icon.name: "document-open"
+                                    onClicked: {
+                                        configPage.activeRowIndexForFileDialog = index;
+                                        overlayFileDialog.open();
+                                    }
+                                }
+                            }
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                visible: (model.overlayType !== undefined ? model.overlayType : 0) !== 0
+                                Label { text: i18n("Opacity:") }
+                                Slider {
+                                    Layout.fillWidth: true
+                                    from: 0.0
+                                    to: 1.0
+                                    stepSize: 0.05
+                                    value: model.overlayOpacity !== undefined ? model.overlayOpacity : 0.5
+                                    onMoved: {
+                                        if (configPage.isLoaded) {
+                                            rowsModel.setProperty(index, "overlayOpacity", value);
+                                            rowsModel.saveToJson();
+                                        }
+                                    }
+                                }
+                                Label {
+                                    text: Math.round((model.overlayOpacity !== undefined ? model.overlayOpacity : 0.5) * 100) + "%"
+                                    Layout.preferredWidth: 35
                                 }
                             }
                         }
