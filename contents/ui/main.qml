@@ -470,22 +470,15 @@ PlasmoidItem {
                                 visible: false
                             }
 
-                            // Capture a dedicated clean texture copy of the text/shape mask to isolate it from shadow/glow expansions
-                            ShaderEffectSource {
-                                id: rowOverlayMaskGrabber
-                                sourceItem: rowContainer.activeShaderSource
-                                live: true
-                                visible: false
-                            }
-
                             // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
+                                id: rowOverlayMultiEffect
                                 anchors.fill: rowContainer.activeShaderSource
                                 source: rowOverlaySourceGrabber
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: (rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5) * (rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0)
                                 maskEnabled: true
-                                maskSource: rowOverlayMaskGrabber
+                                maskSource: rowContainer.activeShaderSource
                                 z: 2
                             }
 
@@ -722,7 +715,7 @@ PlasmoidItem {
                             id: glowComp
                             MultiEffect {
                                 anchors.fill: parent
-                                source: rowContainer.activeShaderSource
+                                source: (rowOverlayMultiEffect && rowOverlayMultiEffect.visible) ? rowOverlayMultiEffect : rowContainer.activeShaderSource
                                 shadowEnabled: true
                                 shadowColor: rowContainer.effColor
                                 shadowHorizontalOffset: 0
@@ -737,7 +730,7 @@ PlasmoidItem {
                             id: softShadowComp
                             MultiEffect {
                                 anchors.fill: parent
-                                source: rowContainer.activeShaderSource
+                                source: (rowOverlayMultiEffect && rowOverlayMultiEffect.visible) ? rowOverlayMultiEffect : rowContainer.activeShaderSource
                                 shadowEnabled: true
                                 shadowColor: rowContainer.effColor
                                 shadowHorizontalOffset: rowContainer.effSize
@@ -750,7 +743,7 @@ PlasmoidItem {
                             id: normalShadowComp
                             MultiEffect {
                                 anchors.fill: parent
-                                source: rowContainer.activeShaderSource
+                                source: (rowOverlayMultiEffect && rowOverlayMultiEffect.visible) ? rowOverlayMultiEffect : rowContainer.activeShaderSource
                                 shadowEnabled: true
                                 shadowColor: rowContainer.effColor
                                 shadowHorizontalOffset: rowContainer.effSize
