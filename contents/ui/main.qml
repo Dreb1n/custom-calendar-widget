@@ -418,9 +418,11 @@ PlasmoidItem {
                             // Row Overlay Layer Source (Hidden, used as MultiEffect texture source)
                             Item {
                                 id: rowOverlayContent
-                                anchors.fill: rowContainer.activeShaderSource
+                                x: -9999
+                                y: -9999
+                                width: rowContainer.activeShaderSource ? rowContainer.activeShaderSource.width : 100
+                                height: rowContainer.activeShaderSource ? rowContainer.activeShaderSource.height : 30
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
-                                opacity: 0
 
                                 // Option 1: Solid Color
                                 Rectangle {
