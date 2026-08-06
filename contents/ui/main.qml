@@ -419,7 +419,8 @@ PlasmoidItem {
                             Item {
                                 id: rowOverlayContent
                                 anchors.fill: rowContainer.activeShaderSource
-                                visible: false
+                                visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                opacity: 0
 
                                 // Option 1: Solid Color
                                 Rectangle {
@@ -434,7 +435,7 @@ PlasmoidItem {
                                     visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 2
                                     sourceComponent: {
                                         if (!rowContainer.rowItem || !rowContainer.rowItem.overlayFile) return null;
-                                        var file = rowContainer.rowItem.overlayFile;
+                                        var file = String(rowContainer.rowItem.overlayFile);
                                         var isVideo = /\.(mp4|webm|ogv|mov|avi|3gp|mkv)$/i.test(file);
                                         return isVideo ? rowVideoComponent : rowImageComponent;
                                     }
