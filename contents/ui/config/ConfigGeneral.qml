@@ -558,8 +558,10 @@ KCM.SimpleKCM {
             item.showOpacity = item.opacity !== 1.0;
             item.showOffsets = (offX !== 0 || offY !== 0 || item.fromCenter === true);
             item.showRotation = item.rotation !== 0;
-            item.showLetterSpacing = !item.isShape && item.letterSpacing !== 0;
             item.showEffect = item.effect !== "none";
+            if (item.effectOpacity === undefined) {
+                item.effectOpacity = 1.0;
+            }
 
             if (item.overlayType === undefined) {
                 item.overlayType = 0;
@@ -636,6 +638,7 @@ KCM.SimpleKCM {
                 "effect": item.showEffect ? (item.effect || "none") : "none",
                 "effectColor": item.showEffect ? (item.effectColor || "") : "",
                 "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
+                "effectOpacity": item.showEffect && item.effectOpacity !== undefined ? item.effectOpacity : 1.0,
                 "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
                 "overlayType": item.showOverlay ? (item.overlayType !== undefined ? item.overlayType : 0) : 0,
                 "overlayColor": item.showOverlay ? (item.overlayColor || "#000000") : "#000000",
@@ -662,6 +665,7 @@ KCM.SimpleKCM {
                 "rotation": item.rotation !== undefined ? item.rotation : 0,
                 "letterSpacing": item.showLetterSpacing && item.letterSpacing !== undefined ? item.letterSpacing : 0,
                 "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
+                "effectOpacity": item.showEffect && item.effectOpacity !== undefined ? item.effectOpacity : 1.0,
                 "timeZone": item.showTimeZone ? (item.timeZone || "") : "",
                 "locale": item.showLocale ? (item.locale || "") : "",
                 "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
@@ -1461,7 +1465,11 @@ KCM.SimpleKCM {
                                         rowsModel.setProperty(index, "showOffsets", true);
                                     }
                                     else if (val === "rotation") { rowsModel.setProperty(index, "rotation", 45); rowsModel.setProperty(index, "showRotation", true); }
-                                    else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
+                                    else if (val === "effect") {
+                                        rowsModel.setProperty(index, "effect", "glow");
+                                        rowsModel.setProperty(index, "effectOpacity", 1.0);
+                                        rowsModel.setProperty(index, "showEffect", true);
+                                    }
                                     else if (val === "overlay") {
                                         rowsModel.setProperty(index, "overlayType", 1);
                                         rowsModel.setProperty(index, "overlayColor", "#000000");
@@ -1578,7 +1586,11 @@ KCM.SimpleKCM {
                                     }
                                     else if (val === "rotation") { rowsModel.setProperty(index, "rotation", 45); rowsModel.setProperty(index, "showRotation", true); }
                                     else if (val === "letterSpacing") { rowsModel.setProperty(index, "letterSpacing", 2); rowsModel.setProperty(index, "showLetterSpacing", true); }
-                                    else if (val === "effect") { rowsModel.setProperty(index, "effect", "glow"); rowsModel.setProperty(index, "showEffect", true); }
+                                    else if (val === "effect") {
+                                        rowsModel.setProperty(index, "effect", "glow");
+                                        rowsModel.setProperty(index, "effectOpacity", 1.0);
+                                        rowsModel.setProperty(index, "showEffect", true);
+                                    }
                                     else if (val === "overlay") {
                                         rowsModel.setProperty(index, "overlayType", 1);
                                         rowsModel.setProperty(index, "overlayColor", "#000000");
@@ -2125,6 +2137,25 @@ KCM.SimpleKCM {
                                     rowsModel.setProperty(index, "effectSize", value);
                                     rowsModel.saveToJson();
                                 }
+                            }
+
+                            Label { text: i18n("Effect Opacity:") }
+                            Slider {
+                                Layout.preferredWidth: 100
+                                from: 0.0
+                                to: 1.0
+                                stepSize: 0.05
+                                value: model.effectOpacity !== undefined ? model.effectOpacity : 1.0
+                                onMoved: {
+                                    if (configPage.isLoaded) {
+                                        rowsModel.setProperty(index, "effectOpacity", value);
+                                        rowsModel.saveToJson();
+                                    }
+                                }
+                            }
+                            Label {
+                                text: Math.round((model.effectOpacity !== undefined ? model.effectOpacity : 1.0) * 100) + "%"
+                                Layout.preferredWidth: 35
                             }
 
                             Button {

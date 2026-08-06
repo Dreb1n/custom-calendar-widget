@@ -476,7 +476,7 @@ PlasmoidItem {
                                 anchors.fill: rowContainer.activeShaderSource
                                 source: rowOverlaySourceGrabber
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
-                                opacity: (rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5) * (rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0)
+                                opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
                                 maskEnabled: true
                                 maskSource: rowContainer.overlayMaskSource
                                 z: 2
@@ -664,7 +664,6 @@ PlasmoidItem {
                             Canvas {
                                 id: textStrokeCanvas
                                 visible: !rowContainer.isShapeItem && rowContainer.effType === "stroke"
-                                opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
                                 layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 layer.smooth: true
                                 property real pad: rowContainer.effSize * 2
@@ -673,6 +672,9 @@ PlasmoidItem {
                                 width: parent.width + (pad * 2)
                                 height: parent.height + (pad * 2)
                                 renderTarget: Canvas.Image
+
+                                property real rowOpacity: (rowContainer.rowItem && rowContainer.rowItem.opacity !== undefined) ? rowContainer.rowItem.opacity : 1.0
+                                property real effectOpacity: (rowContainer.rowItem && rowContainer.rowItem.effectOpacity !== undefined) ? rowContainer.rowItem.effectOpacity : 1.0
 
                                 property string txt: rowContainer.formattedText
                                 property string fontFam: rowContainer.fontFam
@@ -683,6 +685,8 @@ PlasmoidItem {
                                 property int strokeWidth: rowContainer.effSize
                                 property int hAlign: rowContainer.hAlign
 
+                                onRowOpacityChanged: requestPaint()
+                                onEffectOpacityChanged: requestPaint()
                                 onTxtChanged: requestPaint()
                                 onFontSizeChanged: requestPaint()
                                 onFontFamChanged: requestPaint()
@@ -718,10 +722,12 @@ PlasmoidItem {
                                         ctx.lineJoin = "round";
                                         ctx.lineCap = "round";
                                         ctx.strokeStyle = strokeColor;
+                                        ctx.globalAlpha = effectOpacity;
                                         ctx.strokeText(txt, cx, cy);
                                     }
 
                                     ctx.fillStyle = txtColor;
+                                    ctx.globalAlpha = rowOpacity;
                                     ctx.fillText(txt, cx, cy);
                                 }
                             }
@@ -748,7 +754,7 @@ PlasmoidItem {
                             // Lazy-loaded Shader Effect inside itemRotator
                             Loader {
                                 anchors.fill: parent
-                                opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
+                                opacity: rowContainer.rowItem && rowContainer.rowItem.effectOpacity !== undefined ? rowContainer.rowItem.effectOpacity : 1.0
                                 active: rowContainer.effType === "glow" || rowContainer.effType === "shadow" || rowContainer.effType === "normalShadow"
                                 sourceComponent: {
                                     var t = rowContainer.effType;
