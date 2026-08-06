@@ -423,6 +423,7 @@ PlasmoidItem {
 
                                 // Option 1: Solid Color
                                 Rectangle {
+                                    id: rowOverlayColorRect
                                     anchors.fill: parent
                                     visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 1
                                     color: (rowContainer.rowItem && rowContainer.rowItem.overlayColor) ? rowContainer.rowItem.overlayColor : "#000000"
@@ -430,6 +431,7 @@ PlasmoidItem {
 
                                 // Option 2: Media (Image/Video)
                                 Loader {
+                                    id: rowOverlayMediaLoader
                                     anchors.fill: parent
                                     visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 2
                                     sourceComponent: {
@@ -444,7 +446,12 @@ PlasmoidItem {
                             // Capture live video/color frames and hide the original source from direct layout drawing
                             ShaderEffectSource {
                                 id: rowOverlaySourceGrabber
-                                sourceItem: rowOverlayContent
+                                sourceItem: {
+                                    if (!rowContainer.rowItem) return null;
+                                    if (rowContainer.rowItem.overlayType === 1) return rowOverlayColorRect;
+                                    if (rowContainer.rowItem.overlayType === 2) return rowOverlayMediaLoader.item;
+                                    return null;
+                                }
                                 hideSource: true
                                 live: true
                                 visible: false
