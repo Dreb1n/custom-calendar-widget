@@ -295,12 +295,21 @@ PlasmoidItem {
                         z: index
                         Layout.topMargin: isFromCenter ? 0 : rawOffY
 
-                        transform: Translate {
+        transform: Translate {
                             x: rowContainer.isFromCenter ? ((contentColumn.width - rowContainer.width) / 2 + rowContainer.rawOffX - rowContainer.x) : rowContainer.rawOffX
                             y: rowContainer.isFromCenter ? ((contentColumn.height - rowContainer.height) / 2 + rowContainer.rawOffY - rowContainer.y) : 0
                         }
 
                         property string formattedText: ""
+                        property string formattedOverlayFile: {
+                            if (!rowContainer.rowItem || !rowContainer.rowItem.overlayFile) return "";
+                            var file = String(rowContainer.rowItem.overlayFile).trim();
+                            if (file === "") return "";
+                            if (file.indexOf(":/") === -1 && file.indexOf("/") === 0) {
+                                return "file://" + file;
+                            }
+                            return file;
+                        }
 
                         property string currentFmt: (rowContainer.rowItem && rowContainer.rowItem.format) ? rowContainer.rowItem.format : ""
                         property string currentTz: (rowContainer.rowItem && rowContainer.rowItem.timeZone) ? rowContainer.rowItem.timeZone : ""
@@ -435,8 +444,8 @@ PlasmoidItem {
                                     anchors.fill: parent
                                     visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 2
                                     sourceComponent: {
-                                        if (!rowContainer.rowItem || !rowContainer.rowItem.overlayFile) return null;
-                                        var file = String(rowContainer.rowItem.overlayFile);
+                                        if (!rowContainer.rowItem || !rowContainer.formattedOverlayFile) return null;
+                                        var file = rowContainer.formattedOverlayFile;
                                         var isVideo = /\.(mp4|webm|ogv|mov|avi|3gp|mkv)$/i.test(file);
                                         return isVideo ? rowVideoComponent : rowImageComponent;
                                     }
@@ -472,7 +481,7 @@ PlasmoidItem {
                                 id: rowImageComponent
                                 Image {
                                     anchors.fill: parent
-                                    source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
+                                    source: rowContainer.formattedOverlayFile
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
                                     cache: true
@@ -483,7 +492,7 @@ PlasmoidItem {
                                 id: rowVideoComponent
                                 Video {
                                     anchors.fill: parent
-                                    source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
+                                    source: rowContainer.formattedOverlayFile
                                     autoPlay: true
                                     fillMode: VideoOutput.PreserveAspectCrop
                                     loops: MediaPlayer.Infinite
