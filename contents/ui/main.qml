@@ -273,10 +273,8 @@ PlasmoidItem {
                         property real itemRotation: (rowContainer.rowItem && rowContainer.rowItem.rotation !== undefined) ? Number(rowContainer.rowItem.rotation) : 0
 
                         property real strokeMargin: (rowContainer.effType === "stroke") ? Math.max(1, rowContainer.effSize) : 0
-                        property real overlayPadW: (rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0 && !isShapeItem) ? 24 : 0
-                        property real overlayPadH: (rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0 && !isShapeItem) ? 12 : 0
-                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2 + overlayPadW)
-                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2 + overlayPadH)
+                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2)
+                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2)
                         property real rotRad: itemRotation * Math.PI / 180.0
                         property real boundingW: itemRotation === 0 ? unrotatedW : (Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
                         property real boundingH: itemRotation === 0 ? unrotatedH : (Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
@@ -420,7 +418,7 @@ PlasmoidItem {
                             // Row Overlay Layer Source (Hidden, used as MultiEffect texture source)
                             Item {
                                 id: rowOverlayContent
-                                anchors.fill: parent
+                                anchors.fill: rowContainer.activeShaderSource
                                 visible: false
 
                                 // Option 1: Solid Color
@@ -445,7 +443,7 @@ PlasmoidItem {
 
                             // Render masked overlay texture directly on top of the text/shape
                             MultiEffect {
-                                anchors.fill: parent
+                                anchors.fill: rowContainer.activeShaderSource
                                 source: rowOverlayContent
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
@@ -627,7 +625,7 @@ PlasmoidItem {
                             Text {
                                 id: mainText
                                 visible: !rowContainer.isShapeItem && rowContainer.effType !== "stroke"
-                                anchors.centerIn: parent
+                                anchors.fill: parent
                                 layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 layer.smooth: true
                                 text: rowContainer.formattedText
