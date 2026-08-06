@@ -477,10 +477,16 @@ PlasmoidItem {
                                 Video {
                                     anchors.fill: parent
                                     source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
+                                    autoPlay: true
                                     fillMode: VideoOutput.PreserveAspectCrop
                                     loops: MediaPlayer.Infinite
                                     volume: 0
                                     
+                                    onSourceChanged: {
+                                        if (source && source !== "") {
+                                            play();
+                                        }
+                                    }
                                     Component.onCompleted: {
                                         play();
                                     }
