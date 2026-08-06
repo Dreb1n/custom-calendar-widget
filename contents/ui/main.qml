@@ -488,6 +488,8 @@ PlasmoidItem {
                                     fillMode: VideoOutput.PreserveAspectCrop
                                     loops: MediaPlayer.Infinite
                                     volume: 0
+                                    layer.enabled: true
+                                    layer.smooth: true
                                     
                                     onSourceChanged: {
                                         if (source && source !== "") {
