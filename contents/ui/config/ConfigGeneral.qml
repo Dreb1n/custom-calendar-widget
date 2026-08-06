@@ -1947,15 +1947,20 @@ KCM.SimpleKCM {
                             Layout.fillWidth: true
                             visible: model.showOpacity === true
                             Label { text: i18n("Opacity (%):") }
-                            SpinBox {
-                                from: 0
-                                to: 100
-                                stepSize: 5
-                                value: Math.round((model.opacity !== undefined ? model.opacity : 1.0) * 100)
-                                onValueModified: {
-                                    rowsModel.setProperty(index, "opacity", value / 100.0);
+                            Slider {
+                                Layout.fillWidth: true
+                                from: 0.0
+                                to: 1.0
+                                stepSize: 0.05
+                                value: model.opacity !== undefined ? model.opacity : 1.0
+                                onMoved: {
+                                    rowsModel.setProperty(index, "opacity", value);
                                     rowsModel.saveToJson();
                                 }
+                            }
+                            Label {
+                                text: Math.round((model.opacity !== undefined ? model.opacity : 1.0) * 100) + "%"
+                                Layout.preferredWidth: 35
                             }
                             Button {
                                 text: "✕"
