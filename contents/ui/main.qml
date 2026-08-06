@@ -447,7 +447,7 @@ PlasmoidItem {
                                 source: rowOverlayContent
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
-                                maskEnabled: true
+                maskEnabled: true
                                 maskSource: rowContainer.activeShaderSource
                                 z: 2
                             }
@@ -455,6 +455,7 @@ PlasmoidItem {
                             Component {
                                 id: rowImageComponent
                                 Image {
+                                    anchors.fill: parent
                                     source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
                                     fillMode: Image.PreserveAspectCrop
                                     asynchronous: true
@@ -465,6 +466,7 @@ PlasmoidItem {
                             Component {
                                 id: rowVideoComponent
                                 Video {
+                                    anchors.fill: parent
                                     source: (rowContainer.rowItem && rowContainer.rowItem.overlayFile) ? rowContainer.rowItem.overlayFile : ""
                                     fillMode: VideoOutput.PreserveAspectCrop
                                     loops: MediaPlayer.Infinite
