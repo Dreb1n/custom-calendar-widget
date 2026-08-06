@@ -478,7 +478,7 @@ PlasmoidItem {
                                 visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
                                 opacity: (rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5) * (rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0)
                                 maskEnabled: true
-                                maskSource: rowContainer.activeShaderSource
+                                maskSource: rowContainer.overlayMaskSource
                                 z: 2
                             }
 
@@ -710,6 +710,7 @@ PlasmoidItem {
                         }
 
                         property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textStrokeCanvas : mainText)
+                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : mainText
 
                         Component {
                             id: glowComp
