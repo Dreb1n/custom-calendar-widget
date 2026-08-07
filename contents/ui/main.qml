@@ -272,9 +272,9 @@ PlasmoidItem {
                         property bool isShapeItem: rowContainer.rowItem && (rowContainer.rowItem.isShape === true || rowContainer.rowItem.isShape === "true") && (!rowContainer.rowItem.format || rowContainer.rowItem.format === "")
                         property real itemRotation: (rowContainer.rowItem && rowContainer.rowItem.rotation !== undefined) ? Number(rowContainer.rowItem.rotation) : 0
 
-                        property real strokeMargin: (rowContainer.effType !== "none") ? Math.max(2, rowContainer.effSize * 2) : 0
-                        property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2)
-                        property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2)
+                        property real strokeMargin: 0
+                        property real unrotatedW: isShapeItem ? (rowContainer.rowItem.shapeWidth || 100) : (mainText ? Math.max(10, mainText.implicitWidth) : 100)
+                        property real unrotatedH: isShapeItem ? (rowContainer.rowItem.shapeHeight || 100) : (mainText ? Math.max(10, mainText.implicitHeight) : 30)
                         property real rotRad: itemRotation * Math.PI / 180.0
                         property real boundingW: itemRotation === 0 ? unrotatedW : (Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
                         property real boundingH: itemRotation === 0 ? unrotatedH : (Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
@@ -669,97 +669,122 @@ PlasmoidItem {
                                  visible: false
                              }
 
-                            // True Native Vector RoundJoin Text Stroke Canvas
-                            Canvas {
-                                id: textStrokeCanvas
-                                visible: !rowContainer.isShapeItem && rowContainer.effType === "stroke"
-                                property real pad: rowContainer.effSize * 2
-                                x: -pad
-                                y: -pad
-                                width: parent.width + (pad * 2)
-                                height: parent.height + (pad * 2)
-                                renderTarget: Canvas.Image
-
-                                property real rowOpacity: (rowContainer.rowItem && rowContainer.rowItem.opacity !== undefined) ? rowContainer.rowItem.opacity : 1.0
-                                property real effectOpacity: (rowContainer.rowItem && rowContainer.rowItem.effectOpacity !== undefined) ? rowContainer.rowItem.effectOpacity : 1.0
-
-                                property string txt: rowContainer.formattedText
-                                property string fontFam: rowContainer.fontFam
-                                property int fontSize: rowContainer.rowItem.fontSize || 24
-                                property int fontWeight: rowContainer.rowItem.weight || 400
-                                property color txtColor: rowContainer.rowItem.color || "#ffffff"
-                                property color strokeColor: rowContainer.effColor
-                                property int strokeWidth: rowContainer.effSize
-                                property int hAlign: rowContainer.hAlign
-
-                                onRowOpacityChanged: requestPaint()
-                                onEffectOpacityChanged: requestPaint()
-                                onTxtChanged: requestPaint()
-                                onFontSizeChanged: requestPaint()
-                                onFontFamChanged: requestPaint()
-                                onStrokeWidthChanged: requestPaint()
-                                onStrokeColorChanged: requestPaint()
-                                onWidthChanged: requestPaint()
-                                onHeightChanged: requestPaint()
-
-                                onPaint: {
-                                    var ctx = getContext("2d");
-                                    ctx.clearRect(0, 0, width, height);
-                                    if (!txt) return;
-
-                                    var wStr = (fontWeight >= 700) ? "bold " : "";
-                                    ctx.font = wStr + fontSize + "px " + (fontFam || "sans-serif");
-
-                                    var align = "center";
-                                    var cx = width / 2;
-                                    if (hAlign === Text.AlignLeft) {
-                                        align = "left";
-                                        cx = pad;
-                                    } else if (hAlign === Text.AlignRight) {
-                                        align = "right";
-                                        cx = width - pad;
-                                    }
-                                    ctx.textAlign = align;
-                                    ctx.textBaseline = "middle";
-
-                                    var cy = height / 2;
-
-                                    if (strokeWidth > 0) {
-                                        ctx.lineWidth = strokeWidth * 2;
-                                        ctx.lineJoin = "round";
-                                        ctx.lineCap = "round";
-                                        ctx.strokeStyle = strokeColor;
-                                        ctx.globalAlpha = effectOpacity;
-                                        ctx.strokeText(txt, cx, cy);
-                                    }
-
-                                    ctx.fillStyle = txtColor;
-                                    ctx.globalAlpha = rowOpacity;
-                                    ctx.fillText(txt, cx, cy);
-                                }
-                            }
-
-                             // Hidden text element that is always white and fully opaque to serve as a perfect mask
-                             Text {
-                                 id: mainTextMask
+                             // True Native Vector RoundJoin Text Stroke Canvas
+                             Canvas {
+                                 id: textStrokeCanvas
                                  visible: true
                                  opacity: 1.0
-                                 text: rowContainer.formattedText
-                                 anchors.fill: parent
-                                 horizontalAlignment: rowContainer.hAlign
-                                 verticalAlignment: Text.AlignVCenter
-                                 font.pixelSize: rowContainer.rowItem.fontSize || 24
-                                 font.family: rowContainer.fontFam
-                                 font.weight: rowContainer.fontW
-                                 font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
-                                 color: "#ffffff"
+                                 property real pad: rowContainer.effSize * 2
+                                 x: -pad
+                                 y: -pad
+                                 width: parent.width + (pad * 2)
+                                 height: parent.height + (pad * 2)
+                                 renderTarget: Canvas.Image
+
+                                 property string txt: rowContainer.formattedText
+                                 property string fontFam: rowContainer.fontFam
+                                 property int fontSize: rowContainer.rowItem.fontSize || 24
+                                 property int fontWeight: rowContainer.rowItem.weight || 400
+                                 property color strokeColor: rowContainer.effColor
+                                 property int strokeWidth: rowContainer.effSize
+                                 property int hAlign: rowContainer.hAlign
+
+                                 onTxtChanged: requestPaint()
+                                 onFontSizeChanged: requestPaint()
+                                 onFontFamChanged: requestPaint()
+                                 onStrokeWidthChanged: requestPaint()
+                                 onStrokeColorChanged: requestPaint()
+                                 onWidthChanged: requestPaint()
+                                 onHeightChanged: requestPaint()
+
+                                 onPaint: {
+                                     var ctx = getContext("2d");
+                                     ctx.clearRect(0, 0, width, height);
+                                     if (!txt) return;
+
+                                     var wStr = (fontWeight >= 700) ? "bold " : "";
+                                     ctx.font = wStr + fontSize + "px " + (fontFam || "sans-serif");
+
+                                     var align = "center";
+                                     var cx = width / 2;
+                                     if (hAlign === Text.AlignLeft) {
+                                         align = "left";
+                                         cx = pad;
+                                     } else if (hAlign === Text.AlignRight) {
+                                         align = "right";
+                                         cx = width - pad;
+                                     }
+                                     ctx.textAlign = align;
+                                     ctx.textBaseline = "middle";
+
+                                     var cy = height / 2;
+
+                                     if (strokeWidth > 0) {
+                                         ctx.lineWidth = strokeWidth * 2;
+                                         ctx.lineJoin = "round";
+                                         ctx.lineCap = "round";
+                                         ctx.strokeStyle = strokeColor;
+                                         ctx.strokeText(txt, cx, cy);
+                                     }
+                                 }
+                             }
+
+                             ShaderEffectSource {
+                                 id: rowStrokeTextureGrabber
+                                 sourceItem: textStrokeCanvas
+                                 width: textStrokeCanvas.width
+                                 height: textStrokeCanvas.height
+                                 hideSource: true
+                                 live: true
+                                 visible: false
+                             }
+
+                             // Render masked stroke outline on screen
+                             MultiEffect {
+                                 visible: !rowContainer.isShapeItem && rowContainer.effType === "stroke"
+                                 property real pad: rowContainer.effSize * 2
+                                 x: -pad
+                                 y: -pad
+                                 width: parent.width + (pad * 2)
+                                 height: parent.height + (pad * 2)
+                                 source: rowStrokeTextureGrabber
+                                 maskEnabled: true
+                                 maskSource: rowStrokeMaskTextureGrabber
+                                 maskInverted: true
+                                 autoPaddingEnabled: false
+                                 opacity: rowContainer.rowItem && rowContainer.rowItem.effectOpacity !== undefined ? rowContainer.rowItem.effectOpacity : 1.0
+                             }
+
+                             // Hidden text element container that is always white and fully opaque to serve as a perfect mask
+                             Item {
+                                 id: mainTextMaskContainer
+                                 property real pad: rowContainer.effType !== "none" ? rowContainer.effSize * 2 : 0
+                                 x: -pad
+                                 y: -pad
+                                 width: parent.width + (pad * 2)
+                                 height: parent.height + (pad * 2)
+                                 visible: false
+
+                                 Text {
+                                     id: mainTextMask
+                                     text: rowContainer.formattedText
+                                     anchors.fill: parent
+                                     anchors.margins: mainTextMaskContainer.pad
+                                     horizontalAlignment: rowContainer.hAlign
+                                     verticalAlignment: Text.AlignVCenter
+                                     font.pixelSize: rowContainer.rowItem.fontSize || 24
+                                     font.family: rowContainer.fontFam
+                                     font.weight: rowContainer.fontW
+                                     font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
+                                     color: "#ffffff"
+                                 }
                              }
 
                              ShaderEffectSource {
                                  id: rowMaskTextureGrabber
-                                 sourceItem: mainTextMask
-                                 width: parent.width
-                                 height: parent.height
+                                 sourceItem: mainTextMaskContainer
+                                 width: mainTextMaskContainer.width
+                                 height: mainTextMaskContainer.height
                                  hideSource: true
                                  live: true
                                  visible: false
@@ -784,7 +809,11 @@ PlasmoidItem {
 
                             // Lazy-loaded Shader Effect inside itemRotator
                             Loader {
-                                anchors.fill: parent
+                                property real pad: rowContainer.effType !== "none" ? rowContainer.effSize * 2 : 0
+                                x: -pad
+                                y: -pad
+                                width: parent.width + (pad * 2)
+                                height: parent.height + (pad * 2)
                                 opacity: rowContainer.rowItem && rowContainer.rowItem.effectOpacity !== undefined ? rowContainer.rowItem.effectOpacity : 1.0
                                 active: rowContainer.effType === "glow" || rowContainer.effType === "shadow" || rowContainer.effType === "normalShadow"
                                 sourceComponent: {
