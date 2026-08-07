@@ -732,6 +732,23 @@ PlasmoidItem {
                                 }
                             }
 
+                             // Hidden text element that is always white and fully opaque to serve as a perfect mask
+                             Text {
+                                 id: mainTextMask
+                                 visible: false
+                                 layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                 layer.smooth: true
+                                 text: rowContainer.formattedText
+                                 anchors.fill: parent
+                                 horizontalAlignment: rowContainer.hAlign
+                                 verticalAlignment: Text.AlignVCenter
+                                 font.pixelSize: rowContainer.rowItem.fontSize || 24
+                                 font.family: rowContainer.fontFam
+                                 font.weight: rowContainer.fontW
+                                 font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
+                                 color: "#ffffff"
+                             }
+
                             // Main Foreground Vector Text
                             Text {
                                 id: mainText
@@ -767,13 +784,13 @@ PlasmoidItem {
                         }
 
                         property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textStrokeCanvas : mainText)
-                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textMaskCanvas : mainText)
+                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textMaskCanvas : mainTextMask)
 
                         Component {
                             id: glowComp
                             MultiEffect {
                                 anchors.fill: parent
-                                source: (rowOverlayMultiEffect && rowOverlayMultiEffect.visible) ? rowOverlayMultiEffect : rowContainer.activeShaderSource
+                                source: rowContainer.overlayMaskSource
                                 shadowEnabled: true
                                 shadowColor: rowContainer.effColor
                                 shadowHorizontalOffset: 0
@@ -788,7 +805,7 @@ PlasmoidItem {
                             id: softShadowComp
                             MultiEffect {
                                 anchors.fill: parent
-                                source: (rowOverlayMultiEffect && rowOverlayMultiEffect.visible) ? rowOverlayMultiEffect : rowContainer.activeShaderSource
+                                source: rowContainer.overlayMaskSource
                                 shadowEnabled: true
                                 shadowColor: rowContainer.effColor
                                 shadowHorizontalOffset: rowContainer.effSize
@@ -801,7 +818,7 @@ PlasmoidItem {
                             id: normalShadowComp
                             MultiEffect {
                                 anchors.fill: parent
-                                source: (rowOverlayMultiEffect && rowOverlayMultiEffect.visible) ? rowOverlayMultiEffect : rowContainer.activeShaderSource
+                                source: rowContainer.overlayMaskSource
                                 shadowEnabled: true
                                 shadowColor: rowContainer.effColor
                                 shadowHorizontalOffset: rowContainer.effSize
