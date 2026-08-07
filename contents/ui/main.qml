@@ -673,8 +673,6 @@ PlasmoidItem {
                             Canvas {
                                 id: textStrokeCanvas
                                 visible: !rowContainer.isShapeItem && rowContainer.effType === "stroke"
-                                layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
-                                layer.smooth: true
                                 property real pad: rowContainer.effSize * 2
                                 x: -pad
                                 y: -pad
@@ -772,8 +770,6 @@ PlasmoidItem {
                                 id: mainText
                                 visible: !rowContainer.isShapeItem && rowContainer.effType !== "stroke"
                                 anchors.fill: parent
-                                layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
-                                layer.smooth: true
                                 text: rowContainer.formattedText
                                 opacity: rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1.0
                                 horizontalAlignment: rowContainer.hAlign
