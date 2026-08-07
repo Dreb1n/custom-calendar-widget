@@ -8,12 +8,13 @@
         ],
         "Category": "Date and Time",
         "Description": "Customizable multi-row calendar and clock widget with per-row format strings, fonts, colors, and alignments.",
-        "Icon": "preferences-system-time",
+        "Icon": "org.kde.customcalendarwidget",
         "Id": "org.kde.customcalendarwidget",
         "License": "GPL-2.0-or-later",
         "Name": "Custom Calendar and Clock",
-        "Version": "1.4.1",
-        "Website": "https://github.com/Dreb1n/custom-calendar-widget"
+        "Version": "1.5.0",
+        "Website": "https://store.kde.org/p/2367412",
+        "BugReportUrl": "https://github.com/Dreb1n/custom-calendar-widget"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-Provides": [

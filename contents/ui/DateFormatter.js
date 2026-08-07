@@ -38,207 +38,6 @@ function setBoundedCache(cacheObj, key, value) {
   cacheObj[key] = value;
 }
 
-// System IANA tzdata Database Extracted Directly From /usr/share/zoneinfo
-const SYSTEM_TZ_DATA = {
-  "UTC": { "std": 0.0, "dst": 0.0, "rule": "NONE" },
-  "America/New_York": { "std": -5.0, "dst": -4.0, "rule": "US" },
-  "America/Chicago": { "std": -6.0, "dst": -5.0, "rule": "US" },
-  "America/Denver": { "std": -7.0, "dst": -6.0, "rule": "US" },
-  "America/Phoenix": { "std": -7.0, "dst": -7.0, "rule": "NONE" },
-  "America/Los_Angeles": { "std": -8.0, "dst": -7.0, "rule": "US" },
-  "America/Anchorage": { "std": -9.0, "dst": -8.0, "rule": "US" },
-  "Pacific/Honolulu": { "std": -10.0, "dst": -10.0, "rule": "NONE" },
-  "America/Toronto": { "std": -5.0, "dst": -4.0, "rule": "US" },
-  "America/Vancouver": { "std": -8.0, "dst": -7.0, "rule": "US" },
-  "America/Mexico_City": { "std": -6.0, "dst": -6.0, "rule": "NONE" },
-  "America/Sao_Paulo": { "std": -3.0, "dst": -3.0, "rule": "NONE" },
-  "America/Argentina/Buenos_Aires": { "std": -3.0, "dst": -3.0, "rule": "NONE" },
-  "America/Santiago": { "std": -4.0, "dst": -3.0, "rule": "AU" },
-  "America/Bogota": { "std": -5.0, "dst": -5.0, "rule": "NONE" },
-  "America/Lima": { "std": -5.0, "dst": -5.0, "rule": "NONE" },
-  "America/Caracas": { "std": -4.0, "dst": -4.0, "rule": "NONE" },
-  "Europe/London": { "std": 0.0, "dst": 1.0, "rule": "EU" },
-  "Europe/Dublin": { "std": 0.0, "dst": 1.0, "rule": "EU" },
-  "Europe/Paris": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Berlin": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Madrid": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Rome": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Amsterdam": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Brussels": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Zurich": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Vienna": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Stockholm": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Oslo": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Copenhagen": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Warsaw": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Prague": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Budapest": { "std": 1.0, "dst": 2.0, "rule": "EU" },
-  "Europe/Athens": { "std": 2.0, "dst": 3.0, "rule": "EU" },
-  "Europe/Helsinki": { "std": 2.0, "dst": 3.0, "rule": "EU" },
-  "Europe/Bucharest": { "std": 2.0, "dst": 3.0, "rule": "EU" },
-  "Europe/Kyiv": { "std": 2.0, "dst": 3.0, "rule": "EU" },
-  "Europe/Istanbul": { "std": 3.0, "dst": 3.0, "rule": "NONE" },
-  "Europe/Moscow": { "std": 3.0, "dst": 3.0, "rule": "NONE" },
-  "Asia/Tokyo": { "std": 9.0, "dst": 9.0, "rule": "NONE" },
-  "Asia/Seoul": { "std": 9.0, "dst": 9.0, "rule": "NONE" },
-  "Asia/Shanghai": { "std": 8.0, "dst": 8.0, "rule": "NONE" },
-  "Asia/Hong_Kong": { "std": 8.0, "dst": 8.0, "rule": "NONE" },
-  "Asia/Singapore": { "std": 8.0, "dst": 8.0, "rule": "NONE" },
-  "Asia/Taipei": { "std": 8.0, "dst": 8.0, "rule": "NONE" },
-  "Asia/Jakarta": { "std": 7.0, "dst": 7.0, "rule": "NONE" },
-  "Asia/Bangkok": { "std": 7.0, "dst": 7.0, "rule": "NONE" },
-  "Asia/Kolkata": { "std": 5.5, "dst": 5.5, "rule": "NONE" },
-  "Asia/Karachi": { "std": 5.0, "dst": 5.0, "rule": "NONE" },
-  "Asia/Dhaka": { "std": 6.0, "dst": 6.0, "rule": "NONE" },
-  "Asia/Dubai": { "std": 4.0, "dst": 4.0, "rule": "NONE" },
-  "Asia/Riyadh": { "std": 3.0, "dst": 3.0, "rule": "NONE" },
-  "Asia/Jerusalem": { "std": 2.0, "dst": 3.0, "rule": "EU" },
-  "Asia/Tehran": { "std": 3.5, "dst": 3.5, "rule": "NONE" },
-  "Asia/Qatar": { "std": 3.0, "dst": 3.0, "rule": "NONE" },
-  "Australia/Sydney": { "std": 10.0, "dst": 11.0, "rule": "AU" },
-  "Australia/Melbourne": { "std": 10.0, "dst": 11.0, "rule": "AU" },
-  "Australia/Adelaide": { "std": 9.5, "dst": 10.5, "rule": "AU" },
-  "Australia/Darwin": { "std": 9.5, "dst": 9.5, "rule": "NONE" },
-  "Australia/Brisbane": { "std": 10.0, "dst": 10.0, "rule": "NONE" },
-  "Australia/Perth": { "std": 8.0, "dst": 8.0, "rule": "NONE" },
-  "Australia/Hobart": { "std": 10.0, "dst": 11.0, "rule": "AU" },
-  "Pacific/Auckland": { "std": 12.0, "dst": 13.0, "rule": "NZ" },
-  "Pacific/Fiji": { "std": 12.0, "dst": 12.0, "rule": "NONE" },
-  "Africa/Cairo": { "std": 2.0, "dst": 3.0, "rule": "EU" },
-  "Africa/Johannesburg": { "std": 2.0, "dst": 2.0, "rule": "NONE" },
-  "Africa/Lagos": { "std": 1.0, "dst": 1.0, "rule": "NONE" },
-  "Africa/Nairobi": { "std": 3.0, "dst": 3.0, "rule": "NONE" },
-  "Africa/Casablanca": { "std": 1.0, "dst": 1.0, "rule": "NONE" },
-  "Africa/Algiers": { "std": 1.0, "dst": 1.0, "rule": "NONE" }
-};
-
-// Fast Timezone Abbreviation & Alias Map
-const STATIC_TZ_MAP = {
-  "UTC": 0, "GMT": 0, "Z": 0, "ETC UTC": 0, "ETC GMT": 0, "UTC 0": 0, "GMT 0": 0,
-  "TOKYO": 9, "JST": 9, "JAPAN": 9, "ASIA TOKYO": 9,
-  "SEOUL": 9, "KST": 9, "KOREA": 9, "ASIA SEOUL": 9,
-  "SHANGHAI": 8, "BEIJING": 8, "HKT": 8, "SGT": 8, "CHINA": 8, "SINGAPORE": 8, "TAIPEI": 8, "JAKARTA": 7, "WIB": 7, "BANGKOK": 7, "ICT": 7, "ASIA SHANGHAI": 8, "ASIA SINGAPORE": 8, "ASIA HONG KONG": 8, "ASIA TAIPEI": 8, "ASIA JAKARTA": 7, "ASIA BANGKOK": 7,
-  "KOLKATA": 5.5, "CALCUTTA": 5.5, "IST": 5.5, "INDIA": 5.5, "ASIA KOLKATA": 5.5, "ASIA CALCUTTA": 5.5,
-  "KARACHI": 5, "PKT": 5, "PAKISTAN": 5, "ASIA KARACHI": 5,
-  "DHAKA": 6, "BANGLADESH": 6, "ASIA DHAKA": 6,
-  "DUBAI": 4, "GST": 4, "UAE": 4, "ASIA DUBAI": 4,
-  "RIYADH": 3, "SAUDI ARABIA": 3, "AST": 3, "QATAR": 3, "MOSCOW": 3, "MSK": 3, "ASIA RIYADH": 3, "ASIA QATAR": 3, "EUROPE MOSCOW": 3,
-  "SAO PAULO": -3, "BRASILIA": -3, "BRT": -3, "BRAZIL": -3, "BUENOS AIRES": -3, "ART": -3, "AMERICA SAO PAULO": -3, "AMERICA ARGENTINA BUENOS AIRES": -3,
-  "MEXICO": -6, "MEXICO CITY": -6, "AMERICA MEXICO CITY": -6, "BOGOTA": -5, "COT": -5, "AMERICA BOGOTA": -5, "LIMA": -5, "PET": -5, "AMERICA LIMA": -5, "CARACAS": -4, "VET": -4, "AMERICA CARACAS": -4,
-  "PERTH": 8, "AWST": 8, "AUSTRALIA PERTH": 8,
-  "BRISBANE": 10, "AUSTRALIA BRISBANE": 10,
-  "DARWIN": 9.5, "AUSTRALIA DARWIN": 9.5,
-  "PHOENIX": -7, "ARIZONA": -7, "AMERICA PHOENIX": -7
-};
-
-function isEUDST(date, year) {
-  var lastMar = new Date(Date.UTC(year, 3, 0));
-  var marDay = lastMar.getUTCDate() - lastMar.getUTCDay();
-  var lastOct = new Date(Date.UTC(year, 10, 0));
-  var octDay = lastOct.getUTCDate() - lastOct.getUTCDay();
-  var start = new Date(Date.UTC(year, 2, marDay, 1, 0, 0));
-  var end = new Date(Date.UTC(year, 9, octDay, 1, 0, 0));
-  return date >= start && date < end;
-}
-
-function isUSDST(date, year) {
-  var dMar1 = new Date(Date.UTC(year, 2, 1));
-  var marSun2 = (dMar1.getUTCDay() === 0 ? 1 : 8 - dMar1.getUTCDay()) + 7;
-  var dNov1 = new Date(Date.UTC(year, 10, 1));
-  var novSun1 = dNov1.getUTCDay() === 0 ? 1 : 8 - dNov1.getUTCDay();
-  var start = new Date(Date.UTC(year, 2, marSun2, 7, 0, 0));
-  var end = new Date(Date.UTC(year, 10, novSun1, 6, 0, 0));
-  return date >= start && date < end;
-}
-
-function isAustraliaDST(date, year) {
-  var dOct1 = new Date(Date.UTC(year, 9, 1));
-  var octSun1 = dOct1.getUTCDay() === 0 ? 1 : 8 - dOct1.getUTCDay();
-  var dApr1 = new Date(Date.UTC(year, 3, 1));
-  var aprSun1 = dApr1.getUTCDay() === 0 ? 1 : 8 - dApr1.getUTCDay();
-  var start = new Date(Date.UTC(year, 9, octSun1, 16, 0, 0));
-  var end = new Date(Date.UTC(year, 3, aprSun1, 16, 0, 0));
-  return date >= start || date < end;
-}
-
-function getDynamicTimezoneOffset(tzStr, date) {
-  if (!tzStr || typeof tzStr !== "string") return null;
-  var raw = tzStr.trim();
-  if (raw === "" || raw.toLowerCase() === "local") return null;
-
-  // 1. Direct IANA tzdata lookup (sourced from Linux /usr/share/zoneinfo)
-  var tzInfo = SYSTEM_TZ_DATA[raw] || SYSTEM_TZ_DATA[tzStr];
-  if (tzInfo) {
-    if (tzInfo.rule === "NONE") return tzInfo.std;
-    var year = date.getUTCFullYear();
-    var isDst = false;
-    if (tzInfo.rule === "US") isDst = isUSDST(date, year);
-    else if (tzInfo.rule === "EU") isDst = isEUDST(date, year);
-    else if (tzInfo.rule === "AU") isDst = isAustraliaDST(date, year);
-    else if (tzInfo.rule === "NZ") isDst = isAustraliaDST(date, year);
-    return isDst ? tzInfo.dst : tzInfo.std;
-  }
-
-  var norm = raw.replace(/[^\x00-\x7F]/g, "").toUpperCase();
-  norm = norm.replace(/[\/_\s\-]+/g, " ").trim();
-
-  // 2. Abbreviation & Alias Fast Path
-  if (STATIC_TZ_MAP.hasOwnProperty(norm)) {
-    return STATIC_TZ_MAP[norm];
-  }
-
-  var year = date.getUTCFullYear();
-
-  if (norm.indexOf("CEST") !== -1 || norm.indexOf("CET") !== -1 || norm.indexOf("PARIS") !== -1 || norm.indexOf("BERLIN") !== -1 || norm.indexOf("MADRID") !== -1 || norm.indexOf("ROME") !== -1 || norm.indexOf("AMSTERDAM") !== -1 || norm.indexOf("BRUSSELS") !== -1 || norm.indexOf("VIENNA") !== -1 || norm.indexOf("WARSAW") !== -1 || norm.indexOf("STOCKHOLM") !== -1 || norm.indexOf("CENTRAL EUROPE") !== -1 || norm.indexOf("EUROPE PARIS") !== -1 || norm.indexOf("EUROPE BERLIN") !== -1 || norm.indexOf("EUROPE MADRID") !== -1 || norm.indexOf("EUROPE ROME") !== -1 || norm.indexOf("EUROPE AMSTERDAM") !== -1 || norm.indexOf("EUROPE BRUSSELS") !== -1 || norm.indexOf("EUROPE VIENNA") !== -1 || norm.indexOf("EUROPE WARSAW") !== -1 || norm.indexOf("EUROPE STOCKHOLM") !== -1 || norm.indexOf("EUROPE OSLO") !== -1 || norm.indexOf("EUROPE COPENHAGEN") !== -1 || norm.indexOf("EUROPE PRAGUE") !== -1 || norm.indexOf("EUROPE BUDAPEST") !== -1 || norm.indexOf("EUROPE ZURICH") !== -1) {
-    return isEUDST(date, year) ? 2 : 1;
-  }
-
-  if (norm.indexOf("LONDON") !== -1 || norm.indexOf("BST") !== -1 || norm.indexOf("DUBLIN") !== -1 || norm === "UK" || norm === "GB" || norm.indexOf("EUROPE LONDON") !== -1 || norm.indexOf("EUROPE DUBLIN") !== -1) {
-    return isEUDST(date, year) ? 1 : 0;
-  }
-
-  if (norm.indexOf("EEST") !== -1 || norm.indexOf("EET") !== -1 || norm.indexOf("HELSINKI") !== -1 || norm.indexOf("ATHENS") !== -1 || norm.indexOf("BUCHAREST") !== -1 || norm.indexOf("EUROPE HELSINKI") !== -1 || norm.indexOf("EUROPE ATHENS") !== -1 || norm.indexOf("EUROPE BUCHAREST") !== -1 || norm.indexOf("EUROPE KYIV") !== -1 || norm.indexOf("AFRICA CAIRO") !== -1) {
-    return isEUDST(date, year) ? 3 : 2;
-  }
-
-  if (norm.indexOf("NEW YORK") !== -1 || norm.indexOf("TORONTO") !== -1 || norm.indexOf("EASTERN") !== -1 || norm.indexOf("EDT") !== -1 || norm.indexOf("EST") !== -1 || norm.indexOf("AMERICA NEW YORK") !== -1 || norm.indexOf("AMERICA TORONTO") !== -1) {
-    return isUSDST(date, year) ? -4 : -5;
-  }
-
-  if (norm.indexOf("CHICAGO") !== -1 || norm.indexOf("CDT") !== -1 || (norm.indexOf("CST") !== -1 && norm.indexOf("ACST") === -1) || norm.indexOf("CENTRAL") !== -1 || norm.indexOf("AMERICA CHICAGO") !== -1) {
-    return isUSDST(date, year) ? -5 : -6;
-  }
-
-  if (norm.indexOf("DENVER") !== -1 || norm.indexOf("MDT") !== -1 || norm.indexOf("MST") !== -1 || norm.indexOf("MOUNTAIN") !== -1 || norm.indexOf("AMERICA DENVER") !== -1) {
-    return isUSDST(date, year) ? -6 : -7;
-  }
-
-  if (norm.indexOf("LOS ANGELES") !== -1 || norm.indexOf("VANCOUVER") !== -1 || norm.indexOf("PDT") !== -1 || norm.indexOf("PST") !== -1 || norm.indexOf("PACIFIC") !== -1 || norm.indexOf("AMERICA LOS ANGELES") !== -1 || norm.indexOf("AMERICA VANCOUVER") !== -1) {
-    return isUSDST(date, year) ? -7 : -8;
-  }
-
-  if (norm.indexOf("SYDNEY") !== -1 || norm.indexOf("MELBOURNE") !== -1 || norm.indexOf("AEDT") !== -1 || (norm.indexOf("AEST") !== -1 && norm.indexOf("BRISBANE") === -1) || norm.indexOf("AUSTRALIA SYDNEY") !== -1 || norm.indexOf("AUSTRALIA MELBOURNE") !== -1 || norm.indexOf("AUSTRALIA HOBART") !== -1) {
-    return isAustraliaDST(date, year) ? 11 : 10;
-  }
-
-  if (norm.indexOf("ADELAIDE") !== -1 || norm.indexOf("ACDT") !== -1 || norm.indexOf("AUSTRALIA ADELAIDE") !== -1) {
-    return isAustraliaDST(date, year) ? 10.5 : 9.5;
-  }
-
-  if (norm.indexOf("AUCKLAND") !== -1 || norm.indexOf("WELLINGTON") !== -1 || norm.indexOf("NZDT") !== -1 || norm.indexOf("NZST") !== -1 || norm.indexOf("NEW ZEALAND") !== -1 || norm.indexOf("PACIFIC AUCKLAND") !== -1) {
-    return isAustraliaDST(date, year) ? 13 : 12;
-  }
-
-  var match = raw.match(/^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::(\d{2}))?$/i);
-  if (match) {
-    var sign = match[1] === '-' ? -1 : 1;
-    var hOff = parseInt(match[2], 10);
-    var mOff = match[3] ? parseInt(match[3], 10) : 0;
-    return sign * (hOff + mOff / 60);
-  }
-
-  return null;
-}
 
 function padZero(num, length) {
   if (length === undefined) length = 2;
@@ -323,6 +122,10 @@ function compileFormat(formatStr) {
         var literalText = formatStr.substring(pos + 1, endBracket);
         tokens.push({ isToken: false, value: literalText });
         pos = endBracket + 1;
+        continue;
+      } else {
+        tokens.push({ isToken: false, value: "[" });
+        pos = pos + 1;
         continue;
       }
     }
@@ -459,15 +262,12 @@ function format(date, formatStr, timeZone, localeStr) {
       }
 
       if (!resolved) {
-        offsetHours = getDynamicTimezoneOffset(tzClean, date);
-        if (offsetHours === null) {
-          var match = tzClean.match(/^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::(\d{2}))?$/i);
-          if (match) {
-            var sign = match[1] === '-' ? -1 : 1;
-            var hOff = parseInt(match[2], 10);
-            var mOff = match[3] ? parseInt(match[3], 10) : 0;
-            offsetHours = sign * (hOff + mOff / 60);
-          }
+        var match = tzClean.match(/^(?:UTC|GMT)?\s*([+-])\s*(\d{1,2})(?::(\d{2}))?$/i);
+        if (match) {
+          var sign = match[1] === '-' ? -1 : 1;
+          var hOff = parseInt(match[2], 10);
+          var mOff = match[3] ? parseInt(match[3], 10) : 0;
+          offsetHours = sign * (hOff + mOff / 60);
         }
 
         if (offsetHours !== null) {
