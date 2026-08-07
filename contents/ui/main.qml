@@ -612,8 +612,9 @@ PlasmoidItem {
                              // Canvas that only draws the text fill to serve as a perfect mask
                              Canvas {
                                  id: textMaskCanvas
-                                 visible: false
-                                 layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                 visible: true
+                                 opacity: 0.0
+                                 layer.enabled: true
                                  layer.smooth: true
                                  property real pad: rowContainer.effSize * 2
                                  x: -pad
@@ -735,8 +736,9 @@ PlasmoidItem {
                              // Hidden text element that is always white and fully opaque to serve as a perfect mask
                              Text {
                                  id: mainTextMask
-                                 visible: false
-                                 layer.enabled: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                 visible: true
+                                 opacity: 0.0
+                                 layer.enabled: true
                                  layer.smooth: true
                                  text: rowContainer.formattedText
                                  anchors.fill: parent
