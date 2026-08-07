@@ -662,6 +662,8 @@ PlasmoidItem {
                              ShaderEffectSource {
                                  id: rowStrokeMaskTextureGrabber
                                  sourceItem: textMaskCanvas
+                                 width: textMaskCanvas.width
+                                 height: textMaskCanvas.height
                                  hideSource: true
                                  live: true
                                  visible: false
@@ -758,6 +760,8 @@ PlasmoidItem {
                              ShaderEffectSource {
                                  id: rowMaskTextureGrabber
                                  sourceItem: mainTextMask
+                                 width: parent.width
+                                 height: parent.height
                                  hideSource: true
                                  live: true
                                  visible: false
