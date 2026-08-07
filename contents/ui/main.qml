@@ -613,9 +613,7 @@ PlasmoidItem {
                              Canvas {
                                  id: textMaskCanvas
                                  visible: true
-                                 opacity: 0.0
-                                 layer.enabled: true
-                                 layer.smooth: true
+                                 opacity: 1.0
                                  property real pad: rowContainer.effSize * 2
                                  x: -pad
                                  y: -pad
@@ -659,6 +657,14 @@ PlasmoidItem {
                                      ctx.fillStyle = "#ffffff";
                                      ctx.fillText(txt, cx, cy);
                                  }
+                             }
+
+                             ShaderEffectSource {
+                                 id: rowStrokeMaskTextureGrabber
+                                 sourceItem: textMaskCanvas
+                                 hideSource: true
+                                 live: true
+                                 visible: false
                              }
 
                             // True Native Vector RoundJoin Text Stroke Canvas
@@ -737,9 +743,7 @@ PlasmoidItem {
                              Text {
                                  id: mainTextMask
                                  visible: true
-                                 opacity: 0.0
-                                 layer.enabled: true
-                                 layer.smooth: true
+                                 opacity: 1.0
                                  text: rowContainer.formattedText
                                  anchors.fill: parent
                                  horizontalAlignment: rowContainer.hAlign
@@ -749,6 +753,14 @@ PlasmoidItem {
                                  font.weight: rowContainer.fontW
                                  font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
                                  color: "#ffffff"
+                             }
+
+                             ShaderEffectSource {
+                                 id: rowMaskTextureGrabber
+                                 sourceItem: mainTextMask
+                                 hideSource: true
+                                 live: true
+                                 visible: false
                              }
 
                             // Main Foreground Vector Text
@@ -786,7 +798,7 @@ PlasmoidItem {
                         }
 
                         property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textStrokeCanvas : mainText)
-                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? textMaskCanvas : mainTextMask)
+                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : (rowContainer.effType === "stroke" ? rowStrokeMaskTextureGrabber : rowMaskTextureGrabber)
 
                         Component {
                             id: glowComp
