@@ -272,7 +272,7 @@ PlasmoidItem {
                         property bool isShapeItem: rowContainer.rowItem && (rowContainer.rowItem.isShape === true || rowContainer.rowItem.isShape === "true") && (!rowContainer.rowItem.format || rowContainer.rowItem.format === "")
                         property real itemRotation: (rowContainer.rowItem && rowContainer.rowItem.rotation !== undefined) ? Number(rowContainer.rowItem.rotation) : 0
 
-                        property real strokeMargin: (rowContainer.effType === "stroke") ? Math.max(1, rowContainer.effSize) : 0
+                        property real strokeMargin: (rowContainer.effType !== "none") ? Math.max(2, rowContainer.effSize * 2) : 0
                         property real unrotatedW: isShapeItem ? ((rowContainer.rowItem.shapeWidth || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitWidth) : 100) + strokeMargin * 2)
                         property real unrotatedH: isShapeItem ? ((rowContainer.rowItem.shapeHeight || 100) + strokeMargin * 2) : ((mainText ? Math.max(10, mainText.implicitHeight) : 30) + strokeMargin * 2)
                         property real rotRad: itemRotation * Math.PI / 180.0
@@ -815,6 +815,7 @@ PlasmoidItem {
                                 maskEnabled: true
                                 maskSource: rowContainer.overlayMaskSource
                                 maskInverted: true
+                                autoPaddingEnabled: false
                             }
                         }
 
@@ -831,6 +832,7 @@ PlasmoidItem {
                                 maskEnabled: true
                                 maskSource: rowContainer.overlayMaskSource
                                 maskInverted: true
+                                autoPaddingEnabled: false
                             }
                         }
 
@@ -847,6 +849,7 @@ PlasmoidItem {
                                 maskEnabled: true
                                 maskSource: rowContainer.overlayMaskSource
                                 maskInverted: true
+                                autoPaddingEnabled: false
                             }
                         }
                     }
