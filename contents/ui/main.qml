@@ -812,6 +812,9 @@ PlasmoidItem {
                                 shadowBlur: Math.min(1.0, Math.max(0.2, rowContainer.effSize / 5.0))
                                 blurEnabled: true
                                 blur: Math.min(1.0, Math.max(0.1, rowContainer.effSize / 10.0))
+                                maskEnabled: true
+                                maskSource: rowContainer.overlayMaskSource
+                                maskInverted: true
                             }
                         }
 
@@ -825,6 +828,9 @@ PlasmoidItem {
                                 shadowHorizontalOffset: rowContainer.effSize
                                 shadowVerticalOffset: rowContainer.effSize
                                 shadowBlur: Math.min(1.0, Math.max(0.2, rowContainer.effSize / 8.0))
+                                maskEnabled: true
+                                maskSource: rowContainer.overlayMaskSource
+                                maskInverted: true
                             }
                         }
 
@@ -838,6 +844,9 @@ PlasmoidItem {
                                 shadowHorizontalOffset: rowContainer.effSize
                                 shadowVerticalOffset: rowContainer.effSize
                                 shadowBlur: 0.1
+                                maskEnabled: true
+                                maskSource: rowContainer.overlayMaskSource
+                                maskInverted: true
                             }
                         }
                     }
