@@ -18,11 +18,6 @@ KCM.SimpleKCM {
     property alias cfg_borderRadius: borderRadiusHolder.value
     property alias cfg_widgetPadding: widgetPaddingHolder.value
     property alias cfg_rowsJson: rowsJsonHolder.text
-    property alias cfg_isEditing: isEditingHolder.value
-    property alias cfg_editingRowsJson: editingRowsJsonHolder.text
-    property alias cfg_editingFontFamily: editingFontFamilyHolder.text
-    property alias cfg_editingBgType: editingBgTypeHolder.value
-    property alias cfg_editingBgColor: editingBgColorHolder.text
     property int activeRowIndexForFileDialog: -1
     property var activeColorCallback: null
     property var timezoneOptions: ConfigData.timezoneOptions
@@ -738,6 +733,16 @@ KCM.SimpleKCM {
     Component.onCompleted: {
         loadRowsFromJson();
         pushLiveEditingState();
+        try {
+            configPage.needsSave = false;
+            configPage.unrepresentedNeedsSave = false;
+        } catch (e) {}
+        try {
+            if (typeof kcm !== "undefined" && kcm) {
+                kcm.needsSave = false;
+                kcm.unrepresentedNeedsSave = false;
+            }
+        } catch (e) {}
     }
     Component.onDestruction: {
         clearEditingState();
@@ -1261,6 +1266,20 @@ KCM.SimpleKCM {
         function removeRow(idx) {
             if (count > 1 && idx >= 0 && idx < count) {
                 remove(idx);
+                saveToJson(true);
+            }
+        }
+
+        function duplicateRow(idx) {
+            if (idx >= 0 && idx < count) {
+                var original = rowsModel.get(idx);
+                var copyObj = {};
+                for (var key in original) {
+                    if (key !== "_id" && typeof original[key] !== "function") {
+                        copyObj[key] = original[key];
+                    }
+                }
+                rowsModel.insert(idx + 1, copyObj);
                 saveToJson(true);
             }
         }

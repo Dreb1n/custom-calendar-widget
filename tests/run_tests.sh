@@ -20,14 +20,18 @@ echo "Step 3: Running QML Unit Tests (Text Effect Mask)..."
 qmltestrunner -input "$(dirname "$0")/tst_texteffect_mask.qml"
 TEST3_EXIT=$?
 
-if [ $TEST1_EXIT -eq 0 ] && [ $TEST2_EXIT -eq 0 ] && [ $TEST3_EXIT -eq 0 ]; then
+echo "Step 4: Running QML Unit Tests (Click Area Offset)..."
+qmltestrunner -input "$(dirname "$0")/tst_click_area.qml"
+TEST4_EXIT=$?
+
+if [ $TEST1_EXIT -eq 0 ] && [ $TEST2_EXIT -eq 0 ] && [ $TEST3_EXIT -eq 0 ] && [ $TEST4_EXIT -eq 0 ]; then
     echo -e "${GREEN}PASS: All QML Unit Tests succeeded.${NC}\n"
 else
     echo -e "${RED}FAIL: QML Unit Tests failed.${NC}\n"
 fi
 
 # 2. Run QML Syntax Check (qmlformat validation)
-echo "Step 4: Validating QML Syntax (qmlformat)..."
+echo "Step 5: Validating QML Syntax (qmlformat)..."
 qmlformat -v "$(dirname "$0")/../contents/ui/main.qml" >/dev/null 2>&1
 MAIN_SYNTAX=$?
 qmlformat -v "$(dirname "$0")/../contents/ui/config/ConfigGeneral.qml" >/dev/null 2>&1
@@ -46,7 +50,7 @@ else
 fi
 
 # 3. Overall Summary
-if [ $TEST1_EXIT -eq 0 ] && [ $TEST2_EXIT -eq 0 ] && [ $TEST3_EXIT -eq 0 ] && [ $MAIN_SYNTAX -eq 0 ] && [ $CONFIG_SYNTAX -eq 0 ]; then
+if [ $TEST1_EXIT -eq 0 ] && [ $TEST2_EXIT -eq 0 ] && [ $TEST3_EXIT -eq 0 ] && [ $TEST4_EXIT -eq 0 ] && [ $MAIN_SYNTAX -eq 0 ] && [ $CONFIG_SYNTAX -eq 0 ]; then
     echo -e "${GREEN}======================================"
     echo -e "  ALL TESTS PASSED SUCCESSFULLY!"
     echo -e "======================================${NC}"

@@ -49,6 +49,14 @@ Frame {
             }
 
             Button {
+                text: i18n("Duplicate")
+                icon.name: "edit-copy"
+                onClicked: {
+                    rowsModel.duplicateRow(index);
+                }
+            }
+
+            Button {
                 text: i18n("Remove")
                 enabled: rowsModel.count > 1
                 onClicked: {
@@ -628,7 +636,7 @@ Frame {
 
             TextField {
                 Layout.fillWidth: true
-                placeholderText: "Executable command on click (e.g. kcalc, korganizer, brave)"
+                placeholderText: i18n("Command or script (e.g. command1 ; sleep 2 ; command2)")
                 onTextEdited: {
                     if (configPage.isLoaded) {
                         rowsModel.setProperty(index, "clickCommand", text);

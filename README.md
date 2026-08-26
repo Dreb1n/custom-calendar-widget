@@ -2,7 +2,7 @@
 
 [![KDE Plasma 6](https://img.shields.io/badge/KDE%20Plasma-6.0%2B-blue.svg?logo=kde)](https://kde.org/plasma-desktop/)
 [![License: GPL-2.0-or-later](https://img.shields.io/badge/License-GPL--2.0--or--later-green.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-1.4.1-orange.svg)](https://github.com/Dreb1n/custom-calendar-widget/releases)
+[![Version](https://img.shields.io/badge/Version-1.5.1-orange.svg)](https://github.com/Dreb1n/custom-calendar-widget/releases)
 
 A highly customizable, multi-row calendar and digital clock desktop widget (plasmoid) designed for **KDE Plasma 6**.
 
@@ -36,7 +36,15 @@ Configure individual rows with custom date/time format specifiers, typography, c
 
 ## 📖 Format Token Reference Table
 
-Enclose literal text in square brackets `[Like This]` to prevent tokens from being parsed.
+> [!TIP]
+> ### 🔤 Escaping Literal Text with Square Brackets `[...]`
+> Any text enclosed inside square brackets `[Like This]` is treated as **literal text** and will not be parsed as date/time format tokens.
+> 
+> **Why is this necessary?**
+> Letters like `d`, `m`, `y`, `h`, `i`, `s`, `a`, `w`, `x` are active format tokens. If you want to write words containing those letters (such as `"of"`, `"in"`, `"at"`, `"Day"`, `"Week"`), enclose them in brackets so the formatter does not replace those letters with numbers or dates:
+> - `do [of] MMMM, yyyy` ➔ **1st of August, 2026** *(without `[of]`, the `d` in `"of"` would print the day number!)*
+> - `HH:i [in] TZ` ➔ **14:32 in Europe/London** *(without `[in]`, the `i` would print the minutes again!)*
+> - `[Day] dddd, [Week] W` ➔ **Day Saturday, Week 34**
 
 | Token | Description | Example Output |
 | :--- | :--- | :--- |
@@ -69,7 +77,8 @@ Enclose literal text in square brackets `[Like This]` to prevent tokens from bei
 - `dd mmm yyy` ➔ `01 Aug 2026`
 - `do [of] MMMM, yyyy` ➔ `1st of August, 2026`
 - `HH:i:ss` ➔ `14:32:05`
-- `hh:i A (TZ)` ➔ `02:32 PM (Asia/Tokyo)`
+- `hh:i A ([Timezone:] TZ)` ➔ `02:32 PM (Timezone: Asia/Tokyo)`
+- `[Week] W - dddd` ➔ `Week 34 - Saturday`
 
 ---
 

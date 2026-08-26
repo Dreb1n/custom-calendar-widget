@@ -31,9 +31,13 @@ const FORMAT_TOKEN_CACHE = {};
 const MAX_CACHE_ENTRIES = 32;
 
 function setBoundedCache(cacheObj, key, value) {
-  var keys = Object.keys(cacheObj);
-  if (keys.length >= MAX_CACHE_ENTRIES) {
-    delete cacheObj[keys[0]];
+  if (Object.prototype.hasOwnProperty.call(cacheObj, key)) {
+    delete cacheObj[key];
+  } else {
+    var keys = Object.keys(cacheObj);
+    if (keys.length >= MAX_CACHE_ENTRIES) {
+      delete cacheObj[keys[0]];
+    }
   }
   cacheObj[key] = value;
 }
@@ -135,15 +139,15 @@ function compileFormat(formatStr) {
     var segment = formatStr.substring(pos, segmentEnd);
     pos = segmentEnd;
 
-    var tokenRegex = new RegExp(TOKEN_REGEX.source, "g");
+    TOKEN_REGEX.lastIndex = 0;
     var lastIndex = 0;
     var match;
-    while ((match = tokenRegex.exec(segment)) !== null) {
+    while ((match = TOKEN_REGEX.exec(segment)) !== null) {
       if (match.index > lastIndex) {
         tokens.push({ isToken: false, value: segment.substring(lastIndex, match.index) });
       }
       tokens.push({ isToken: true, value: match[0] });
-      lastIndex = tokenRegex.lastIndex;
+      lastIndex = TOKEN_REGEX.lastIndex;
     }
     if (lastIndex < segment.length) {
       tokens.push({ isToken: false, value: segment.substring(lastIndex) });
@@ -253,8 +257,9 @@ function format(date, formatStr, timeZone, localeStr) {
               case 'second': seconds = parseInt(part.value, 10) || 0; break;
             }
           }
-          dayOfWeek = new Date(Date.UTC(year, month, dayOfMonth)).getUTCDay();
           var targetUtc = Date.UTC(year, month, dayOfMonth, hours24, minutes, seconds);
+          dayOfWeek = (Math.floor(targetUtc / 86400000) + 4) % 7;
+          if (dayOfWeek < 0) dayOfWeek += 7;
           var baseUtc = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds());
           offsetHours = (targetUtc - baseUtc) / 3600000;
           resolved = true;

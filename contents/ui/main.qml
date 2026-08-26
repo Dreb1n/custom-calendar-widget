@@ -187,19 +187,15 @@ PlasmoidItem {
             if (trimmed.length === 0)
                 return null;
 
-            // Reject command injection attempts containing shell chaining operators
-            if (/[;&|`$><\r\n]/.test(trimmed)) {
-                console.warn("Custom Calendar Plasmoid: Blocked command containing unsafe shell characters:", trimmed);
-                return null;
-            }
             return trimmed;
         }
 
         function exec(cmd) {
             const safeCmd = sanitizeCommand(cmd);
             if (safeCmd) {
-                disconnectSource(safeCmd);
-                connectSource(safeCmd);
+                const execStr = "sh -c " + JSON.stringify(safeCmd);
+                disconnectSource(execStr);
+                connectSource(execStr);
             }
         }
 
@@ -209,25 +205,34 @@ PlasmoidItem {
         }
     }
 
+    function tickClock() {
+        const now = new Date();
+        root.currentTime = now;
+        const ms = now.getMilliseconds();
+        if (root.anyRowHasSeconds) {
+            // Phase-lock to top of every second (000ms boundary)
+            masterClockTimer.interval = Math.max(10, 1000 - ms);
+        } else {
+            // Phase-lock to top of every minute (00s 000ms boundary)
+            const sec = now.getSeconds();
+            masterClockTimer.interval = Math.max(50, (60 - sec) * 1000 - ms);
+        }
+    }
+
     Timer {
         id: masterClockTimer
 
         interval: 1000
         repeat: true
-        running: true
+        running: root.visible
         triggeredOnStart: true
-        onTriggered: {
-            const now = new Date();
-            root.currentTime = now;
-            const ms = now.getMilliseconds();
-            if (root.anyRowHasSeconds) {
-                // Phase-lock to top of every second (000ms boundary)
-                masterClockTimer.interval = Math.max(10, 1000 - ms);
-            } else {
-                // Phase-lock to top of every minute (00s 000ms boundary)
-                const sec = now.getSeconds();
-                masterClockTimer.interval = Math.max(50, (60 - sec) * 1000 - ms);
-            }
+        onTriggered: root.tickClock()
+    }
+
+    onVisibleChanged: {
+        if (root.visible) {
+            root.tickClock();
+            masterClockTimer.restart();
         }
     }
 
@@ -493,6 +498,16 @@ PlasmoidItem {
                             target: root
                         }
 
+                        property bool hasValidCmd: rowContainer.rowItem && rowContainer.rowItem.clickCommand && rowContainer.rowItem.clickCommand.trim().length > 0
+
+                        function contains(point) {
+                            if (!hasValidCmd)
+                                return false;
+
+                            var pInRotator = itemRotator.mapFromItem(rowContainer, point);
+                            return pInRotator.x >= 0 && pInRotator.x <= itemRotator.width && pInRotator.y >= 0 && pInRotator.y <= itemRotator.height;
+                        }
+
                         // Unified Hardware SceneGraph Rotator (Positioned in rowContainer by Alignment)
                         Item {
                             id: itemRotator
@@ -508,13 +523,15 @@ PlasmoidItem {
 
                             // Click Handler positioned directly inside the rotated/offset container
                             MouseArea {
-                                property bool hasValidCmd: executableSource.sanitizeCommand(rowContainer.rowItem.clickCommand) !== null
                                 property bool clickAllowed: true
 
+                                enabled: rowContainer.hasValidCmd
+                                hoverEnabled: true
+                                z: 10
                                 anchors.fill: parent
-                                cursorShape: hasValidCmd ? Qt.PointingHandCursor : Qt.ArrowCursor
+                                cursorShape: rowContainer.hasValidCmd ? Qt.PointingHandCursor : Qt.ArrowCursor
                                 onClicked: {
-                                    if (hasValidCmd && clickAllowed) {
+                                    if (rowContainer.hasValidCmd && clickAllowed) {
                                         clickAllowed = false;
                                         clickDebounceTimer.start();
                                         executableSource.exec(rowContainer.rowItem.clickCommand);

@@ -23,7 +23,7 @@ Kirigami.ScrollablePage {
                     spacing: 16
 
                     Image {
-                        source: Qt.resolvedUrl("icon.png")
+                        source: Qt.resolvedUrl("../../icons/icon.png")
                         implicitWidth: 48
                         implicitHeight: 48
                         fillMode: Image.PreserveAspectFit
@@ -39,7 +39,7 @@ Kirigami.ScrollablePage {
                         }
 
                         Label {
-                            text: i18n("Version 1.4.1")
+                            text: i18n("Version %1", (typeof plasmoid !== "undefined" && plasmoid.metadata && plasmoid.metadata.version) ? plasmoid.metadata.version : "1.5.1")
                             color: Kirigami.Theme.disabledTextColor
                         }
 
