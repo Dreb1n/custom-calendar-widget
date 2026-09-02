@@ -11,6 +11,7 @@ import org.kde.plasma.plasmoid
 KCM.SimpleKCM {
     id: configPage
 
+    property alias cfg_widgetId: widgetIdInput.text
     property alias cfg_fontFamily: fontCombo.selectedFont
     property alias cfg_bgType: bgTypeCombo.currentIndex
     property alias cfg_bgColor: bgColorInput.text
@@ -162,6 +163,7 @@ KCM.SimpleKCM {
             var pConfig = getPlasmoidConfig();
             if (pConfig) {
                 pConfig.rowsJson = rowsJsonHolder.text;
+                pConfig.widgetId = (typeof widgetIdInput !== "undefined" && widgetIdInput) ? widgetIdInput.text : cfg_widgetId;
                 pConfig.fontFamily = (typeof fontCombo !== "undefined" && fontCombo && fontCombo.selectedFont) ? fontCombo.selectedFont : cfg_fontFamily;
                 pConfig.bgType = (typeof bgTypeCombo !== "undefined" && bgTypeCombo && bgTypeCombo.currentIndex !== undefined) ? bgTypeCombo.currentIndex : cfg_bgType;
                 pConfig.bgColor = (typeof bgColorInput !== "undefined" && bgColorInput && bgColorInput.text) ? bgColorInput.text : cfg_bgColor;
@@ -484,6 +486,7 @@ KCM.SimpleKCM {
         var isSh = (item.isShape === true || item.isShape === "true") && (!item.format || item.format === "");
         if (isSh)
             return {
+                "rowId": item.rowId !== undefined ? item.rowId : "",
                 "isShape": true,
                 "shapeType": item.shapeType || "circle",
                 "shapeWidth": item.shapeWidth || 100,
@@ -510,6 +513,7 @@ KCM.SimpleKCM {
             };
         else
             return {
+                "rowId": item.rowId !== undefined ? item.rowId : "",
                 "format": item.format || "",
                 "fontFamily": item.showFontFamily ? (item.fontFamily || "") : "",
                 "align": item.showAlign ? (item.align || "center") : "center",
@@ -1263,6 +1267,28 @@ KCM.SimpleKCM {
     ListModel {
         id: rowsModel
 
+        function getNextRowId() {
+            var maxId = -1;
+            for (var i = 0; i < count; i++) {
+                var item = get(i);
+                var curId = parseInt(item.rowId, 10);
+                if (!isNaN(curId) && curId > maxId) maxId = curId;
+            }
+            var candidateId = maxId + 1;
+            while (true) {
+                var collision = false;
+                for (var j = 0; j < count; j++) {
+                    if (String(get(j).rowId) === String(candidateId)) {
+                        collision = true;
+                        break;
+                    }
+                }
+                if (!collision) break;
+                candidateId++;
+            }
+            return candidateId;
+        }
+
         function removeRow(idx) {
             if (count > 1 && idx >= 0 && idx < count) {
                 remove(idx);
@@ -1279,6 +1305,7 @@ KCM.SimpleKCM {
                         copyObj[key] = original[key];
                     }
                 }
+                copyObj["rowId"] = getNextRowId();
                 rowsModel.insert(idx + 1, copyObj);
                 saveToJson(true);
             }
@@ -1305,6 +1332,17 @@ KCM.SimpleKCM {
 
     Kirigami.FormLayout {
         id: formLayout
+
+        TextField {
+            id: widgetIdInput
+
+            Kirigami.FormData.label: i18n("Widget ID:")
+            placeholderText: i18n("e.g. weather")
+            onTextEdited: {
+                pushLiveEditingState();
+                markChanged();
+            }
+        }
 
         RowLayout {
             Kirigami.FormData.label: i18n("Design Presets:")
@@ -1460,6 +1498,7 @@ KCM.SimpleKCM {
                     icon.name: "list-add"
                     onClicked: {
                         rowsModel.append({
+                            "rowId": rowsModel.getNextRowId(),
                             "isShape": false,
                             "format": "H:i:ss",
                             "align": "center",
@@ -1498,6 +1537,7 @@ KCM.SimpleKCM {
                     icon.name: "draw-polygon"
                     onClicked: {
                         rowsModel.append({
+                            "rowId": rowsModel.getNextRowId(),
                             "isShape": true,
                             "shapeType": "circle",
                             "shapeWidth": 100,

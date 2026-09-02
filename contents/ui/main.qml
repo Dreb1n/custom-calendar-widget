@@ -133,6 +133,21 @@ PlasmoidItem {
                     "timeZone": ""
                 }];
 
+            // Guarantee every row has a unique incrementing rowId
+            var usedRowIds = {};
+            for (var rIdx = 0; rIdx < parsedRows.length; rIdx++) {
+                var rowObj = parsedRows[rIdx];
+                if (!rowObj || typeof rowObj !== "object") continue;
+                if (rowObj.rowId === undefined || rowObj.rowId === null || String(rowObj.rowId) === "" || usedRowIds[String(rowObj.rowId)]) {
+                    var candidateRowId = rIdx;
+                    while (usedRowIds[String(candidateRowId)]) {
+                        candidateRowId++;
+                    }
+                    rowObj.rowId = candidateRowId;
+                }
+                usedRowIds[String(rowObj.rowId)] = true;
+            }
+
             cachedParsedRows = parsedRows;
         }
         var bgOp = (pCfg && pCfg.bgOpacity !== undefined) ? pCfg.bgOpacity : 0.8;
@@ -173,6 +188,249 @@ PlasmoidItem {
         } catch (e) {
         }
         updateActiveSettings();
+    }
+
+    function setWidgetProperty(propName, propVal, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg)
+            return ;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return ;
+
+        if (propName === "rowsJson") {
+            setRowsJsonUpdate(propVal);
+        } else {
+            pCfg[propName] = propVal;
+            updateActiveSettings();
+        }
+    }
+
+    function setWidgetProperties(propsObj, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg || !propsObj)
+            return ;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return ;
+
+        for (var key in propsObj) {
+            if (key === "rowsJson")
+                setRowsJsonUpdate(propsObj[key]);
+            else
+                pCfg[key] = propsObj[key];
+        }
+        updateActiveSettings();
+        return null;
+    }
+
+    function getWidgetProperty(propName, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg)
+            return null;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return null;
+
+        switch (propName) {
+            case "rowsJson":
+                return pCfg.rowsJson;
+            case "widgetId":
+                return myWidgetId;
+            default:
+                return pCfg[propName] !== undefined ? pCfg[propName] : null;
+        }
+    }
+
+    function setRowsJsonUpdate(incomingRowsData) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg)
+            return ;
+
+        var currentJson = pCfg.rowsJson || "[]";
+        var existingRows = [];
+        try {
+            existingRows = JSON.parse(currentJson);
+        } catch (e) {
+            existingRows = [];
+        }
+        var incomingList = incomingRowsData;
+        if (typeof incomingRowsData === "string") {
+            try {
+                incomingList = JSON.parse(incomingRowsData);
+            } catch (e) {
+                incomingList = [];
+            }
+        }
+        if (!Array.isArray(incomingList))
+            return ;
+
+        for (var i = 0; i < incomingList.length; i++) {
+            var item = incomingList[i];
+            if (!item || typeof item !== "object")
+                continue;
+
+            var matchedIndex = -1;
+            if (item.rowId !== undefined && item.rowId !== null && String(item.rowId) !== "") {
+                var targetRowId = String(item.rowId);
+                for (var r = 0; r < existingRows.length; r++) {
+                    var exId = existingRows[r].rowId !== undefined ? String(existingRows[r].rowId) : "";
+                    if (exId !== "" && exId === targetRowId) {
+                        matchedIndex = r;
+                        break;
+                    }
+                }
+                if (matchedIndex === -1 && !isNaN(item.rowId)) {
+                    var idxNum = parseInt(item.rowId, 10);
+                    if (idxNum >= 0 && idxNum < existingRows.length)
+                        matchedIndex = idxNum;
+
+                }
+            } else if (item.index !== undefined && !isNaN(item.index)) {
+                var idx = parseInt(item.index, 10);
+                if (idx >= 0 && idx < existingRows.length)
+                    matchedIndex = idx;
+
+            } else if (i < existingRows.length) {
+                matchedIndex = i;
+            }
+            if (matchedIndex >= 0 && matchedIndex < existingRows.length) {
+                for (var k in item) {
+                    existingRows[matchedIndex][k] = item[k];
+                    if (k === "icon" && (existingRows[matchedIndex]["format"] === undefined || existingRows[matchedIndex]["format"] === "" || existingRows[matchedIndex]["icon"] !== undefined))
+                        existingRows[matchedIndex]["format"] = item[k];
+
+                }
+            }
+        }
+        var updatedJson = JSON.stringify(existingRows);
+        pCfg.rowsJson = updatedJson;
+        updateActiveSettings();
+    }
+
+    function getRowProperty(rowId, propName, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg)
+            return null;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return null;
+
+        var rows = (activeSettings && activeSettings.rows) ? activeSettings.rows : [];
+        var targetStr = String(rowId);
+        for (var i = 0; i < rows.length; i++) {
+            var r = rows[i];
+            var rId = (r && r.rowId !== undefined && r.rowId !== null) ? String(r.rowId) : String(i);
+            if (rId === targetStr) {
+                if (!propName || propName === "")
+                    return JSON.stringify(r);
+                return r[propName] !== undefined ? r[propName] : null;
+            }
+        }
+        return null;
+    }
+
+    function addRow(rowObjOrJson, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg)
+            return null;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return null;
+
+        var currentJson = pCfg.rowsJson || "[]";
+        var existingRows = [];
+        try {
+            existingRows = JSON.parse(currentJson);
+        } catch (e) {
+            existingRows = [];
+        }
+
+        var newRow = rowObjOrJson;
+        if (typeof rowObjOrJson === "string") {
+            try {
+                newRow = JSON.parse(rowObjOrJson);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        if (!newRow || typeof newRow !== "object")
+            return null;
+
+        if (newRow.rowId === undefined || newRow.rowId === null || String(newRow.rowId) === "") {
+            var maxId = -1;
+            for (var i = 0; i < existingRows.length; i++) {
+                var curId = parseInt(existingRows[i].rowId, 10);
+                if (!isNaN(curId) && curId > maxId) maxId = curId;
+            }
+            var candidateId = maxId + 1;
+            while (existingRows.some(function(r) { return r && String(r.rowId) === String(candidateId); })) {
+                candidateId++;
+            }
+            newRow.rowId = candidateId;
+        }
+
+        existingRows.push(newRow);
+        pCfg.rowsJson = JSON.stringify(existingRows);
+        updateActiveSettings();
+        return newRow.rowId;
+    }
+
+    function removeRow(rowId, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg)
+            return false;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return false;
+
+        var currentJson = pCfg.rowsJson || "[]";
+        var existingRows = [];
+        try {
+            existingRows = JSON.parse(currentJson);
+        } catch (e) {
+            return false;
+        }
+
+        var targetStr = String(rowId);
+        var removed = false;
+        var newRows = [];
+        for (var i = 0; i < existingRows.length; i++) {
+            var rId = (existingRows[i].rowId !== undefined && existingRows[i].rowId !== null) ? String(existingRows[i].rowId) : String(i);
+            if (rId === targetStr) {
+                removed = true;
+            } else {
+                newRows.push(existingRows[i]);
+            }
+        }
+
+        if (removed) {
+            pCfg.rowsJson = JSON.stringify(newRows);
+            updateActiveSettings();
+        }
+        return removed;
+    }
+
+    function setRowProperty(rowId, propName, propVal, targetId) {
+        var pCfg = (plasmoid && plasmoid.configuration) ? plasmoid.configuration : null;
+        if (!pCfg || !propName)
+            return false;
+
+        var myWidgetId = pCfg.widgetId || "";
+        if (targetId && targetId !== "" && myWidgetId !== "" && targetId !== myWidgetId)
+            return false;
+
+        var updateObj = { "rowId": rowId };
+        updateObj[propName] = propVal;
+        setRowsJsonUpdate([updateObj]);
+        return true;
     }
 
     // ExecutableDataSource for launching per-row custom click commands
@@ -232,7 +490,6 @@ PlasmoidItem {
     onVisibleChanged: {
         if (root.visible) {
             root.tickClock();
-            masterClockTimer.restart();
         }
     }
 
@@ -364,8 +621,8 @@ PlasmoidItem {
                         property real unrotatedW: isShapeItem ? (rowContainer.rowItem.shapeWidth || 100) : (mainText ? Math.max(10, mainText.implicitWidth) : 100)
                         property real unrotatedH: isShapeItem ? (rowContainer.rowItem.shapeHeight || 100) : (mainText ? Math.max(10, mainText.implicitHeight) : 30)
                         property real rotRad: itemRotation * Math.PI / 180
-                        property real boundingW: itemRotation === 0 ? unrotatedW : (Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
-                        property real boundingH: itemRotation === 0 ? unrotatedH : (Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
+                        property real boundingW: itemRotation === 0 ? Math.ceil(unrotatedW) : Math.ceil(Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
+                        property real boundingH: itemRotation === 0 ? Math.ceil(unrotatedH) : Math.ceil(Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
                         property bool isFromCenter: rowContainer.rowItem && (rowContainer.rowItem.fromCenter === true || rowContainer.rowItem.fromCenter === "true")
                         property real rawOffX: rowContainer.rowItem.offsetWidth !== undefined ? rowContainer.rowItem.offsetWidth : (rowContainer.rowItem.offsetX !== undefined ? rowContainer.rowItem.offsetX : 0)
                         property real rawOffY: rowContainer.rowItem.offsetHeight !== undefined ? rowContainer.rowItem.offsetHeight : (rowContainer.rowItem.topMargin !== undefined ? rowContainer.rowItem.topMargin : 0)
@@ -714,14 +971,20 @@ PlasmoidItem {
                                 property real shapeH: rowContainer.rowItem.shapeHeight || 100
                                 property string cachedSvgPath: {
                                     var st = vectorShape.sType;
-                                    var w = vectorShape.shapeW;
-                                    var h = vectorShape.shapeH;
-                                    var m = vectorShape.m;
-                                    if (w <= 0 || h <= 0)
+                                    var rawW = Math.round(vectorShape.shapeW);
+                                    var rawH = Math.round(vectorShape.shapeH);
+                                    if (rawW <= 0 || rawH <= 0)
                                         return "";
 
-                                    var cx = m + w / 2;
-                                    var cy = m + h / 2;
+                                    // Force even integer dimensions via bitwise AND so w / 2 and h / 2 are exact whole integers
+                                    var w = rawW & ~1;
+                                    var h = rawH & ~1;
+                                    if (w <= 0 || h <= 0)
+                                        return "";
+                                    var m = Math.round(vectorShape.m);
+
+                                    var cx = m + (w / 2);
+                                    var cy = m + (h / 2);
                                     if (st === "circle" || st === "ellipse" || st === "oblong") {
                                         var rx = w / 2;
                                         var ry = h / 2;
@@ -731,7 +994,9 @@ PlasmoidItem {
                                         return "M " + m + " " + m + " L " + (m + w) + " " + m + " L " + (m + w) + " " + (m + h) + " L " + m + " " + (m + h) + " Z";
 
                                     if (st === "pill" || st === "capsule") {
-                                        var r = Math.min(w, h) / 2;
+                                        var minDim = Math.min(w, h);
+                                        var evenMin = minDim & ~1;
+                                        var r = evenMin / 2;
                                         if (w >= h)
                                             return "M " + (m + r) + " " + m + " L " + (m + w - r) + " " + m + " A " + r + " " + r + " 0 0 1 " + (m + w - r) + " " + (m + h) + " L " + (m + r) + " " + (m + h) + " A " + r + " " + r + " 0 0 1 " + (m + r) + " " + m + " Z";
                                         else
@@ -746,8 +1011,8 @@ PlasmoidItem {
                                     var str = "";
                                     for (var i = 0; i < sides; i++) {
                                         var angle = i * (2 * Math.PI / sides) - Math.PI / 2;
-                                        var x = cx + radiusX * Math.cos(angle);
-                                        var y = cy + radiusY * Math.sin(angle);
+                                        var x = Math.round(cx + radiusX * Math.cos(angle));
+                                        var y = Math.round(cy + radiusY * Math.sin(angle));
                                         if (i === 0)
                                             str += "M " + x + " " + y;
                                         else
@@ -986,8 +1251,8 @@ PlasmoidItem {
                             }
 
                             transform: Translate {
-                                x: rowContainer.isFromCenter ? ((contentColumn.width - itemRotator.width) / 2 + rowContainer.rawOffX - itemRotator.x - rowContainer.x) : rowContainer.rawOffX
-                                y: rowContainer.isFromCenter ? ((contentColumn.height - itemRotator.height) / 2 + rowContainer.rawOffY - itemRotator.y - rowContainer.y) : 0
+                                x: rowContainer.isFromCenter ? (((Math.round(contentColumn.width - itemRotator.width) & ~1) / 2) + Math.round(rowContainer.rawOffX) - Math.round(itemRotator.x) - Math.round(rowContainer.x)) : Math.round(rowContainer.rawOffX)
+                                y: rowContainer.isFromCenter ? (((Math.round(contentColumn.height - itemRotator.height) & ~1) / 2) + Math.round(rowContainer.rawOffY) - Math.round(itemRotator.y) - Math.round(rowContainer.y)) : 0
                             }
 
                         }

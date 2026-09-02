@@ -28,6 +28,27 @@ Frame {
                 font.bold: true
             }
 
+            Label {
+                text: i18n("ID:")
+                leftPadding: 6
+            }
+
+            TextField {
+                id: rowIdInput
+                Layout.preferredWidth: 90
+                placeholderText: delegateFrame.isItemShape ? i18n("e.g. icon") : i18n("e.g. temp")
+                onTextEdited: {
+                    if (configPage.isLoaded) {
+                        rowsModel.setProperty(index, "rowId", text);
+                        rowsModel.saveToJson();
+                    }
+                }
+
+                Binding on text {
+                    value: model.rowId !== undefined ? String(model.rowId) : ""
+                }
+            }
+
             Item {
                 Layout.fillWidth: true
             }
