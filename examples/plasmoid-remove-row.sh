@@ -27,9 +27,16 @@ JS_SCRIPT="
 var targetWid = ${JS_WIDGET};
 var rowId = ${JS_ROW_ID};
 var ds = desktops();
+if (!ds || ds.length === 0) {
+    try { ds = desktopsForActivity(currentActivity()); } catch (e) { ds = []; }
+}
+var ps = [];
+try { ps = panels(); } catch (e) { ps = []; }
+var allContainers = ds.concat(ps);
+
 var result = false;
-for (var i = 0; i < ds.length; i++) {
-    var w = ds[i].widgets();
+for (var i = 0; i < allContainers.length; i++) {
+    var w = allContainers[i].widgets();
     for (var j = 0; j < w.length; j++) {
         if (w[j].type === 'org.kde.customcalendarwidget') {
             w[j].currentConfigGroup = ['General'];
@@ -37,6 +44,10 @@ for (var i = 0; i < ds.length; i++) {
             if (!targetWid || wid === targetWid) {
                 if (w[j].rootItem && w[j].rootItem.removeRow) {
                     result = w[j].rootItem.removeRow(rowId, targetWid);
+                    var fullRowsJson = w[j].rootItem.getWidgetProperty('rowsJson', targetWid);
+                    if (fullRowsJson) {
+                        w[j].writeConfig('rowsJson', fullRowsJson);
+                    }
                 }
             }
         }

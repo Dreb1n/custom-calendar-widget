@@ -4,9 +4,10 @@
 #   Target widgetId: "system_monitor" (default) or pass custom widgetId as $1
 
 TARGET_WIDGET="${1:-system_monitor}"
+MOUNT_POINT="${2:-/}"
 
-# Fetch root filesystem usage using df
-DF_OUTPUT=$(df -h / | tail -n1)
+# Fetch filesystem usage using df
+DF_OUTPUT=$(df -h "$MOUNT_POINT" | tail -n1)
 USAGE_PCT=$(echo "$DF_OUTPUT" | awk '{print $5}')
 AVAIL_STORAGE=$(echo "$DF_OUTPUT" | awk '{print $4}')
 

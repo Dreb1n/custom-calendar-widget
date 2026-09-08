@@ -27,7 +27,7 @@
       <default>16</default>
     </entry>
     <entry name="rowsJson" type="String">
-      <default>[{"format":"dddd","align":"center","fontSize":18,"color":"#ffffff","weight":"400","effect":"none","opacity":1.0,"timeZone":""},{"format":"dd mmm yyy","align":"center","fontSize":28,"color":"#ffffff","weight":"400","effect":"none","opacity":1.0,"timeZone":""},{"format":"H:i","align":"center","fontSize":48,"color":"#ffffff","weight":"600","effect":"none","opacity":1.0,"timeZone":""}]</default>
+      <default>[{"format":"dddd","align":"center","fontSize":18,"color":"#ffffff","weight":"400","effect":"none","opacity":1.0,"timeZone":""},{"format":"do [of] mmm yyy","align":"center","fontSize":28,"color":"#ffffff","weight":"400","effect":"none","opacity":1.0,"timeZone":""},{"format":"H:i","align":"center","fontSize":48,"color":"#ffffff","weight":"600","effect":"none","opacity":1.0,"timeZone":""}]</default>
     </entry>
     <entry name="isEditing" type="Bool">
       <default>false</default>
@@ -43,6 +43,9 @@
     </entry>
     <entry name="editingBgColor" type="String">
       <default></default>
+    </entry>
+    <entry name="externalScriptsJson" type="String">
+      <default>[]</default>
     </entry>
   </group>
 </kcfg>

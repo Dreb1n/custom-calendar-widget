@@ -15,13 +15,18 @@ if command -v nvidia-smi &>/dev/null; then
         UTIL=$(echo "$GPU_INFO" | cut -d',' -f2 | tr -d ' ')
         DISPLAY_TEXT="GPU: ${TEMP}°C (${UTIL}% load)"
     fi
-# Check for AMD/Intel GPU hwmon thermal sysfs
-elif [ -d /sys/class/drm/card0/device/hwmon ]; then
-    HWMON_TEMP=$(cat /sys/class/drm/card0/device/hwmon/hwmon*/temp1_input 2>/dev/null | head -n1)
-    if [ -n "$HWMON_TEMP" ]; then
-        TEMP_C=$((HWMON_TEMP / 1000))
-        DISPLAY_TEXT="GPU: ${TEMP_C}°C"
-    fi
+# Check for AMD/Intel/NVIDIA GPU hwmon thermal sysfs
+else
+    for hwmon in /sys/class/drm/card*/device/hwmon/hwmon*/temp1_input; do
+        if [ -f "$hwmon" ]; then
+            HWMON_TEMP=$(cat "$hwmon" 2>/dev/null)
+            if [ -n "$HWMON_TEMP" ] && [ "$HWMON_TEMP" -gt 0 ]; then
+                TEMP_C=$((HWMON_TEMP / 1000))
+                DISPLAY_TEXT="GPU: ${TEMP_C}°C"
+                break
+            fi
+        fi
+    done
 fi
 
 ROWS_JSON=$(cat <<EOF

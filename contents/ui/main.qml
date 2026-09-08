@@ -113,7 +113,7 @@ PlasmoidItem {
                     "opacity": 1,
                     "timeZone": ""
                 }, {
-                    "format": "dd mmm yyy",
+                    "format": "do [of] mmm yyy",
                     "align": "center",
                     "fontSize": 28,
                     "color": "#ffffff",
@@ -463,6 +463,150 @@ PlasmoidItem {
         }
     }
 
+    // ExecutableDataSource for launching background row inline script polling
+    Plasma5Support.DataSource {
+        id: scriptRunnerSource
+        engine: "executable"
+
+        property var pendingScriptRequests: ({})
+
+        function runScript(rowId, cmd, prefix, suffix, regexPattern) {
+            if (!cmd || typeof cmd !== "string")
+                return;
+
+            var trimmed = cmd.trim();
+            if (trimmed.length === 0)
+                return;
+
+            var cmdToExec = trimmed;
+            if (cmdToExec.indexOf("~") === 0) {
+                cmdToExec = cmdToExec.replace(/^~(?=\/|$)/, "$HOME");
+            }
+
+            var execStr = "sh -c " + JSON.stringify(cmdToExec);
+            pendingScriptRequests[execStr] = {
+                "rowId": rowId,
+                "prefix": prefix || "",
+                "suffix": suffix || "",
+                "regexPattern": regexPattern || ""
+            };
+            disconnectSource(execStr);
+            connectSource(execStr);
+        }
+
+        onNewData: function(sourceName, data) {
+            disconnectSource(sourceName);
+            var reqMeta = pendingScriptRequests[sourceName];
+            if (reqMeta !== undefined && reqMeta !== null) {
+                delete pendingScriptRequests[sourceName];
+                var rawOut = (data && data["stdout"] !== undefined) ? String(data["stdout"]) : "";
+                processRowScriptResult(reqMeta.rowId, rawOut, reqMeta.prefix, reqMeta.suffix, reqMeta.regexPattern);
+            }
+        }
+    }
+
+    function processRowScriptResult(rowId, rawOut, prefix, suffix, regexPattern) {
+        if (rowId === undefined || rowId === null)
+            return;
+
+        var text = rawOut.trim();
+
+        if (regexPattern && regexPattern !== "") {
+            try {
+                var re = new RegExp(regexPattern);
+                var m = text.match(re);
+                if (m) {
+                    text = (m[1] !== undefined) ? m[1] : m[0];
+                }
+            } catch (e) {
+                console.warn("Plasmoid: Invalid regex pattern provided for row script:", regexPattern, e);
+            }
+        }
+
+        var finalText = prefix + text + suffix;
+        setRowProperty(rowId, "format", finalText);
+    }
+
+    // ExecutableDataSource for background external scripts tab
+    Plasma5Support.DataSource {
+        id: externalScriptRunnerSource
+        engine: "executable"
+
+        function runExternalScriptPath(scriptPath) {
+            if (!scriptPath || typeof scriptPath !== "string")
+                return;
+
+            var trimmed = scriptPath.trim();
+            if (trimmed.length === 0)
+                return;
+
+            var cmdToExec = trimmed;
+            if (cmdToExec.indexOf("~") === 0) {
+                cmdToExec = cmdToExec.replace(/^~(?=\/|$)/, "$HOME");
+            }
+
+            var execStr = "sh -c " + JSON.stringify(cmdToExec);
+            disconnectSource(execStr);
+            connectSource(execStr);
+        }
+
+        onNewData: function(sourceName, data) {
+            disconnectSource(sourceName);
+        }
+    }
+
+    property var parsedExternalScripts: {
+        var raw = (plasmoid && plasmoid.configuration && plasmoid.configuration.externalScriptsJson) ? plasmoid.configuration.externalScriptsJson : "[]";
+        try {
+            var arr = JSON.parse(raw);
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    // Repeater for dynamic per-script interval timers
+    Repeater {
+        model: root.parsedExternalScripts
+
+        delegate: Item {
+            id: scriptTimerContainer
+
+            property var scriptItem: modelData
+            property string sPath: (scriptTimerContainer.scriptItem && scriptTimerContainer.scriptItem.scriptPath) ? String(scriptTimerContainer.scriptItem.scriptPath).trim() : ""
+            property bool isEnabled: scriptTimerContainer.scriptItem && scriptTimerContainer.scriptItem.enabled !== false
+            property bool runOnBootFlag: scriptTimerContainer.scriptItem && scriptTimerContainer.scriptItem.runOnBoot === true
+            property int sInterval: {
+                if (!scriptTimerContainer.scriptItem || scriptTimerContainer.scriptItem.interval === undefined)
+                    return 0;
+                var val = parseInt(scriptTimerContainer.scriptItem.interval, 10);
+                return isNaN(val) || val <= 0 ? 0 : val;
+            }
+
+            // Boot / Login trigger (delays 3 seconds after QML startup)
+            Timer {
+                id: bootScriptTimer
+                interval: 3000
+                running: scriptTimerContainer.isEnabled && scriptTimerContainer.runOnBootFlag && scriptTimerContainer.sPath !== ""
+                repeat: false
+                onTriggered: {
+                    externalScriptRunnerSource.runExternalScriptPath(scriptTimerContainer.sPath);
+                }
+            }
+
+            // Recurring interval timer
+            Timer {
+                id: recurringScriptTimer
+                interval: scriptTimerContainer.sInterval
+                running: scriptTimerContainer.isEnabled && scriptTimerContainer.sInterval > 0 && scriptTimerContainer.sPath !== "" && root.visible
+                repeat: true
+                onTriggered: {
+                    externalScriptRunnerSource.runExternalScriptPath(scriptTimerContainer.sPath);
+                }
+            }
+        }
+    }
+
     function tickClock() {
         const now = new Date();
         root.currentTime = now;
@@ -643,6 +787,29 @@ PlasmoidItem {
                         property string currentFmt: (rowContainer.rowItem && rowContainer.rowItem.format) ? rowContainer.rowItem.format : ""
                         property string currentTz: (rowContainer.rowItem && rowContainer.rowItem.timeZone) ? rowContainer.rowItem.timeZone : ""
                         property string currentLoc: (rowContainer.rowItem && rowContainer.rowItem.locale) ? rowContainer.rowItem.locale : ""
+                        property string scriptCmd: (rowContainer.rowItem && rowContainer.rowItem.scriptCommand) ? String(rowContainer.rowItem.scriptCommand).trim() : ""
+                        property int scriptInt: {
+                            if (!rowContainer.rowItem || rowContainer.rowItem.scriptInterval === undefined || rowContainer.rowItem.scriptInterval === null)
+                                return 5000;
+                            var val = parseInt(rowContainer.rowItem.scriptInterval, 10);
+                            return isNaN(val) || val <= 0 ? 5000 : val;
+                        }
+                        property string scriptPfx: (rowContainer.rowItem && rowContainer.rowItem.scriptPrefix !== undefined) ? String(rowContainer.rowItem.scriptPrefix) : ""
+                        property string scriptSfx: (rowContainer.rowItem && rowContainer.rowItem.scriptSuffix !== undefined) ? String(rowContainer.rowItem.scriptSuffix) : ""
+                        property string scriptRgx: (rowContainer.rowItem && rowContainer.rowItem.scriptRegex !== undefined) ? String(rowContainer.rowItem.scriptRegex) : ""
+
+                        Timer {
+                            id: inlineScriptTimer
+                            interval: rowContainer.scriptInt
+                            running: rowContainer.scriptCmd !== "" && root.visible
+                            repeat: true
+                            triggeredOnStart: true
+                            onTriggered: {
+                                var rId = (rowContainer.rowItem && rowContainer.rowItem.rowId !== undefined) ? rowContainer.rowItem.rowId : index;
+                                scriptRunnerSource.runScript(rId, rowContainer.scriptCmd, rowContainer.scriptPfx, rowContainer.scriptSfx, rowContainer.scriptRgx);
+                            }
+                        }
+
                         property int lastMin: -1
                         property int lastHr: -1
                         property int lastDay: -1

@@ -201,6 +201,9 @@ Frame {
                     "text": i18n("+ Add Option..."),
                     "value": ""
                 }, {
+                    "text": i18n("Inline Script Polling"),
+                    "value": "scriptCommand"
+                }, {
                     "text": i18n("Click Command"),
                     "value": "clickCommand"
                 }, {
@@ -228,7 +231,14 @@ Frame {
                         return ;
 
                     var val = addShapeOptionCombo.model[idx].value;
-                    if (val === "clickCommand") {
+                    if (val === "scriptCommand") {
+                        rowsModel.setProperty(index, "scriptCommand", "echo 'Status OK'");
+                        rowsModel.setProperty(index, "scriptInterval", 5000);
+                        rowsModel.setProperty(index, "scriptPrefix", "");
+                        rowsModel.setProperty(index, "scriptSuffix", "");
+                        rowsModel.setProperty(index, "scriptRegex", "");
+                        rowsModel.setProperty(index, "showScriptCommand", true);
+                    } else if (val === "clickCommand") {
                         rowsModel.setProperty(index, "clickCommand", "kcalc");
                         rowsModel.setProperty(index, "showClickCommand", true);
                     } else if (val === "align") {
@@ -276,7 +286,7 @@ Frame {
 
             TextField {
                 Layout.fillWidth: true
-                placeholderText: "e.g. dddd, dd mmm yyy, H:i"
+                placeholderText: "e.g. dddd, do [of] mmm yyy, H:i"
                 onTextEdited: {
                     if (configPage.isLoaded) {
                         rowsModel.setProperty(index, "format", text);
@@ -356,6 +366,9 @@ Frame {
                     "text": i18n("+ Add Option..."),
                     "value": ""
                 }, {
+                    "text": i18n("Inline Script Polling"),
+                    "value": "scriptCommand"
+                }, {
                     "text": i18n("Timezone"),
                     "value": "timeZone"
                 }, {
@@ -398,7 +411,14 @@ Frame {
                         return ;
 
                     var val = addOptionCombo.model[idx].value;
-                    if (val === "timeZone") {
+                    if (val === "scriptCommand") {
+                        rowsModel.setProperty(index, "scriptCommand", "date +%S");
+                        rowsModel.setProperty(index, "scriptInterval", 1000);
+                        rowsModel.setProperty(index, "scriptPrefix", "");
+                        rowsModel.setProperty(index, "scriptSuffix", "");
+                        rowsModel.setProperty(index, "scriptRegex", "");
+                        rowsModel.setProperty(index, "showScriptCommand", true);
+                    } else if (val === "timeZone") {
                         rowsModel.setProperty(index, "timeZone", "UTC");
                         rowsModel.setProperty(index, "showTimeZone", true);
                     } else if (val === "locale") {
@@ -680,6 +700,146 @@ Frame {
                 }
             }
 
+        }
+
+        // Inline Script Polling Controls
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 6
+            visible: model.showScriptCommand === true
+
+            RowLayout {
+                Layout.fillWidth: true
+
+                Label {
+                    text: i18n("Inline Script Polling:")
+                }
+
+                TextField {
+                    Layout.fillWidth: true
+                    placeholderText: i18n("Command (e.g. sensors | grep 'Package id 0' | awk '{print $4}')")
+                    onTextEdited: {
+                        if (configPage.isLoaded) {
+                            rowsModel.setProperty(index, "scriptCommand", text);
+                            rowsModel.saveToJson();
+                        }
+                    }
+
+                    Binding on text {
+                        value: model.scriptCommand || ""
+                    }
+                }
+
+                Button {
+                    text: "✕"
+                    onClicked: {
+                        rowsModel.setProperty(index, "scriptCommand", "");
+                        rowsModel.setProperty(index, "showScriptCommand", false);
+                        rowsModel.saveToJson();
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Label {
+                    text: i18n("Interval:")
+                }
+
+                ComboBox {
+                    id: intervalCombo
+                    model: [
+                        { "text": i18n("1 second"), "val": 1000 },
+                        { "text": i18n("5 seconds"), "val": 5000 },
+                        { "text": i18n("10 seconds"), "val": 10000 },
+                        { "text": i18n("30 seconds"), "val": 30000 },
+                        { "text": i18n("1 minute"), "val": 60000 },
+                        { "text": i18n("5 minutes"), "val": 300000 },
+                        { "text": i18n("15 minutes"), "val": 900000 },
+                        { "text": i18n("30 minutes"), "val": 1800000 },
+                        { "text": i18n("1 hour"), "val": 3600000 },
+                        { "text": i18n("2 hours"), "val": 7200000 }
+                    ]
+                    textRole: "text"
+
+                    currentIndex: {
+                        var curVal = model.scriptInterval || 5000;
+                        for (var i = 0; i < intervalCombo.model.length; i++) {
+                            if (intervalCombo.model[i].val === curVal) return i;
+                        }
+                        return 1;
+                    }
+
+                    onActivated: function(idx) {
+                        if (configPage.isLoaded) {
+                            var selectedVal = intervalCombo.model[idx].val;
+                            rowsModel.setProperty(index, "scriptInterval", selectedVal);
+                            rowsModel.saveToJson();
+                        }
+                    }
+                }
+
+                Label {
+                    text: i18n("RegEx:")
+                }
+
+                TextField {
+                    Layout.fillWidth: true
+                    placeholderText: i18n("Pattern e.g. (\\d+\\.\\d+)")
+                    onTextEdited: {
+                        if (configPage.isLoaded) {
+                            rowsModel.setProperty(index, "scriptRegex", text);
+                            rowsModel.saveToJson();
+                        }
+                    }
+                    Binding on text {
+                        value: model.scriptRegex || ""
+                    }
+                }
+            }
+
+            RowLayout {
+                Layout.fillWidth: true
+                spacing: 8
+
+                Label {
+                    text: i18n("Prefix:")
+                }
+
+                TextField {
+                    Layout.fillWidth: true
+                    placeholderText: i18n("e.g. CPU: ")
+                    onTextEdited: {
+                        if (configPage.isLoaded) {
+                            rowsModel.setProperty(index, "scriptPrefix", text);
+                            rowsModel.saveToJson();
+                        }
+                    }
+                    Binding on text {
+                        value: model.scriptPrefix || ""
+                    }
+                }
+
+                Label {
+                    text: i18n("Suffix:")
+                }
+
+                TextField {
+                    Layout.fillWidth: true
+                    placeholderText: i18n("e.g. °C")
+                    onTextEdited: {
+                        if (configPage.isLoaded) {
+                            rowsModel.setProperty(index, "scriptSuffix", text);
+                            rowsModel.saveToJson();
+                        }
+                    }
+                    Binding on text {
+                        value: model.scriptSuffix || ""
+                    }
+                }
+            }
         }
 
         // 4. Custom Font Family

@@ -6,6 +6,7 @@
 #   update-system-monitor-example.sh [targetWidgetId]
 
 TARGET_WIDGET="${1:-system_monitor}"
+MOUNT_POINT="${2:-/}"
 
 get_cpu_temp_celsius() {
     # 1. Iterate sysfs thermal zones searching for CPU package sensors
@@ -67,7 +68,7 @@ else
 fi
 
 # 3. Disk Storage
-DF_OUT=$(df -h / | tail -n1)
+DF_OUT=$(df -h "$MOUNT_POINT" | tail -n1)
 DISK_FREE=$(echo "$DF_OUT" | awk '{print $4}')
 DISK_PCT=$(echo "$DF_OUT" | awk '{print $5}')
 DISK_TXT="Disk: ${DISK_FREE} free (${DISK_PCT} used)"
@@ -77,9 +78,16 @@ GPU_TXT="GPU: N/A"
 if command -v nvidia-smi &>/dev/null; then
     NVIDIA_OUT=$(nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -n1)
     [ -n "$NVIDIA_OUT" ] && GPU_TXT="GPU: ${NVIDIA_OUT}°C"
-elif [ -d /sys/class/drm/card0/device/hwmon ]; then
-    AMD_RAW=$(cat /sys/class/drm/card0/device/hwmon/hwmon*/temp1_input 2>/dev/null | head -n1)
-    [ -n "$AMD_RAW" ] && GPU_TXT="GPU: $((AMD_RAW / 1000))°C"
+else
+    for hwmon in /sys/class/drm/card*/device/hwmon/hwmon*/temp1_input; do
+        if [ -f "$hwmon" ]; then
+            AMD_RAW=$(cat "$hwmon" 2>/dev/null)
+            if [ -n "$AMD_RAW" ] && [ "$AMD_RAW" -gt 0 ]; then
+                GPU_TXT="GPU: $((AMD_RAW / 1000))°C"
+                break
+            fi
+        fi
+    done
 fi
 
 # Construct batch JSON payload for all 4 rows

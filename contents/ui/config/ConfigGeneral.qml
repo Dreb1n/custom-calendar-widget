@@ -286,7 +286,7 @@ KCM.SimpleKCM {
                     "opacity": 1,
                     "timeZone": ""
                 }, {
-                    "format": "dd mmm yyy",
+                    "format": "do [of] mmm yyy",
                     "align": "center",
                     "fontSize": 28,
                     "color": "#ffffff",
@@ -351,6 +351,21 @@ KCM.SimpleKCM {
             if (!item.clickCommand)
                 item.clickCommand = "";
 
+            if (!item.scriptCommand)
+                item.scriptCommand = "";
+
+            if (item.scriptInterval === undefined || item.scriptInterval === null)
+                item.scriptInterval = 5000;
+
+            if (!item.scriptPrefix)
+                item.scriptPrefix = "";
+
+            if (!item.scriptSuffix)
+                item.scriptSuffix = "";
+
+            if (!item.scriptRegex)
+                item.scriptRegex = "";
+
             var isSh = (item.isShape === true || item.isShape === "true") && (!item.format || item.format === "");
             item.isShape = isSh;
             if (isSh) {
@@ -383,6 +398,7 @@ KCM.SimpleKCM {
             item.showTimeZone = !item.isShape && item.timeZone !== "";
             item.showLocale = !item.isShape && item.locale !== "";
             item.showClickCommand = item.clickCommand !== "";
+            item.showScriptCommand = item.scriptCommand !== "";
             item.showFontFamily = !item.isShape && item.fontFamily !== "";
             item.showWeight = !item.isShape && String(item.weight) !== "400";
             item.showAlign = item.align !== undefined && item.align !== "center";
@@ -447,6 +463,9 @@ KCM.SimpleKCM {
             if (!item.clickCommand || item.clickCommand === "")
                 rowsModel.setProperty(i, "showClickCommand", false);
 
+            if (!item.scriptCommand || item.scriptCommand === "")
+                rowsModel.setProperty(i, "showScriptCommand", false);
+
             if (!item.effect || item.effect === "none")
                 rowsModel.setProperty(i, "showEffect", false);
 
@@ -505,6 +524,11 @@ KCM.SimpleKCM {
                 "effectSize": item.showEffect && item.effectSize !== undefined ? item.effectSize : 2,
                 "effectOpacity": item.showEffect && item.effectOpacity !== undefined ? item.effectOpacity : 1,
                 "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
+                "scriptCommand": item.showScriptCommand ? (item.scriptCommand || "") : "",
+                "scriptInterval": item.showScriptCommand ? (item.scriptInterval !== undefined ? item.scriptInterval : 5000) : 5000,
+                "scriptPrefix": item.showScriptCommand ? (item.scriptPrefix || "") : "",
+                "scriptSuffix": item.showScriptCommand ? (item.scriptSuffix || "") : "",
+                "scriptRegex": item.showScriptCommand ? (item.scriptRegex || "") : "",
                 "overlayType": item.showOverlay ? (item.overlayType !== undefined ? item.overlayType : 0) : 0,
                 "overlayColor": item.showOverlay ? (item.overlayColor || "#000000") : "#000000",
                 "overlayOpacity": item.showOverlay && item.overlayOpacity !== undefined ? item.overlayOpacity : 0.5,
@@ -535,6 +559,11 @@ KCM.SimpleKCM {
                 "timeZone": item.showTimeZone ? (item.timeZone || "") : "",
                 "locale": item.showLocale ? (item.locale || "") : "",
                 "clickCommand": item.showClickCommand ? (item.clickCommand || "") : "",
+                "scriptCommand": item.showScriptCommand ? (item.scriptCommand || "") : "",
+                "scriptInterval": item.showScriptCommand ? (item.scriptInterval !== undefined ? item.scriptInterval : 5000) : 5000,
+                "scriptPrefix": item.showScriptCommand ? (item.scriptPrefix || "") : "",
+                "scriptSuffix": item.showScriptCommand ? (item.scriptSuffix || "") : "",
+                "scriptRegex": item.showScriptCommand ? (item.scriptRegex || "") : "",
                 "glow": item.showEffect && item.effect === "glow",
                 "overlayType": item.showOverlay ? (item.overlayType !== undefined ? item.overlayType : 0) : 0,
                 "overlayColor": item.showOverlay ? (item.overlayColor || "#000000") : "#000000",
