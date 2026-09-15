@@ -34,6 +34,19 @@ Configure individual rows with custom date/time format specifiers, typography, c
 
 ---
 
+## 💡 External Scripts & System Monitoring
+
+Extend your desktop widgets beyond clocks and calendars with background scripts, system telemetry, and external API integrations:
+
+- 🖥️ **Live Telemetry Dashboards**: Display real-time CPU Temperature, RAM Usage, Disk Space, and GPU Load/Temp directly on your desktop.
+- 🌦️ **Weather & External APIs**: Fetch and display live local weather metrics automatically.
+- ⚙️ **GUI Script Scheduler**: Configure scripts in the widget settings (**External Scripts** tab) to trigger on boot or refresh periodically (1 min to 24 hours).
+- 🔌 **CLI & DBus Automation**: Dynamically modify widget properties, add/remove rows, or push live updates from shell/Python scripts or systemd timers.
+
+👉 **Check out the [`examples/ README`](examples/README.md) for full CLI helper documentation, API reference, and ready-to-use monitoring scripts.**
+
+---
+
 ## 📖 Format Token Reference Table
 
 > [!TIP]
