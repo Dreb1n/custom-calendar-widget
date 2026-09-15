@@ -142,11 +142,15 @@ Every property below can be queried or modified by name via `plasmoid-get-widget
 | `fromCenter` | Boolean | Center alignment offset flag (`true` or `false`) |
 | `offsetX` / `offsetWidth` | Number | Horizontal position offset in pixels |
 | `topMargin` / `offsetHeight` | Number | Vertical position offset in pixels |
-| `fillType` / `overlayType` | Number | Fill / Mask mode (`0` = None, `1` = Solid Color, `2` = Media File / Image / Video texture) |
-| `overlayColor` | String | Texture mask color hex |
+| `fillType` | Number | Independent fill mode (`0` = None, `1` = Solid Color, `2` = Media File / Image / Video) |
+| `fillColor` | String | Solid fill color hex string (e.g., `"#ff0000"`) |
+| `fillOpacity` | Number | Fill opacity (`0.0` transparent to `1.0` opaque) |
+| `fillFile` | String | File URL for media fill (`"file:///home/user/background.png"`, `".mp4"`) |
+| `overlayType` | Number | Texture mask mode (`0` = None, `1` = Solid Color Overlay, `2` = Media Mask File) |
+| `overlayColor` | String | Texture mask color hex string |
 | `overlayOpacity` | Number | Texture mask opacity (`0.0` to `1.0`) |
-| `overlayFile` | String | File URL for media texture (`"file:///home/user/image.png"`) |
-| `showOverlay` | Boolean | Enable fill / texture overlay mask (`true` or `false`) |
+| `overlayFile` | String | File URL for texture mask (`"file:///home/user/texture.png"`) |
+| `showOverlay` | Boolean | Enable texture overlay mask (`true` or `false`) |
 
 ### B. Vector Shape Properties
 
@@ -157,7 +161,7 @@ Every property below can be queried or modified by name via `plasmoid-get-widget
 | `shapeWidth` | Number | Vector shape width in pixels (e.g., `100`, `200`) |
 | `shapeHeight` | Number | Vector shape height in pixels (e.g., `100`, `200`) |
 | `color` | String | Shape fill color (e.g., `"#3b82f6"`, `"#ef4444"`) |
-| `align`, `opacity`, `rotation`, `clickCommand`, `overlayType`, `overlayFile` | ... | Inherits all layout, position offset, effect, and media mask properties |
+| `align`, `opacity`, `rotation`, `clickCommand`, `fillType`, `fillFile`, `overlayType`, `overlayFile` | ... | Inherits all layout, position offset, effect, and media mask properties |
 
 ---
 
