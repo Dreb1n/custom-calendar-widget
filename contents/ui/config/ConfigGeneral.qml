@@ -409,6 +409,12 @@ KCM.SimpleKCM {
             if (item.effectOpacity === undefined)
                 item.effectOpacity = 1;
 
+            if (item.fillType === undefined)
+                item.fillType = 1;
+
+            if (!item.fillFile)
+                item.fillFile = "";
+
             if (item.overlayType === undefined)
                 item.overlayType = 0;
 
@@ -469,9 +475,23 @@ KCM.SimpleKCM {
             if (!item.effect || item.effect === "none")
                 rowsModel.setProperty(i, "showEffect", false);
 
-            if (item.overlayType === 0)
-                rowsModel.setProperty(i, "showOverlay", false);
+            if (item.fontFamily)
+                rowsModel.setProperty(i, "showFontFamily", true);
 
+            if (item.weight && String(item.weight) !== "400")
+                rowsModel.setProperty(i, "showWeight", true);
+
+            if (item.align && item.align !== "center")
+                rowsModel.setProperty(i, "showAlign", true);
+
+            if (item.opacity !== undefined && item.opacity !== 1)
+                rowsModel.setProperty(i, "showOpacity", true);
+
+            if (item.effect && item.effect !== "none")
+                rowsModel.setProperty(i, "showEffect", true);
+
+            if (item.overlayType && item.overlayType !== 0)
+                rowsModel.setProperty(i, "showOverlay", true);
         }
     }
 
@@ -500,10 +520,9 @@ KCM.SimpleKCM {
     }
 
     function serializeRowItem(item) {
-        var offX = item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX !== undefined ? item.offsetX : 0);
-        var offY = item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin !== undefined ? item.topMargin : 0);
-        var isSh = (item.isShape === true || item.isShape === "true") && (!item.format || item.format === "");
-        if (isSh)
+        var offX = item.showOffsets ? (item.offsetWidth !== undefined ? item.offsetWidth : (item.offsetX || 0)) : 0;
+        var offY = item.showOffsets ? (item.offsetHeight !== undefined ? item.offsetHeight : (item.topMargin || 0)) : 0;
+        if (item.isShape)
             return {
                 "rowId": item.rowId !== undefined ? item.rowId : "",
                 "isShape": true,
@@ -513,6 +532,8 @@ KCM.SimpleKCM {
                 "color": item.color || "#3b82f6",
                 "align": item.showAlign ? (item.align || "center") : "center",
                 "opacity": item.showOpacity && item.opacity !== undefined ? item.opacity : 1,
+                "fillType": item.fillType !== undefined ? item.fillType : 1,
+                "fillFile": item.fillFile || "",
                 "offsetWidth": item.showOffsets ? offX : 0,
                 "offsetHeight": item.showOffsets ? offY : 0,
                 "offsetX": item.showOffsets ? offX : 0,
@@ -543,6 +564,8 @@ KCM.SimpleKCM {
                 "align": item.showAlign ? (item.align || "center") : "center",
                 "fontSize": item.fontSize || 24,
                 "color": item.color || "#ffffff",
+                "fillType": item.fillType !== undefined ? item.fillType : 1,
+                "fillFile": item.fillFile || "",
                 "effectColor": item.showEffect ? (item.effectColor || "") : "",
                 "weight": item.showWeight ? String(item.weight || "400") : "400",
                 "effect": item.showEffect ? (item.effect || "none") : "none",
@@ -1160,6 +1183,22 @@ KCM.SimpleKCM {
                 overlayFileInput.text = path;
                 pushLiveEditingState();
                 markChanged();
+            }
+        }
+    }
+
+    FileDialog {
+        id: fillFileDialog
+
+        title: i18n("Select Text Fill Media File")
+        fileMode: FileDialog.OpenFile
+        nameFilters: [i18n("Media Files (*.png *.jpg *.jpeg *.gif *.webp *.mp4 *.webm *.ogv *.mov *.avi *.3gp *.mkv)"), i18n("Image Files (*.png *.jpg *.jpeg *.gif *.webp)"), i18n("Video Files (*.mp4 *.webm *.ogv *.mov *.avi *.3gp *.mkv)"), i18n("All Files (*)")]
+        onAccepted: {
+            var path = String(selectedFile);
+            if (configPage.activeRowIndexForFileDialog !== -1) {
+                rowsModel.setProperty(configPage.activeRowIndexForFileDialog, "fillFile", path);
+                rowsModel.saveToJson();
+                configPage.activeRowIndexForFileDialog = -1;
             }
         }
     }

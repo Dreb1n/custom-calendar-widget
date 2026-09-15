@@ -11,6 +11,20 @@ Kirigami.FormLayout {
 
     property bool isLoaded: false
 
+    readonly property var refreshRatesModel: [
+        { "text": i18n("Never"), "val": 0 },
+        { "text": i18n("1 minute"), "val": 60000 },
+        { "text": i18n("5 minutes"), "val": 300000 },
+        { "text": i18n("10 minutes"), "val": 600000 },
+        { "text": i18n("20 minutes"), "val": 1200000 },
+        { "text": i18n("30 minutes"), "val": 1800000 },
+        { "text": i18n("1 hour"), "val": 3600000 },
+        { "text": i18n("2 hours"), "val": 7200000 },
+        { "text": i18n("5 hours"), "val": 18000000 },
+        { "text": i18n("12 hours"), "val": 43200000 },
+        { "text": i18n("24 hours"), "val": 86400000 }
+    ]
+
     ListModel {
         id: scriptsModel
 
@@ -288,19 +302,7 @@ Kirigami.FormLayout {
                             ComboBox {
                                 id: refreshCombo
 
-                                model: [
-                                    { "text": i18n("Never"), "val": 0 },
-                                    { "text": i18n("1 minute"), "val": 60000 },
-                                    { "text": i18n("5 minutes"), "val": 300000 },
-                                    { "text": i18n("10 minutes"), "val": 600000 },
-                                    { "text": i18n("20 minutes"), "val": 1200000 },
-                                    { "text": i18n("30 minutes"), "val": 1800000 },
-                                    { "text": i18n("1 hour"), "val": 3600000 },
-                                    { "text": i18n("2 hours"), "val": 7200000 },
-                                    { "text": i18n("5 hours"), "val": 18000000 },
-                                    { "text": i18n("12 hours"), "val": 43200000 },
-                                    { "text": i18n("24 hours"), "val": 86400000 }
-                                ]
+                                model: configScriptsPage.refreshRatesModel
                                 textRole: "text"
 
                                 currentIndex: {

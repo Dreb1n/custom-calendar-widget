@@ -771,11 +771,13 @@ PlasmoidItem {
                         property real rawOffX: rowContainer.rowItem.offsetWidth !== undefined ? rowContainer.rowItem.offsetWidth : (rowContainer.rowItem.offsetX !== undefined ? rowContainer.rowItem.offsetX : 0)
                         property real rawOffY: rowContainer.rowItem.offsetHeight !== undefined ? rowContainer.rowItem.offsetHeight : (rowContainer.rowItem.topMargin !== undefined ? rowContainer.rowItem.topMargin : 0)
                         property string formattedText: ""
-                        property string formattedOverlayFile: {
-                            if (!rowContainer.rowItem || !rowContainer.rowItem.overlayFile)
+                        readonly property real textPad: rowContainer.isShapeItem ? 0 : 50
+
+                        function formatFileUrl(filePath) {
+                            if (!filePath)
                                 return "";
 
-                            var file = String(rowContainer.rowItem.overlayFile).trim();
+                            var file = String(filePath).trim();
                             if (file === "")
                                 return "";
 
@@ -784,6 +786,9 @@ PlasmoidItem {
 
                             return file;
                         }
+
+                        property string formattedOverlayFile: formatFileUrl(rowContainer.rowItem ? rowContainer.rowItem.overlayFile : "")
+                        property string formattedFillFile: formatFileUrl(rowContainer.rowItem ? rowContainer.rowItem.fillFile : "")
                         property string currentFmt: (rowContainer.rowItem && rowContainer.rowItem.format) ? rowContainer.rowItem.format : ""
                         property string currentTz: (rowContainer.rowItem && rowContainer.rowItem.timeZone) ? rowContainer.rowItem.timeZone : ""
                         property string currentLoc: (rowContainer.rowItem && rowContainer.rowItem.locale) ? rowContainer.rowItem.locale : ""
@@ -797,6 +802,14 @@ PlasmoidItem {
                         property string scriptPfx: (rowContainer.rowItem && rowContainer.rowItem.scriptPrefix !== undefined) ? String(rowContainer.rowItem.scriptPrefix) : ""
                         property string scriptSfx: (rowContainer.rowItem && rowContainer.rowItem.scriptSuffix !== undefined) ? String(rowContainer.rowItem.scriptSuffix) : ""
                         property string scriptRgx: (rowContainer.rowItem && rowContainer.rowItem.scriptRegex !== undefined) ? String(rowContainer.rowItem.scriptRegex) : ""
+                        property int effectiveFillType: {
+                            if (!rowContainer.rowItem) return 0;
+                            return rowContainer.rowItem.fillType !== undefined ? parseInt(rowContainer.rowItem.fillType, 10) : 0;
+                        }
+                        property int effectiveOverlayType: {
+                            if (!rowContainer.rowItem) return 0;
+                            return rowContainer.rowItem.overlayType !== undefined ? parseInt(rowContainer.rowItem.overlayType, 10) : 0;
+                        }
 
                         Timer {
                             id: inlineScriptTimer
@@ -860,8 +873,8 @@ PlasmoidItem {
                         property int effSize: rowContainer.rowItem.effectSize !== undefined ? rowContainer.rowItem.effectSize : 2
                         property string effType: rowContainer.rowItem.effect || (rowContainer.rowItem.glow ? "glow" : "none")
                         property Item activeShaderSource: rowContainer.isShapeItem ? vectorShape : mainText
-                        property Item overlayMaskSource: rowContainer.isShapeItem ? vectorShape : rowMaskTextureGrabber
-                        property Item overlayPaddedMaskSource: rowContainer.isShapeItem ? vectorShape : rowPaddedMaskTextureGrabber
+                        property Item overlayMaskSource: rowMaskTextureGrabber
+                        property Item overlayPaddedMaskSource: rowPaddedMaskTextureGrabber
 
                         function updateRowText(force) {
                             if (rowContainer.isShapeItem || !currentFmt)
@@ -972,24 +985,149 @@ PlasmoidItem {
 
                             }
 
-                            // Row Overlay Layer Source (Placed inline, but hidden from screen via ShaderEffectSource)
+                            // Row Fill Media Layer Source (Positioned offscreen to avoid direct SceneGraph rendering)
                             Item {
-                                id: rowOverlayContent
+                                id: rowFillContent
 
-                                property real pad: rowContainer.isShapeItem ? 0 : 50
+                                property real pad: rowContainer.textPad
+
+                                x: -9999
+                                y: -9999
+                                width: parent.width + (pad * 2)
+                                height: parent.height + (pad * 2)
+                                visible: rowContainer.effectiveFillType === 2
+
+                                Loader {
+                                    id: rowFillMediaLoader
+
+                                    anchors.fill: parent
+                                    sourceComponent: {
+                                        if (!rowContainer.rowItem || !rowContainer.formattedFillFile)
+                                            return null;
+
+                                        var file = rowContainer.formattedFillFile;
+                                        var isVideo = /\.(mp4|webm|ogv|mov|avi|3gp|mkv)$/i.test(file);
+                                        return isVideo ? rowFillVideoComponent : rowFillImageComponent;
+                                    }
+                                }
+                            }
+
+                            ShaderEffectSource {
+                                id: rowFillSourceGrabber
+
+                                sourceItem: {
+                                    if (!rowContainer.rowItem || rowContainer.effectiveFillType !== 2)
+                                        return null;
+
+                                    var it = rowFillMediaLoader.item;
+                                    if (!it)
+                                        return null;
+
+                                    return it.videoSink !== undefined ? it.videoSink : it;
+                                }
+                                width: sourceItem ? sourceItem.width : 0
+                                height: sourceItem ? sourceItem.height : 0
+                                hideSource: true
+                                live: (rowContainer.effectiveFillType === 2)
+                                visible: false
+                            }
+
+                            MultiEffect {
+                                id: rowFillMultiEffect
+
+                                property real pad: rowContainer.textPad
 
                                 x: -pad
                                 y: -pad
                                 width: parent.width + (pad * 2)
                                 height: parent.height + (pad * 2)
-                                visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                source: rowFillSourceGrabber
+                                visible: rowContainer.effectiveFillType === 2
+                                opacity: rowContainer.rowItem && rowContainer.rowItem.opacity !== undefined ? rowContainer.rowItem.opacity : 1
+                                maskEnabled: true
+                                maskSource: rowContainer.overlayMaskSource
+                                autoPaddingEnabled: false
+                                z: 0.5
+                            }
+
+                            Component {
+                                id: rowFillImageComponent
+
+                                Image {
+                                    anchors.fill: parent
+                                    source: rowContainer.formattedFillFile
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: false
+                                    cache: true
+                                    onStatusChanged: {
+                                        if (status === Image.Ready) {
+                                            rowFillSourceGrabber.scheduleUpdate();
+                                        }
+                                    }
+                                }
+                            }
+
+                            Component {
+                                id: rowFillVideoComponent
+
+                                Item {
+                                    property Item videoSink: fillVideoOutput
+
+                                    anchors.fill: parent
+
+                                    MediaPlayer {
+                                        id: rowFillMediaPlayer
+
+                                        source: rowContainer.formattedFillFile
+                                        videoOutput: fillVideoOutput
+                                        loops: MediaPlayer.Infinite
+                                        Component.onCompleted: {
+                                            play();
+                                        }
+
+                                        audioOutput: AudioOutput {
+                                            volume: 0
+                                        }
+                                    }
+
+                                    VideoOutput {
+                                        id: fillVideoOutput
+
+                                        anchors.fill: parent
+                                        fillMode: VideoOutput.PreserveAspectCrop
+                                        visible: false
+                                        layer.enabled: true
+                                        layer.smooth: true
+                                    }
+
+                                    Connections {
+                                        function onFormattedFillFileChanged() {
+                                            rowFillMediaPlayer.play();
+                                        }
+
+                                        target: rowContainer
+                                    }
+                                }
+                            }
+
+                            // Row Overlay Layer Source (Positioned offscreen to avoid direct SceneGraph rendering)
+                            Item {
+                                id: rowOverlayContent
+
+                                property real pad: rowContainer.textPad
+
+                                x: -9999
+                                y: -9999
+                                width: parent.width + (pad * 2)
+                                height: parent.height + (pad * 2)
+                                visible: rowContainer.effectiveOverlayType !== 0
 
                                 // Option 1: Solid Color
                                 Rectangle {
                                     id: rowOverlayColorRect
 
                                     anchors.fill: parent
-                                    visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 1
+                                    visible: rowContainer.effectiveOverlayType === 1
                                     color: (rowContainer.rowItem && rowContainer.rowItem.overlayColor) ? rowContainer.rowItem.overlayColor : "#000000"
                                 }
 
@@ -998,7 +1136,6 @@ PlasmoidItem {
                                     id: rowOverlayMediaLoader
 
                                     anchors.fill: parent
-                                    visible: rowContainer.rowItem && rowContainer.rowItem.overlayType === 2
                                     sourceComponent: {
                                         if (!rowContainer.rowItem || !rowContainer.formattedOverlayFile)
                                             return null;
@@ -1019,10 +1156,10 @@ PlasmoidItem {
                                     if (!rowContainer.rowItem)
                                         return null;
 
-                                    if (rowContainer.rowItem.overlayType === 1)
+                                    if (rowContainer.effectiveOverlayType === 1)
                                         return rowOverlayColorRect;
 
-                                    if (rowContainer.rowItem.overlayType === 2) {
+                                    if (rowContainer.effectiveOverlayType === 2) {
                                         var it = rowOverlayMediaLoader.item;
                                         if (!it)
                                             return null;
@@ -1034,7 +1171,7 @@ PlasmoidItem {
                                 width: sourceItem ? sourceItem.width : 0
                                 height: sourceItem ? sourceItem.height : 0
                                 hideSource: true
-                                live: (rowContainer.rowItem !== undefined && rowContainer.rowItem !== null && rowContainer.rowItem.overlayType === 2)
+                                live: (rowContainer.effectiveOverlayType === 2)
                                 visible: false
                             }
 
@@ -1042,14 +1179,14 @@ PlasmoidItem {
                             MultiEffect {
                                 id: rowOverlayMultiEffect
 
-                                property real pad: rowContainer.isShapeItem ? 0 : 50
+                                property real pad: rowContainer.textPad
 
                                 x: -pad
                                 y: -pad
                                 width: parent.width + (pad * 2)
                                 height: parent.height + (pad * 2)
                                 source: rowOverlaySourceGrabber
-                                visible: rowContainer.rowItem && rowContainer.rowItem.overlayType !== undefined && rowContainer.rowItem.overlayType !== 0
+                                visible: rowContainer.effectiveOverlayType !== 0
                                 opacity: rowContainer.rowItem && rowContainer.rowItem.overlayOpacity !== undefined ? rowContainer.rowItem.overlayOpacity : 0.5
                                 maskEnabled: true
                                 maskSource: rowContainer.overlayMaskSource
@@ -1064,8 +1201,13 @@ PlasmoidItem {
                                     anchors.fill: parent
                                     source: rowContainer.formattedOverlayFile
                                     fillMode: Image.PreserveAspectCrop
-                                    asynchronous: true
+                                    asynchronous: false
                                     cache: true
+                                    onStatusChanged: {
+                                        if (status === Image.Ready) {
+                                            rowOverlaySourceGrabber.scheduleUpdate();
+                                        }
+                                    }
                                 }
 
                             }
@@ -1121,7 +1263,7 @@ PlasmoidItem {
                                 id: vectorShape
 
                                 property string sType: rowContainer.rowItem.shapeType || "circle"
-                                property color sColor: rowContainer.rowItem.color || "#3b82f6"
+                                property color sColor: (rowContainer.effectiveFillType === 2) ? "transparent" : (rowContainer.rowItem.color || "#3b82f6")
                                 property int w: width
                                 property int h: height
                                 readonly property var sidesLookup: ({
@@ -1294,21 +1436,22 @@ PlasmoidItem {
 
                             }
 
-                            // Hidden unpadded text mask for the overlay
+                            // Hidden unpadded text/shape mask for overlay and fill media
                             Item {
                                 id: mainTextMaskUnpaddedContainer
 
-                                property real pad: rowContainer.isShapeItem ? 0 : 50
+                                property real pad: rowContainer.textPad
 
-                                x: -pad
-                                y: -pad
+                                x: -9999
+                                y: -9999
                                 width: parent.width + (pad * 2)
                                 height: parent.height + (pad * 2)
-                                visible: true
+                                visible: (rowContainer.rowItem !== undefined && rowContainer.rowItem !== null && (rowContainer.effectiveOverlayType > 0 || rowContainer.effectiveFillType === 2))
 
                                 Text {
                                     id: mainTextMaskUnpadded
 
+                                    visible: !rowContainer.isShapeItem
                                     text: rowContainer.formattedText
                                     anchors.fill: parent
                                     anchors.margins: mainTextMaskUnpaddedContainer.pad
@@ -1321,6 +1464,24 @@ PlasmoidItem {
                                     color: "#ffffff"
                                 }
 
+                                Shape {
+                                    id: mainShapeMaskUnpadded
+
+                                    visible: rowContainer.isShapeItem
+                                    anchors.fill: parent
+                                    anchors.margins: mainTextMaskUnpaddedContainer.pad
+
+                                    ShapePath {
+                                        strokeColor: "transparent"
+                                        strokeWidth: 0
+                                        fillColor: "#ffffff"
+
+                                        PathSvg {
+                                            path: vectorShape.cachedSvgPath
+                                        }
+                                    }
+                                }
+
                             }
 
                             ShaderEffectSource {
@@ -1330,7 +1491,7 @@ PlasmoidItem {
                                 width: mainTextMaskUnpaddedContainer.width
                                 height: mainTextMaskUnpaddedContainer.height
                                 hideSource: true
-                                live: (rowContainer.rowItem !== undefined && rowContainer.rowItem !== null && rowContainer.rowItem.overlayType > 0)
+                                live: (rowContainer.rowItem !== undefined && rowContainer.rowItem !== null && (rowContainer.effectiveOverlayType > 0 || rowContainer.effectiveFillType === 2))
                                 visible: false
                             }
 
@@ -1340,15 +1501,16 @@ PlasmoidItem {
 
                                 property real pad: rowContainer.effType !== "none" ? rowContainer.effSize * 2 : 0
 
-                                x: -pad
-                                y: -pad
+                                x: -9999
+                                y: -9999
                                 width: parent.width + (pad * 2)
                                 height: parent.height + (pad * 2)
-                                visible: true
+                                visible: (rowContainer.effType !== "none" && rowContainer.effType !== "stroke")
 
                                 Text {
                                     id: mainTextMask
 
+                                    visible: !rowContainer.isShapeItem
                                     text: rowContainer.formattedText
                                     anchors.fill: parent
                                     anchors.margins: mainTextMaskContainer.pad
@@ -1359,6 +1521,24 @@ PlasmoidItem {
                                     font.weight: rowContainer.fontW
                                     font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
                                     color: "#ffffff"
+                                }
+
+                                Shape {
+                                    id: mainShapeMaskPadded
+
+                                    visible: rowContainer.isShapeItem
+                                    anchors.fill: parent
+                                    anchors.margins: mainTextMaskContainer.pad
+
+                                    ShapePath {
+                                        strokeColor: "transparent"
+                                        strokeWidth: 0
+                                        fillColor: "#ffffff"
+
+                                        PathSvg {
+                                            path: vectorShape.cachedSvgPath
+                                        }
+                                    }
                                 }
 
                             }
@@ -1388,7 +1568,7 @@ PlasmoidItem {
                                 font.family: rowContainer.fontFam
                                 font.weight: rowContainer.fontW
                                 font.letterSpacing: rowContainer.rowItem.letterSpacing !== undefined ? rowContainer.rowItem.letterSpacing : 0
-                                color: rowContainer.rowItem.color || "#ffffff"
+                                color: (rowContainer.effectiveFillType === 2) ? "transparent" : (rowContainer.rowItem.color || "#ffffff")
                                 z: 1
                             }
 

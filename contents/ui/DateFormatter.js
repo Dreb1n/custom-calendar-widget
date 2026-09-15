@@ -34,9 +34,14 @@ function setBoundedCache(cacheObj, key, value) {
   if (Object.prototype.hasOwnProperty.call(cacheObj, key)) {
     delete cacheObj[key];
   } else {
-    var keys = Object.keys(cacheObj);
-    if (keys.length >= MAX_CACHE_ENTRIES) {
-      delete cacheObj[keys[0]];
+    var count = 0;
+    var firstKey = null;
+    for (var k in cacheObj) {
+      if (firstKey === null) firstKey = k;
+      count++;
+    }
+    if (count >= MAX_CACHE_ENTRIES && firstKey !== null) {
+      delete cacheObj[firstKey];
     }
   }
   cacheObj[key] = value;

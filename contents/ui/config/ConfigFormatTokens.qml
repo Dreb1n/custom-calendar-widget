@@ -6,6 +6,8 @@ import org.kde.kirigami as Kirigami
 Kirigami.FormLayout {
     id: configTokensPage
 
+    readonly property string cleanFilter: searchField.text.trim().toLowerCase()
+
     ListModel {
         id: tokenModel
 
@@ -137,12 +139,12 @@ Kirigami.FormLayout {
                     delegate: Rectangle {
                         id: tokenRow
 
-                        property string filterQuery: searchField.text.trim().toLowerCase()
                         property bool matchesFilter: {
-                            if (filterQuery === "") return true;
-                            return model.token.toLowerCase().indexOf(filterQuery) !== -1 ||
-                                   model.desc.toLowerCase().indexOf(filterQuery) !== -1 ||
-                                   model.example.toLowerCase().indexOf(filterQuery) !== -1;
+                            var q = configTokensPage.cleanFilter;
+                            if (q === "") return true;
+                            return model.token.toLowerCase().indexOf(q) !== -1 ||
+                                   model.desc.toLowerCase().indexOf(q) !== -1 ||
+                                   model.example.toLowerCase().indexOf(q) !== -1;
                         }
 
                         visible: matchesFilter

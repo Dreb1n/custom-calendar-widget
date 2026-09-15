@@ -39,7 +39,7 @@ Kirigami.ScrollablePage {
                         }
 
                         Label {
-                            text: i18n("Version %1", (typeof plasmoid !== "undefined" && plasmoid.metadata && plasmoid.metadata.version) ? plasmoid.metadata.version : "1.5.1")
+                            text: i18n("Version %1", (typeof plasmoid !== "undefined" && plasmoid.metadata && plasmoid.metadata.version) ? plasmoid.metadata.version : "1.5.4")
                             color: Kirigami.Theme.disabledTextColor
                         }
 

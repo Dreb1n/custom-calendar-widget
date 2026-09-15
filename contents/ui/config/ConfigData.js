@@ -153,7 +153,7 @@ const localeOptions = [
     { label: "🇩🇰 Danish (Denmark - da_DK)", value: "da_DK" },
     { label: "🇫🇮 Finnish (Finland - fi_FI)", value: "fi_FI" },
     { label: "🇨🇿 Czech (Czechia - cs_CZ)", value: "cs_CZ" },
-    { label: "🇸lovakia (sk_SK)", value: "sk_SK" },
+    { label: "🇸🇰 Slovak (Slovakia - sk_SK)", value: "sk_SK" },
     { label: "🇭🇺 Hungarian (Hungary - hu_HU)", value: "hu_HU" },
     { label: "🇷🇴 Romanian (Romania - ro_RO)", value: "ro_RO" },
     { label: "🇧🇬 Bulgarian (Bulgaria - bg_BG)", value: "bg_BG" },

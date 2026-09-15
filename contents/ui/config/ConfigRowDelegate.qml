@@ -9,6 +9,8 @@ Frame {
     id: delegateFrame
 
     property bool isItemShape: (model.isShape === true || model.isShape === "true") && (model.format === undefined || model.format === "")
+    readonly property var fillTypeModel: [i18n("None"), i18n("Solid Color"), i18n("Media File (Image/GIF/Video)")]
+    readonly property int effFillType: model.fillType !== undefined ? parseInt(model.fillType, 10) : 0
 
     Layout.fillWidth: true
     padding: 8
@@ -151,10 +153,33 @@ Frame {
             }
 
             Label {
+                text: i18n("Fill Type:")
+            }
+
+            ComboBox {
+                id: shapeFillTypeCombo
+
+                Layout.preferredWidth: 160
+                model: delegateFrame.fillTypeModel
+                onActivated: function(fIdx) {
+                    if (configPage.isLoaded) {
+                        rowsModel.setProperty(index, "fillType", fIdx);
+                        rowsModel.saveToJson();
+                    }
+                }
+
+                Binding on currentIndex {
+                    value: delegateFrame.effFillType
+                }
+            }
+
+            Label {
                 text: i18n("Color:")
+                visible: delegateFrame.effFillType !== 2
             }
 
             Rectangle {
+                visible: delegateFrame.effFillType !== 2
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 radius: 4
@@ -174,10 +199,10 @@ Frame {
                         });
                     }
                 }
-
             }
 
             TextField {
+                visible: delegateFrame.effFillType !== 2
                 Layout.preferredWidth: 80
                 placeholderText: "#3b82f6"
                 onTextEdited: {
@@ -190,7 +215,6 @@ Frame {
                 Binding on text {
                     value: model.color || "#3b82f6"
                 }
-
             }
 
             ComboBox {
@@ -315,10 +339,33 @@ Frame {
             }
 
             Label {
+                text: i18n("Fill Type:")
+            }
+
+            ComboBox {
+                id: rowFillTypeCombo
+
+                Layout.preferredWidth: 160
+                model: delegateFrame.fillTypeModel
+                onActivated: function(fIdx) {
+                    if (configPage.isLoaded) {
+                        rowsModel.setProperty(index, "fillType", fIdx);
+                        rowsModel.saveToJson();
+                    }
+                }
+
+                Binding on currentIndex {
+                    value: delegateFrame.effFillType
+                }
+            }
+
+            Label {
                 text: i18n("Color:")
+                visible: delegateFrame.effFillType !== 2
             }
 
             Rectangle {
+                visible: delegateFrame.effFillType !== 2
                 Layout.preferredWidth: 24
                 Layout.preferredHeight: 24
                 radius: 4
@@ -338,10 +385,10 @@ Frame {
                         });
                     }
                 }
-
             }
 
             TextField {
+                visible: delegateFrame.effFillType !== 2
                 Layout.preferredWidth: 80
                 placeholderText: "#ffffff"
                 onTextEdited: {
@@ -354,7 +401,6 @@ Frame {
                 Binding on text {
                     value: model.color || "#ffffff"
                 }
-
             }
 
             ComboBox {
@@ -467,6 +513,43 @@ Frame {
                 }
             }
 
+        }
+
+        // Fill Media Input Row (Appears directly underneath the Fill Type dropdown when Media File is selected)
+        RowLayout {
+            Layout.fillWidth: true
+            visible: delegateFrame.effFillType === 2
+            spacing: 8
+
+            Label {
+                text: i18n("Fill Media:")
+            }
+
+            TextField {
+                id: rowFillFileInput
+
+                Layout.fillWidth: true
+                placeholderText: i18n("Select local image, GIF, or video for text fill...")
+                onTextEdited: {
+                    if (configPage.isLoaded) {
+                        rowsModel.setProperty(index, "fillFile", text);
+                        rowsModel.saveToJson();
+                    }
+                }
+
+                Binding on text {
+                    value: model.fillFile || ""
+                }
+            }
+
+            Button {
+                text: i18n("Browse...")
+                icon.name: "document-open"
+                onClicked: {
+                    configPage.activeRowIndexForFileDialog = index;
+                    fillFileDialog.open();
+                }
+            }
         }
 
         // 9. Rotation
@@ -1324,6 +1407,8 @@ Frame {
 
         }
 
+
+
         // 12. Overlay Layer
         ColumnLayout {
             Layout.fillWidth: true
@@ -1352,7 +1437,6 @@ Frame {
                     Binding on currentIndex {
                         value: model.overlayType !== undefined ? model.overlayType : 0
                     }
-
                 }
 
                 Button {
@@ -1366,7 +1450,6 @@ Frame {
                         rowsModel.saveToJson();
                     }
                 }
-
             }
 
             RowLayout {
@@ -1397,7 +1480,6 @@ Frame {
                             });
                         }
                     }
-
                 }
 
                 TextField {
@@ -1413,9 +1495,7 @@ Frame {
                     Binding on text {
                         value: model.overlayColor || "#000000"
                     }
-
                 }
-
             }
 
             RowLayout {
@@ -1441,7 +1521,6 @@ Frame {
                     Binding on text {
                         value: model.overlayFile || ""
                     }
-
                 }
 
                 Button {
@@ -1452,7 +1531,6 @@ Frame {
                         overlayFileDialog.open();
                     }
                 }
-
             }
 
             RowLayout {
@@ -1481,11 +1559,7 @@ Frame {
                     text: Math.round((model.overlayOpacity !== undefined ? model.overlayOpacity : 0.5) * 100) + "%"
                     Layout.preferredWidth: 35
                 }
-
             }
-
         }
-
     }
-
 }

@@ -142,11 +142,11 @@ Every property below can be queried or modified by name via `plasmoid-get-widget
 | `fromCenter` | Boolean | Center alignment offset flag (`true` or `false`) |
 | `offsetX` / `offsetWidth` | Number | Horizontal position offset in pixels |
 | `topMargin` / `offsetHeight` | Number | Vertical position offset in pixels |
-| `overlayType` | Number | Mask mode (`0` = None, `1` = Color, `2` = Image/Video texture) |
+| `fillType` / `overlayType` | Number | Fill / Mask mode (`0` = None, `1` = Solid Color, `2` = Media File / Image / Video texture) |
 | `overlayColor` | String | Texture mask color hex |
 | `overlayOpacity` | Number | Texture mask opacity (`0.0` to `1.0`) |
 | `overlayFile` | String | File URL for media texture (`"file:///home/user/image.png"`) |
-| `showOverlay` | Boolean | Enable texture overlay mask (`true` or `false`) |
+| `showOverlay` | Boolean | Enable fill / texture overlay mask (`true` or `false`) |
 
 ### B. Vector Shape Properties
 
