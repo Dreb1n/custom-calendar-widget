@@ -3,7 +3,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 
-Kirigami.FormLayout {
+Kirigami.ScrollablePage {
     id: configTokensPage
 
     readonly property string cleanFilter: searchField.text.trim().toLowerCase()
@@ -36,10 +36,11 @@ Kirigami.FormLayout {
         ListElement { token: "X"; desc: "Unix epoch timestamp in seconds"; example: "1785579846"; category: "Misc" }
     }
 
-    ColumnLayout {
-        Kirigami.FormData.label: i18n("Format Reference:")
-        Layout.fillWidth: true
-        spacing: 12
+    Kirigami.FormLayout {
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("Format Reference:")
+            Layout.fillWidth: true
+            spacing: 12
 
         // Escaping Literal Text Tip Card
         Kirigami.AbstractCard {
@@ -228,4 +229,5 @@ Kirigami.FormLayout {
             }
         }
     }
+}
 }

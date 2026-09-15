@@ -6,7 +6,7 @@ import org.kde.kirigami as Kirigami
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as Plasma5Support
 
-Kirigami.FormLayout {
+Kirigami.ScrollablePage {
     id: configScriptsPage
 
     property bool isLoaded: false
@@ -167,10 +167,11 @@ Kirigami.FormLayout {
         }
     }
 
-    ColumnLayout {
-        Kirigami.FormData.label: i18n("External Scripts:")
-        Layout.fillWidth: true
-        spacing: 12
+    Kirigami.FormLayout {
+        ColumnLayout {
+            Kirigami.FormData.label: i18n("External Scripts:")
+            Layout.fillWidth: true
+            spacing: 12
 
         Label {
             text: i18n("Configure external scripts to trigger on system boot/login and periodically in the background.")
@@ -345,4 +346,5 @@ Kirigami.FormLayout {
             }
         }
     }
+}
 }
