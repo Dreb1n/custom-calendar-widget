@@ -769,8 +769,8 @@ PlasmoidItem {
                         property bool isShapeItem: rowContainer.rowItem && (rowContainer.rowItem.isShape === true || rowContainer.rowItem.isShape === "true") && (!rowContainer.rowItem.format || rowContainer.rowItem.format === "")
                         property real itemRotation: (rowContainer.rowItem && rowContainer.rowItem.rotation !== undefined) ? Number(rowContainer.rowItem.rotation) : 0
                         property real strokeMargin: 0
-                        property real unrotatedW: isShapeItem ? (rowContainer.rowItem.shapeWidth || 100) : (mainText ? Math.max(10, mainText.implicitWidth) : 100)
-                        property real unrotatedH: isShapeItem ? (rowContainer.rowItem.shapeHeight || 100) : (mainText ? Math.max(10, mainText.implicitHeight) : 30)
+                        property real unrotatedW: isShapeItem ? (rowContainer.rowItem.shapeWidth || 100) : (mainText ? Math.max(1, mainText.implicitWidth) : 10)
+                        property real unrotatedH: isShapeItem ? (rowContainer.rowItem.shapeHeight || 100) : (mainText ? Math.max(1, mainText.implicitHeight) : 10)
                         property real rotRad: itemRotation * Math.PI / 180
                         property real boundingW: itemRotation === 0 ? Math.ceil(unrotatedW) : Math.ceil(Math.abs(Math.cos(rotRad)) * unrotatedW + Math.abs(Math.sin(rotRad)) * unrotatedH)
                         property real boundingH: itemRotation === 0 ? Math.ceil(unrotatedH) : Math.ceil(Math.abs(Math.sin(rotRad)) * unrotatedW + Math.abs(Math.cos(rotRad)) * unrotatedH)
@@ -917,8 +917,8 @@ PlasmoidItem {
 
                         width: isFromCenter ? Math.max(10, boundingW) : undefined
                         height: isFromCenter ? Math.max(10, boundingH) : undefined
-                        implicitWidth: isFromCenter ? 0 : Math.max(100, boundingW)
-                        implicitHeight: isFromCenter ? 0 : Math.max(20, boundingH)
+                        implicitWidth: isFromCenter ? 0 : Math.max(1, boundingW)
+                        implicitHeight: isFromCenter ? 0 : Math.max(1, boundingH)
                         Layout.preferredWidth: implicitWidth
                         Layout.preferredHeight: implicitHeight
                         Layout.fillWidth: !isFromCenter
