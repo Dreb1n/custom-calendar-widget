@@ -529,7 +529,7 @@ Frame {
                 id: rowFillFileInput
 
                 Layout.fillWidth: true
-                placeholderText: i18n("Select local image, GIF, or video for text fill...")
+                placeholderText: i18n("Select local image, GIF, or video for text/shape fill...")
                 onTextEdited: {
                     if (configPage.isLoaded) {
                         rowsModel.setProperty(index, "fillFile", text);

@@ -1263,7 +1263,14 @@ PlasmoidItem {
                                 id: vectorShape
 
                                 property string sType: rowContainer.rowItem.shapeType || "circle"
-                                property color sColor: (rowContainer.effectiveFillType === 2) ? "transparent" : (rowContainer.rowItem.color || "#3b82f6")
+                                property color sColor: {
+                                    var ft = rowContainer.effectiveFillType;
+                                    if (ft === 2)
+                                        return "transparent";
+                                    if (ft === 0 && rowContainer.rowItem && rowContainer.rowItem.fillType !== undefined)
+                                        return "transparent";
+                                    return (rowContainer.rowItem && rowContainer.rowItem.color) ? rowContainer.rowItem.color : "#3b82f6";
+                                }
                                 property int w: width
                                 property int h: height
                                 readonly property var sidesLookup: ({
