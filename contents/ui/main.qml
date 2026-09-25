@@ -778,14 +778,6 @@ PlasmoidItem {
                         property real rawOffX: rowContainer.rowItem.offsetWidth !== undefined ? rowContainer.rowItem.offsetWidth : (rowContainer.rowItem.offsetX !== undefined ? rowContainer.rowItem.offsetX : 0)
                         property real rawOffY: rowContainer.rowItem.offsetHeight !== undefined ? rowContainer.rowItem.offsetHeight : (rowContainer.rowItem.topMargin !== undefined ? rowContainer.rowItem.topMargin : 0)
                         property string formattedText: ""
-                        property string displayLocation: (rowContainer.rowItem && rowContainer.rowItem.displayLocation !== undefined) ? String(rowContainer.rowItem.displayLocation) : "all"
-                        property bool isVisibleInCurrentLocation: {
-                            if (displayLocation === "desktop")
-                                return !root.inPanel;
-                            if (displayLocation === "panel")
-                                return root.inPanel;
-                            return true;
-                        }
                         readonly property real textPad: rowContainer.isShapeItem ? 0 : 50
 
                         function formatFileUrl(filePath) {
@@ -923,14 +915,13 @@ PlasmoidItem {
 
                         }
 
-                        visible: isVisibleInCurrentLocation
-                        width: (visible && isFromCenter) ? Math.max(10, boundingW) : undefined
-                        height: (visible && isFromCenter) ? Math.max(10, boundingH) : undefined
-                        implicitWidth: (visible && !isFromCenter) ? Math.max(1, boundingW) : 0
-                        implicitHeight: (visible && !isFromCenter) ? Math.max(1, boundingH) : 0
+                        width: isFromCenter ? Math.max(10, boundingW) : undefined
+                        height: isFromCenter ? Math.max(10, boundingH) : undefined
+                        implicitWidth: isFromCenter ? 0 : Math.max(1, boundingW)
+                        implicitHeight: isFromCenter ? 0 : Math.max(1, boundingH)
                         Layout.preferredWidth: implicitWidth
                         Layout.preferredHeight: implicitHeight
-                        Layout.fillWidth: visible && !isFromCenter
+                        Layout.fillWidth: !isFromCenter
                         z: index
                         Layout.topMargin: isFromCenter ? 0 : rawOffY
                         onCurrentFmtChanged: updateRowText(true)

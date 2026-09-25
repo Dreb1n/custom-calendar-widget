@@ -248,9 +248,6 @@ Frame {
                 }, {
                     "text": i18n("Overlay Layer"),
                     "value": "overlay"
-                }, {
-                    "text": i18n("Display Location (Panel / Desktop)"),
-                    "value": "displayLocation"
                 }]
                 currentIndex: 0
                 onActivated: function(idx) {
@@ -293,9 +290,6 @@ Frame {
                         rowsModel.setProperty(index, "overlayOpacity", 0.5);
                         rowsModel.setProperty(index, "overlayFile", "");
                         rowsModel.setProperty(index, "showOverlay", true);
-                    } else if (val === "displayLocation") {
-                        rowsModel.setProperty(index, "displayLocation", "all");
-                        rowsModel.setProperty(index, "showDisplayLocation", true);
                     }
                     rowsModel.saveToJson();
                     currentIndex = 0;
@@ -456,9 +450,6 @@ Frame {
                 }, {
                     "text": i18n("Overlay Layer"),
                     "value": "overlay"
-                }, {
-                    "text": i18n("Display Location (Panel / Desktop)"),
-                    "value": "displayLocation"
                 }]
                 currentIndex: 0
                 onActivated: function(idx) {
@@ -516,9 +507,6 @@ Frame {
                         rowsModel.setProperty(index, "overlayOpacity", 0.5);
                         rowsModel.setProperty(index, "overlayFile", "");
                         rowsModel.setProperty(index, "showOverlay", true);
-                    } else if (val === "displayLocation") {
-                        rowsModel.setProperty(index, "displayLocation", "all");
-                        rowsModel.setProperty(index, "showDisplayLocation", true);
                     }
                     rowsModel.saveToJson();
                     currentIndex = 0;
@@ -611,54 +599,6 @@ Frame {
                 }
             }
 
-        }
-
-        // Display Location (Panel vs Desktop)
-        RowLayout {
-            Layout.fillWidth: true
-            visible: (rowsModel.get(index) ? (rowsModel.get(index).showDisplayLocation === true || rowsModel.get(index).showDisplayLocation === "true" || (rowsModel.get(index).displayLocation !== undefined && rowsModel.get(index).displayLocation !== "all")) : false)
-            spacing: 8
-
-            Label {
-                text: i18n("Display Location:")
-            }
-
-            ComboBox {
-                id: displayLocationCombo
-
-                Layout.preferredWidth: 260
-                model: [
-                    { "text": i18n("Show Everywhere (Desktop & Panel)"), "value": "all" },
-                    { "text": i18n("Desktop Only (Hide in Panel)"), "value": "desktop" },
-                    { "text": i18n("Panel Only (Hide on Desktop)"), "value": "panel" }
-                ]
-                textRole: "text"
-
-                currentIndex: {
-                    var cur = (index >= 0 && index < rowsModel.count && rowsModel.get(index)) ? (rowsModel.get(index).displayLocation || "all") : "all";
-                    if (cur === "desktop") return 1;
-                    if (cur === "panel") return 2;
-                    return 0;
-                }
-
-                onActivated: function(idx) {
-                    if (configPage.isLoaded) {
-                        var selectedVal = displayLocationCombo.model[idx].value;
-                        rowsModel.setProperty(index, "displayLocation", selectedVal);
-                        rowsModel.setProperty(index, "showDisplayLocation", true);
-                        rowsModel.saveToJson();
-                    }
-                }
-            }
-
-            Button {
-                text: "✕"
-                onClicked: {
-                    rowsModel.setProperty(index, "displayLocation", "all");
-                    rowsModel.setProperty(index, "showDisplayLocation", false);
-                    rowsModel.saveToJson();
-                }
-            }
         }
 
         // 1. Timezone
