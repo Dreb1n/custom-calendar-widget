@@ -13,6 +13,13 @@ import org.kde.plasma.plasmoid
 PlasmoidItem {
     id: root
 
+    // Panel & Desktop Placement Detection
+    readonly property bool isHorizontalPanel: Plasmoid.formFactor === PlasmaCore.Types.Horizontal
+    readonly property bool isVerticalPanel: Plasmoid.formFactor === PlasmaCore.Types.Vertical
+    readonly property bool inPanel: isHorizontalPanel || isVerticalPanel
+    readonly property real sidePadding: inPanel ? (isHorizontalPanel ? 8 : 4) : 32
+    readonly property real topBottomPadding: inPanel ? 2 : 16
+
     // Static compiled format detection regexes
     readonly property var regexSeconds: /[sX]/
     readonly property var regexMinutes: /i|MN/
@@ -717,10 +724,10 @@ PlasmoidItem {
             id: fullRepItem
 
             anchors.fill: parent
-            Layout.minimumWidth: Math.max(120, contentColumn.implicitWidth + 32)
-            Layout.minimumHeight: Math.max(120, contentColumn.implicitHeight + 32)
-            Layout.preferredWidth: Layout.minimumWidth
-            Layout.preferredHeight: Layout.minimumHeight
+            Layout.minimumWidth: root.inPanel ? (root.isHorizontalPanel ? Math.max(10, contentColumn.implicitWidth + root.sidePadding) : 0) : Math.max(120, contentColumn.implicitWidth + 32)
+            Layout.minimumHeight: root.inPanel ? (root.isVerticalPanel ? Math.max(10, contentColumn.implicitHeight + (root.topBottomPadding * 2)) : 0) : Math.max(120, contentColumn.implicitHeight + 32)
+            Layout.preferredWidth: root.inPanel ? Math.max(10, contentColumn.implicitWidth + root.sidePadding) : Layout.minimumWidth
+            Layout.preferredHeight: root.inPanel ? Math.max(10, contentColumn.implicitHeight + (root.topBottomPadding * 2)) : Layout.minimumHeight
             Layout.fillWidth: true
             Layout.fillHeight: true
 
@@ -730,7 +737,7 @@ PlasmoidItem {
 
                 anchors.fill: parent
                 visible: root.activeSettings.bgType !== 2
-                radius: root.activeSettings.borderRadius
+                radius: root.inPanel ? Math.min(root.activeSettings.borderRadius, 4) : root.activeSettings.borderRadius
                 color: root.activeSettings.bgColor
                 opacity: root.activeSettings.bgOpacity
                 border.color: root.activeSettings.bgType === 2 ? "transparent" : "#334155"
@@ -742,8 +749,8 @@ PlasmoidItem {
                 id: contentColumn
 
                 anchors.centerIn: parent
-                width: Math.max(100, parent.width - 32)
-                spacing: 4
+                width: Math.max(10, parent.width - root.sidePadding)
+                spacing: root.inPanel ? 1 : 4
 
                 Repeater {
                     // Security & Execution Policy:
